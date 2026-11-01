@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Render\WaterParticleSystem.cpp" />
+    <ClCompile Include="Source\Systems\ObjectLoader.cpp" />
+    <ClCompile Include="Source\Systems\ObjectFactory.cpp" />
+    <ClCompile Include="Source\Game\ExitScene.cpp" />
+    <ClCompile Include="Source\Game\IngameScene.cpp" />
+    <ClCompile Include="Source\Game\Boat.cpp" />
+    <ClCompile Include="Source\Game\Shop.cpp" />
+    <ClCompile Include="Source\Systems\CollisionSystem.cpp" />
+    <ClCompile Include="Source\Systems\DebugDrawer.cpp" />
+    <ClCompile Include="Source\Systems\BoxCollider.cpp" />
+    <ClCompile Include="Source\Game\Crop.cpp" />
+    <ClCompile Include="Source\Systems\DataTable.cpp" />
+    <ClCompile Include="Source\Core\InputManager.cpp" />
+    <ClCompile Include="Source\Render\Camera.cpp" />
+    <ClCompile Include="Source\Game\GameObject.cpp" />
+    <ClCompile Include="Source\Game\Inventory.cpp" />
+    <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\Render\Model.cpp" />
+    <ClCompile Include="Source\PCH\PCH.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Player.cpp" />
+    <ClCompile Include="Source\Core\SceneManager.cpp" />
+    <ClCompile Include="Source\Render\Shader.cpp" />
+    <ClCompile Include="Source\Game\StaticProp.cpp" />
+    <ClCompile Include="Source\Render\TextRenderer.cpp" />
+    <ClCompile Include="Source\Render\UIRenderer.cpp" />
+    <ClCompile Include="Source\Render\TextureLoader.cpp" />
+    <ClCompile Include="Source\Game\TitleScene.cpp" />
+    <ClCompile Include="Source\Systems\TimeSystem.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Render\WaterParticleSystem.h" />
+    <ClInclude Include="Source\Systems\ObjectLoader.h" />
+    <ClInclude Include="Source\Systems\ObjectFactory.h" />
+    <ClInclude Include="Source\Game\ExitScene.h" />
+    <ClInclude Include="Source\Game\IngameScene.h" />
+    <ClInclude Include="Source\Game\Scene.h" />
+    <ClInclude Include="Source\Game\Boat.h" />
+    <ClInclude Include="Source\Game\Shop.h" />
+    <ClInclude Include="Source\Game\IInteractable.h" />
+    <ClInclude Include="Source\Game\InteractableObject.h" />
+    <ClInclude Include="Source\Game\StaticProp.h" />
+    <ClInclude Include="Source\Systems\TimeSystem.h" />
+    <ClInclude Include="Source\Utils\FileUtils.h" />
+    <ClInclude Include="Source\Systems\CollisionSystem.h" />
+    <ClInclude Include="Source\Systems\DebugDrawer.h" />
+    <ClInclude Include="Source\Systems\BoxCollider.h" />
+    <ClInclude Include="Source\Systems\Collider.h" />
+    <ClInclude Include="Source\Game\GameTypes.h" />
+    <ClInclude Include="Source\Game\Crop.h" />
+    <ClInclude Include="Source\Systems\DataTable.h" />
+    <ClInclude Include="Source\Core\InputManager.h" />
+    <ClInclude Include="Source\Render\Camera.h" />
+    <ClInclude Include="Source\Game\GameObject.h" />
+    <ClInclude Include="Source\Game\Inventory.h" />
+    <ClInclude Include="Source\Utils\Logger.h" />
+    <ClInclude Include="Source\Render\Model.h" />
+    <ClInclude Include="Source\PCH\PCH.h" />
+    <ClInclude Include="Source\Game\Player.h" />
+    <ClInclude Include="Source\Core\SceneManager.h" />
+    <ClInclude Include="Source\Render\Shader.h" />
+    <ClInclude Include="Source\Utils\MathUtils.h" />
+    <ClInclude Include="Source\Render\TextRenderer.h" />
+    <ClInclude Include="Source\Render\UIRenderer.h" />
+    <ClInclude Include="Source\Render\TextureLoader.h" />
+    <ClInclude Include="Source\Game\TitleScene.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{ff29e483-001c-455c-a616-11a82fd60832}</ProjectGuid>
+    <RootNamespace>MiniFarm</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>glew32.lib freeglut.lib %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>glew32.lib freeglut.lib %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_ENABLE_EXPERIMENTAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>glew32.lib freeglut.lib %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>glew32.lib freeglut.lib %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

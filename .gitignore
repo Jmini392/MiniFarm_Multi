@@ -1,0 +1,28 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build 출력물
+Debug/
+Release/
+x64/
+build/
+bin/
+obj/
+
+# 바이너리 / 중간 파일
+*.exe
+*.dll
+*.lib
+*.pdb
+*.ilk
+
+# 시스템 파일
+Thumbs.db
+*.DS_Store
+desktop.ini
+
+# 실행에 필요한 런타임 DLL은 포함
+!Client/MiniFarm/Libs/x64/
+!Client/MiniFarm/Libs/x64/*.dll
