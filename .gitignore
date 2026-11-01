@@ -23,6 +23,8 @@ Thumbs.db
 *.DS_Store
 desktop.ini
 
-# 실행에 필요한 런타임 DLL은 포함
-!Client/MiniFarm/Libs/x64/
-!Client/MiniFarm/Libs/x64/*.dll
+# OpenGL 의존성(헤더/lib/dll) - 다른 PC에서도 바로 빌드되도록 포함
+!Client/build/
+!Client/build/environment/
+!Client/build/environment/deps/
+!Client/build/environment/deps/**

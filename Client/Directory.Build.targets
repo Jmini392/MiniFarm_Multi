@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'MiniFarm'">
+    <MiniFarmDependencyRoot>$(MSBuildThisFileDirectory)build\environment\deps\</MiniFarmDependencyRoot>
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(MSBuildProjectName)' == 'MiniFarm'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(MiniFarmDependencyRoot)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(MiniFarmDependencyRoot)lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <Target Name="MiniFarmCopyRuntimeDependencies" AfterTargets="Build" Condition="'$(MSBuildProjectName)' == 'MiniFarm'">
+    <Copy SourceFiles="$(MiniFarmDependencyRoot)bin\$(Platform)\glew32.dll;$(MiniFarmDependencyRoot)bin\$(Platform)\freeglut.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>
