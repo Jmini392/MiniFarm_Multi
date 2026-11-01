@@ -115,6 +115,9 @@
     <ClCompile Include="Source\Render\WaterParticleSystem.cpp">
       <Filter>소스 파일\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="NetworkClient.cpp">
+      <Filter>소스 파일\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Systems\CollisionSystem.h">
@@ -221,6 +224,9 @@
     </ClInclude>
     <ClInclude Include="Source\Render\WaterParticleSystem.h">
       <Filter>소스 파일\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkClient.h">
+      <Filter>소스 파일\Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

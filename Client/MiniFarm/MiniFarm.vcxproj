@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="NetworkClient.cpp" />
     <ClCompile Include="Source\Render\WaterParticleSystem.cpp" />
     <ClCompile Include="Source\Systems\ObjectLoader.cpp" />
     <ClCompile Include="Source\Systems\ObjectFactory.cpp" />
@@ -54,6 +55,7 @@
     <ClCompile Include="Source\Systems\TimeSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="NetworkClient.h" />
     <ClInclude Include="Source\Render\WaterParticleSystem.h" />
     <ClInclude Include="Source\Systems\ObjectLoader.h" />
     <ClInclude Include="Source\Systems\ObjectFactory.h" />
@@ -151,7 +153,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -170,7 +172,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -187,7 +189,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -206,7 +208,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

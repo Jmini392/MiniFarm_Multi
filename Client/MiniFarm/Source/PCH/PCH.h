@@ -1,4 +1,11 @@
 #pragma once
+
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <gl/glew.h>
 #include <gl/freeglut.h>
