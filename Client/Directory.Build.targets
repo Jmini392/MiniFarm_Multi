@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(MSBuildProjectName)' == 'MiniFarm'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MiniFarmDependencyRoot)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MiniFarmDependencyRoot)include;$(ProjectDir)..\..;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(MiniFarmDependencyRoot)lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

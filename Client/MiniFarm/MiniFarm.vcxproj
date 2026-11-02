@@ -19,15 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Common\InventoryCore.cpp">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\ShopLogic.cpp">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\CropLogic.cpp">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="Source\Render\WaterParticleSystem.cpp" />
     <ClCompile Include="Source\Systems\ObjectLoader.cpp" />
     <ClCompile Include="Source\Systems\ObjectFactory.cpp" />
@@ -63,11 +54,6 @@
     <ClCompile Include="Source\Systems\TimeSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Common\GameTypes.h" />
-    <ClInclude Include="..\..\Common\CropState.h" />
-    <ClInclude Include="..\..\Common\CropLogic.h" />
-    <ClInclude Include="..\..\Common\InventoryCore.h" />
-    <ClInclude Include="..\..\Common\ShopLogic.h" />
     <ClInclude Include="Source\Render\WaterParticleSystem.h" />
     <ClInclude Include="Source\Systems\ObjectLoader.h" />
     <ClInclude Include="Source\Systems\ObjectFactory.h" />
@@ -103,6 +89,24 @@
     <ClInclude Include="Source\Render\UIRenderer.h" />
     <ClInclude Include="Source\Render\TextureLoader.h" />
     <ClInclude Include="Source\Game\TitleScene.h" />
+  </ItemGroup>
+  <ItemGroup Label="CommonSources">
+    <ClCompile Include="..\..\Common\InventoryCore.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\ShopLogic.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\CropLogic.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup Label="CommonHeaders">
+    <ClInclude Include="..\..\Common\GameTypes.h" />
+    <ClInclude Include="..\..\Common\CropState.h" />
+    <ClInclude Include="..\..\Common\CropLogic.h" />
+    <ClInclude Include="..\..\Common\InventoryCore.h" />
+    <ClInclude Include="..\..\Common\ShopLogic.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -165,7 +169,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..;$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -184,7 +188,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..;$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -201,7 +205,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..;$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -220,7 +224,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..;$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Source\Core;$(ProjectDir)\Source\Game;$(ProjectDir)\Source\Render;$(ProjectDir)\Source\Systems;$(ProjectDir)\Source\PCH;$(ProjectDir)\Source\Utils;$(ProjectDir)\Includes;$(ProjectDir)\Shaders;$(ProjectDir)\Assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
