@@ -273,14 +273,15 @@ void Player::SellCrop(EItemID cropID, int count)
 		return;
 	}
 
-	if (UseItem(cropID, count))
+	auto result = ShopLogic::SellCrop(m_inventory.Core(), cropID, count, *data);
+	if (result.success)
 	{
-		int totalPrice = data->sellPrice * count;
-		m_inventory.AddMoney(totalPrice);
-		LOG_D("%s를 %d개 판매 (+%d원) ", data->name.c_str(), count, totalPrice);
+		LOG_D("아이템 사용: %d개", count);
+		LOG_D("%s를 %d개 판매 (+%d원) ", data->name.c_str(), count, result.totalPrice);
 	}
 	else
 	{
+		LOG_D("아이템 부족");
 		LOG_D("판매할 %s 없음", data->name.c_str());
 	}
 }

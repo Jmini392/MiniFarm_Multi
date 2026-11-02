@@ -10,3 +10,14 @@ ShopLogic::TradeResult ShopLogic::BuySeed(InventoryCore& inventory,
     inventory.AddItem(seedID, count);
     return { true, totalPrice };
 }
+
+ShopLogic::TradeResult ShopLogic::SellCrop(InventoryCore& inventory,
+    EItemID cropID, int count, const CropData& data)
+{
+    if (!inventory.UseItem(cropID, count))
+        return { false, 0 };
+
+    int totalPrice = data.sellPrice * count;
+    inventory.AddMoney(totalPrice);
+    return { true, totalPrice };
+}

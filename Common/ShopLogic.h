@@ -11,4 +11,7 @@ namespace ShopLogic
 
     TradeResult BuySeed(InventoryCore& inventory, EItemID seedID,
         int count, const CropData& data);
+
+    TradeResult SellCrop(InventoryCore& inventory, EItemID cropID,
+        int count, const CropData& data);
 }
