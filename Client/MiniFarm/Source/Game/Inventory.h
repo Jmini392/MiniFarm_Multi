@@ -1,5 +1,6 @@
 #pragma once
 #include "GameTypes.h"
+#include "Common/InventoryCore.h"
 
 class Inventory
 {
@@ -12,9 +13,8 @@ public:
 
     void AddMoney(int amount);
     bool SpendMoney(int amount);
-    int GetMoney() const { return m_money; }
+    int GetMoney() const { return m_core.GetMoney(); }
 	void DrawUI() const;
 private:
-	std::unordered_map<EItemID, int> m_items;
-	int m_money = 0;
+	InventoryCore m_core;
 };
