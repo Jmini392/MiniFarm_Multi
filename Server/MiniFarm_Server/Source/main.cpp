@@ -1,8 +1,5 @@
 ﻿#include "Common.h"
-
-#define SERVERPORT 9000
-#define BUFSIZE    512
-
+#include "RecvPacket.h"
 #include <vector>
 
 // 접속한 클라이언트 한 명을 나타내는 세션
@@ -61,7 +58,7 @@ int main(int argc, char* argv[]) {
 	memset(&serveraddr, 0, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serveraddr.sin_port = htons(SERVERPORT);
+	serveraddr.sin_port = htons(SERVER_PORT);
 	retval = bind(listen_sock, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("bind()");
 
@@ -73,8 +70,8 @@ int main(int argc, char* argv[]) {
 	SOCKET client_sock;
 	struct sockaddr_in clientaddr;
 	int addrlen;
+	char buf[MAX_PACKET_SIZE]; // 받은 패킷
 
-	int MaxClients = SOMAXCONN; // 최대 접속자 수
 	std::vector<ClientSession> sessions; // 접속 중인 세션 목록
 	int nextId = 1; // 다음에 부여할 세션 ID
 
@@ -90,7 +87,22 @@ int main(int argc, char* argv[]) {
 		// 접속한 클라이언트마다 세션 생성
 		sessions.push_back(ClientSession(nextId++, client_sock, clientaddr));
 		const ClientSession& session = sessions.back();
-		printf("[접속] ID %d (%s:%d)\n", session.GetId(), session.GetIp(), session.GetPort());
+		printf("[접속] %s\n", session.GetIp());
+
+		// 이 클라이언트가 연결을 끊을 때까지 패킷을 받는다 (끊기면 다음 접속을 기다린다)
+		// 스레드는 아직 쓰지 않으므로 한 번에 한 명의 클라이언트만 처리한다
+		while (1) {
+			int size = RecvPacket(session.GetSocket(), buf);
+			if (size <= 0) { // 0이면 연결 종료, -1이면 오류
+				printf("[해제] %s\n", session.GetIp());
+				break;
+			}
+
+			// 패킷의 헤더에서 타입과 크기를 꺼내 출력
+			PacketHeader header;
+			memcpy(&header, buf, sizeof(header));
+			printf("[패킷] %s: 타입 %d, 크기 %d\n", session.GetIp(), header.type, header.size);
+		}
 	}
 
 	// 소켓 닫기

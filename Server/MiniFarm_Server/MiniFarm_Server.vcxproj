@@ -20,9 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\PacketHandler.cpp" />
+    <ClCompile Include="Source\RecvPacket.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Common.h" />
+    <ClInclude Include="Source\PacketHandler.h" />
+    <ClInclude Include="Source\RecvPacket.h" />
+    <ClInclude Include="..\..\Shared\Protocol.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
