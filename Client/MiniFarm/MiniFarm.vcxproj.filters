@@ -129,6 +129,9 @@
     <ClInclude Include="..\..\Common\GameTypes.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Common\CropState.h">
+      <Filter>Common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Common\InventoryCore.h">
       <Filter>Common</Filter>
     </ClInclude>

@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Common\GameTypes.h" />
+    <ClInclude Include="..\..\Common\CropState.h" />
     <ClInclude Include="..\..\Common\InventoryCore.h" />
     <ClInclude Include="..\..\Common\ShopLogic.h" />
     <ClInclude Include="Source\Render\WaterParticleSystem.h" />
