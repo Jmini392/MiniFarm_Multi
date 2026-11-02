@@ -7,6 +7,7 @@
 #include "CollisionSystem.h"
 #include "IInteractable.h"
 #include "Shop.h"
+#include "Common/ShopLogic.h"
 #include "Shader.h"
 
 Player::Player()
@@ -246,11 +247,10 @@ void Player::BuySeed(EItemID seedID, int count)
 	default:
 		return;
 	}
-	int totalPrice = data->seedPrice * count;
-	if (m_inventory.SpendMoney(totalPrice))
+	auto result = ShopLogic::BuySeed(m_inventory.Core(), seedID, count, *data);
+	if (result.success)
 	{
-		AddItem(seedID, count);
-		LOG_D("%s를 %d개 구매 (-%d원) ", data->name.c_str(), count, totalPrice);
+		LOG_D("%s를 %d개 구매 (-%d원) ", data->name.c_str(), count, result.totalPrice);
 	}
 	else
 	{

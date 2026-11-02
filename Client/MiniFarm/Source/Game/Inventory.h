@@ -15,6 +15,9 @@ public:
     bool SpendMoney(int amount);
     int GetMoney() const { return m_core.GetMoney(); }
 	void DrawUI() const;
+
+    InventoryCore& Core() { return m_core; }
+    const InventoryCore& Core() const { return m_core; }
 private:
 	InventoryCore m_core;
 };

@@ -22,6 +22,9 @@
     <ClCompile Include="..\..\Common\InventoryCore.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\..\Common\ShopLogic.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Source\Render\WaterParticleSystem.cpp" />
     <ClCompile Include="Source\Systems\ObjectLoader.cpp" />
     <ClCompile Include="Source\Systems\ObjectFactory.cpp" />
@@ -59,6 +62,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\Common\GameTypes.h" />
     <ClInclude Include="..\..\Common\InventoryCore.h" />
+    <ClInclude Include="..\..\Common\ShopLogic.h" />
     <ClInclude Include="Source\Render\WaterParticleSystem.h" />
     <ClInclude Include="Source\Systems\ObjectLoader.h" />
     <ClInclude Include="Source\Systems\ObjectFactory.h" />
