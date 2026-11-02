@@ -18,13 +18,8 @@ Crop::Crop(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale,
 
 void Crop::SetCropState(EItemID newID, int newLevel)
 {
-	m_state.id = newID;
-	m_state.level = newLevel;
-	m_state.water = 0.f;
-	m_state.growTime = 0.f;
-	m_state.requiredGrowTime = 3.f;
-
-	RefreshModelFromState();
+    CropLogic::ResetState(m_state, newID, newLevel);
+    RefreshModelFromState();
 }
 
 void Crop::RefreshModelFromState()
@@ -69,30 +64,40 @@ void Crop::OnInteract(Player* player)
 	{
 	case EItemID::Hoe:
 	{
-		if (m_state.id == EItemID::Empty)
+		if (CropLogic::Till(m_state) == CropLogic::ActionResult::Success)
 		{
-			SetCropState(EItemID::Tilled, 0);
+			RefreshModelFromState();
 			LOG_D("Soil tilled");
 		}
 		break;
 	}
 	case EItemID::SeedCarrot:
 	{
-		if (m_state.id == EItemID::Tilled)
+		auto result = CropLogic::Plant(m_state, player->GetInventory().Core(), tool);
+		if (result == CropLogic::ActionResult::Success)
 		{
-			if (!player->UseItem(tool)) break;
-			SetCropState(EItemID::Carrot, 0);
+			LOG_D("아이템 사용: %d개", 1);
+			RefreshModelFromState();
 			LOG_D("Carrot planted");
+		}
+		else if (result == CropLogic::ActionResult::NoSeed)
+		{
+			LOG_D("아이템 부족");
 		}
 		break;
 	}
 	case EItemID::SeedCabbage:
 	{
-		if (m_state.id == EItemID::Tilled)
+		auto result = CropLogic::Plant(m_state, player->GetInventory().Core(), tool);
+		if (result == CropLogic::ActionResult::Success)
 		{
-			if (!player->UseItem(tool)) break;
-			SetCropState(EItemID::Cabbage, 0);
+			LOG_D("아이템 사용: %d개", 1);
+			RefreshModelFromState();
 			LOG_D("Cabbage planted");
+		}
+		else if (result == CropLogic::ActionResult::NoSeed)
+		{
+			LOG_D("아이템 부족");
 		}
 		break;
 	}

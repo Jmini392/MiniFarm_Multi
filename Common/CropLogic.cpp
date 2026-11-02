@@ -1,4 +1,5 @@
 #include "CropLogic.h"
+#include "InventoryCore.h"
 
 bool CropLogic::UpdateGrowth(CropState& state, const CropData& data, int dt)
 {
@@ -29,4 +30,48 @@ bool CropLogic::UpdateGrowth(CropState& state, const CropData& data, int dt)
         state.water = 0.f;
 
     return grew;
+}
+
+void CropLogic::ResetState(CropState& state, EItemID id, int level)
+{
+    state.id = id;
+    state.level = level;
+    state.water = 0.f;
+    state.growTime = 0.f;
+    state.requiredGrowTime = 3.f;
+}
+
+CropLogic::ActionResult CropLogic::Till(CropState& state)
+{
+    if (state.id != EItemID::Empty)
+        return ActionResult::NotApplicable;
+
+    ResetState(state, EItemID::Tilled, 0);
+    return ActionResult::Success;
+}
+
+CropLogic::ActionResult CropLogic::Plant(CropState& state,
+    InventoryCore& inventory, EItemID seedID)
+{
+    if (state.id != EItemID::Tilled)
+        return ActionResult::NotApplicable;
+
+    EItemID cropID;
+    switch (seedID)
+    {
+    case EItemID::SeedCarrot:
+        cropID = EItemID::Carrot;
+        break;
+    case EItemID::SeedCabbage:
+        cropID = EItemID::Cabbage;
+        break;
+    default:
+        return ActionResult::NotApplicable;
+    }
+
+    if (!inventory.UseItem(seedID))
+        return ActionResult::NoSeed;
+
+    ResetState(state, cropID, 0);
+    return ActionResult::Success;
 }
