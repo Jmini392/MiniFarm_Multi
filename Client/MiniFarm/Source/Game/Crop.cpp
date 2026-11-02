@@ -1,5 +1,6 @@
 #include "PCH.h"
 #include "Crop.h"
+#include "Common/CropLogic.h"
 #include "DataTable.h"
 #include "Model.h"
 #include "Player.h"
@@ -23,6 +24,11 @@ void Crop::SetCropState(EItemID newID, int newLevel)
 	m_state.growTime = 0.f;
 	m_state.requiredGrowTime = 3.f;
 
+	RefreshModelFromState();
+}
+
+void Crop::RefreshModelFromState()
+{
 	const CropData* data = DataTable::GetCrop(m_state.id);
 	if (!data || data->stageTypes.empty())
 		return;
@@ -36,39 +42,17 @@ void Crop::SetCropState(EItemID newID, int newLevel)
 
 void Crop::Update(int dt)
 {
-	if (m_state.id == EItemID::Empty || m_state.id == EItemID::Tilled)
-		return;
+    if (m_state.id == EItemID::Empty || m_state.id == EItemID::Tilled)
+        return;
 
-	const CropData* data = DataTable::GetCrop(m_state.id);
-	if (!data) return;
+    const CropData* data = DataTable::GetCrop(m_state.id);
+    if (!data) return;
 
-	int maxLevel = (int)data->stageTypes.size() - 1;
-	if (m_state.level >= maxLevel)
-		return;
-
-	float requiredWater = data->waterStages[m_state.level];
-
-	if (m_state.water >= requiredWater)
-	{
-		m_state.growTime += dt / 1000.f;
-	}
-
-	if (m_state.growTime >= m_state.requiredGrowTime)
-	{
-		m_state.water -= requiredWater;
-		m_state.growTime = 0.f;
-		m_state.level++;
-
-		const std::string& typeName = data->stageTypes[m_state.level];
-		const ObjectInfo* info = DataTable::GetObjectInfo(typeName);
-		if (info)
-			m_model = ModelCache::Get(info->modelPath, info->texturePath);
-
-		LOG_D("Crop grew to level %d", m_state.level);
-	}
-
-	if (m_state.water < 0.f)
-		m_state.water = 0.f;
+    if (CropLogic::UpdateGrowth(m_state, *data, dt))
+    {
+        RefreshModelFromState();
+        LOG_D("Crop grew to level %d", m_state.level);
+    }
 }
 
 

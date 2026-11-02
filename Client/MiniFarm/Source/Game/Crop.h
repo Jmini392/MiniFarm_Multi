@@ -6,6 +6,7 @@ class Crop : public InteractableObject
 {
 private:
     CropState m_state;
+    void RefreshModelFromState();
 public:
     Crop(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale,
         const std::string& model, const std::string& texture);
