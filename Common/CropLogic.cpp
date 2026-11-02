@@ -75,3 +75,28 @@ CropLogic::ActionResult CropLogic::Plant(CropState& state,
     ResetState(state, cropID, 0);
     return ActionResult::Success;
 }
+
+void CropLogic::AddWater(CropState& state, float amount)
+{
+    state.water += amount;
+}
+
+CropLogic::ActionResult CropLogic::Water(CropState& state)
+{
+    if (state.id == EItemID::Empty || state.id == EItemID::Tilled)
+        return ActionResult::NotApplicable;
+
+    AddWater(state, 5.f);
+    return ActionResult::Success;
+}
+
+CropLogic::ActionResult CropLogic::Harvest(CropState& state,
+    InventoryCore& inventory, const CropData& data)
+{
+    if (state.level != (int)data.stageTypes.size() - 1)
+        return ActionResult::NotApplicable;
+
+    inventory.AddItem(state.id);
+    ResetState(state, EItemID::Tilled, 0);
+    return ActionResult::Success;
+}

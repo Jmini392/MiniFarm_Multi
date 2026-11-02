@@ -53,7 +53,7 @@ void Crop::Update(int dt)
 
 void Crop::AddWater(float amount)
 {
-	m_state.water += amount;
+	CropLogic::AddWater(m_state, amount);
 }
 
 void Crop::OnInteract(Player* player)
@@ -103,9 +103,9 @@ void Crop::OnInteract(Player* player)
 	}
 	case EItemID::WateringCan:
 	{
-		if (m_state.id != EItemID::Empty && m_state.id != EItemID::Tilled)
+		auto result = CropLogic::Water(m_state);
+		if (result == CropLogic::ActionResult::Success)
 		{
-			AddWater(5.f);
 			WaterParticleSystem::Watering(m_pos);
 			player->m_action = true;
 			LOG_D("Crop watered. Current water: %.2f", m_state.water);
@@ -116,10 +116,12 @@ void Crop::OnInteract(Player* player)
 	{
 		const CropData* data = DataTable::GetCrop(m_state.id);
 
-		if (data && m_state.level == (int)data->stageTypes.size() - 1)
+		if (!data) break;
+
+		auto result = CropLogic::Harvest(m_state, player->GetInventory().Core(), *data);
+		if (result == CropLogic::ActionResult::Success)
 		{
-			player->AddItem(m_state.id);
-			SetCropState(EItemID::Tilled, 0);
+			RefreshModelFromState();
 			LOG_D("Crop harvested");
 		}
 		break;
