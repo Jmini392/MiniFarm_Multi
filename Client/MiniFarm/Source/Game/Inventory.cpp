@@ -10,38 +10,31 @@ Inventory::Inventory()
 	AddItem(EItemID::SeedCabbage, 1);
 	AddItem(EItemID::Carrot, 1);
 	AddItem(EItemID::Cabbage, 1);
-	m_money = 0;
 }
 
 void Inventory::AddItem(EItemID id, int count)
 {
-	m_items[id] += count;
+    m_core.AddItem(id, count);
 }
 
 bool Inventory::UseItem(EItemID id, int count)
 {
-	if (!HasItem(id))
-		return false;
-
-	m_items[id] -= count;
-	return true;
+    return m_core.UseItem(id, count);
 }
 
 bool Inventory::HasItem(EItemID id) const
 {
-	return m_items.find(id) != m_items.end() && m_items.at(id) > 0;
+    return m_core.HasItem(id);
 }
 
 void Inventory::AddMoney(int amount)
 {
-	m_money += amount;
+    m_core.AddMoney(amount);
 }
 
 bool Inventory::SpendMoney(int amount)
 {
-	if (m_money < amount) return false;
-	m_money -= amount;
-	return true;
+    return m_core.SpendMoney(amount);
 }
 
 void Inventory::DrawUI() const
@@ -50,13 +43,13 @@ void Inventory::DrawUI() const
 	UIRenderer::DrawCenter(TextureLoader::Load("Assets/ui_inventory.png"), { 0.5f,0.1f }, 0.85f);
 	UIRenderer::Draw(TextureLoader::Load("Assets/ui_goldbar.png"), { 0.01f,0.9f }, 0.25f);
 
-	std::string moneyStr = std::to_string(m_money);
+	std::string moneyStr = std::to_string(m_core.GetMoney());
 	TextRenderer::Draw(moneyStr, 80, WINDOW_H - 35, 2, tcolor);
 
-	std::string cseedscnt = "x" + std::to_string(m_items.count(EItemID::SeedCarrot) ? m_items.at(EItemID::SeedCarrot) : 0);
-	std::string cabseedscnt = "x" + std::to_string(m_items.count(EItemID::SeedCabbage) ? m_items.at(EItemID::SeedCabbage) : 0);
-	std::string carrotcnt = "x" + std::to_string(m_items.count(EItemID::Carrot) ? m_items.at(EItemID::Carrot) : 0);
-	std::string cabbagecnt = "x" + std::to_string(m_items.count(EItemID::Cabbage) ? m_items.at(EItemID::Cabbage) : 0);
+	std::string cseedscnt = "x" + std::to_string(m_core.GetItemCount(EItemID::SeedCarrot));
+	std::string cabseedscnt = "x" + std::to_string(m_core.GetItemCount(EItemID::SeedCabbage));
+	std::string carrotcnt = "x" + std::to_string(m_core.GetItemCount(EItemID::Carrot));
+	std::string cabbagecnt = "x" + std::to_string(m_core.GetItemCount(EItemID::Cabbage));
 
 	float slotDist = 60.f;
 	TextRenderer::DrawLeft(cseedscnt, WINDOW_W / 2, 20, 1.5f, tcolor);

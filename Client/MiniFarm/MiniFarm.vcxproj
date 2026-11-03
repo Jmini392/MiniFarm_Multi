@@ -92,6 +92,24 @@
     <ClInclude Include="Source\Render\TextureLoader.h" />
     <ClInclude Include="Source\Game\TitleScene.h" />
   </ItemGroup>
+  <ItemGroup Label="CommonSources">
+    <ClCompile Include="..\..\Common\InventoryCore.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\ShopLogic.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\CropLogic.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup Label="CommonHeaders">
+    <ClInclude Include="..\..\Common\GameTypes.h" />
+    <ClInclude Include="..\..\Common\CropState.h" />
+    <ClInclude Include="..\..\Common\CropLogic.h" />
+    <ClInclude Include="..\..\Common\InventoryCore.h" />
+    <ClInclude Include="..\..\Common\ShopLogic.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

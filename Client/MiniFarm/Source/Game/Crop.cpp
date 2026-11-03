@@ -1,5 +1,6 @@
 #include "PCH.h"
 #include "Crop.h"
+#include "Common/CropLogic.h"
 #include "DataTable.h"
 #include "Model.h"
 #include "Player.h"
@@ -12,27 +13,22 @@ Crop::Crop(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale,
 	const std::string& model, const std::string& texture)
 	: InteractableObject(pos, rot, scale)
 {
-	m_level = 0;
-	m_water = 0.f;
-	m_id = EItemID::Empty;
-	m_growTime = 0.f;
-	m_requiredGrowTime = 3.f;
 	m_model = ModelCache::Get(model, texture);
 }
 
 void Crop::SetCropState(EItemID newID, int newLevel)
 {
-	m_id = newID;
-	m_level = newLevel;
-	m_water = 0.f;
-	m_growTime = 0.f;
-	m_requiredGrowTime = 3.f;
+    CropLogic::ResetState(m_state, newID, newLevel);
+    RefreshModelFromState();
+}
 
-	const CropData* data = DataTable::GetCrop(m_id);
+void Crop::RefreshModelFromState()
+{
+	const CropData* data = DataTable::GetCrop(m_state.id);
 	if (!data || data->stageTypes.empty())
 		return;
 
-	const std::string& typeName = data->stageTypes[m_level];
+	const std::string& typeName = data->stageTypes[m_state.level];
 	const ObjectInfo* info = DataTable::GetObjectInfo(typeName);
 
 	if (info)
@@ -41,45 +37,23 @@ void Crop::SetCropState(EItemID newID, int newLevel)
 
 void Crop::Update(int dt)
 {
-	if (m_id == EItemID::Empty || m_id == EItemID::Tilled)
-		return;
+    if (m_state.id == EItemID::Empty || m_state.id == EItemID::Tilled)
+        return;
 
-	const CropData* data = DataTable::GetCrop(m_id);
-	if (!data) return;
+    const CropData* data = DataTable::GetCrop(m_state.id);
+    if (!data) return;
 
-	int maxLevel = (int)data->stageTypes.size() - 1;
-	if (m_level >= maxLevel)
-		return;
-
-	float requiredWater = data->waterStages[m_level];
-
-	if (m_water >= requiredWater)
-	{
-		m_growTime += dt / 1000.f;
-	}
-
-	if (m_growTime >= m_requiredGrowTime)
-	{
-		m_water -= requiredWater;
-		m_growTime = 0.f;
-		m_level++;
-
-		const std::string& typeName = data->stageTypes[m_level];
-		const ObjectInfo* info = DataTable::GetObjectInfo(typeName);
-		if (info)
-			m_model = ModelCache::Get(info->modelPath, info->texturePath);
-
-		LOG_D("Crop grew to level %d", m_level);
-	}
-
-	if (m_water < 0.f)
-		m_water = 0.f;
+    if (CropLogic::UpdateGrowth(m_state, *data, dt))
+    {
+        RefreshModelFromState();
+        LOG_D("Crop grew to level %d", m_state.level);
+    }
 }
 
 
 void Crop::AddWater(float amount)
 {
-	m_water += amount;
+	CropLogic::AddWater(m_state, amount);
 }
 
 void Crop::OnInteract(Player* player)
@@ -90,52 +64,64 @@ void Crop::OnInteract(Player* player)
 	{
 	case EItemID::Hoe:
 	{
-		if (m_id == EItemID::Empty)
+		if (CropLogic::Till(m_state) == CropLogic::ActionResult::Success)
 		{
-			SetCropState(EItemID::Tilled, 0);
+			RefreshModelFromState();
 			LOG_D("Soil tilled");
 		}
 		break;
 	}
 	case EItemID::SeedCarrot:
 	{
-		if (m_id == EItemID::Tilled)
+		auto result = CropLogic::Plant(m_state, player->GetInventory().Core(), tool);
+		if (result == CropLogic::ActionResult::Success)
 		{
-			if (!player->UseItem(tool)) break;
-			SetCropState(EItemID::Carrot, 0);
+			LOG_D("아이템 사용: %d개", 1);
+			RefreshModelFromState();
 			LOG_D("Carrot planted");
+		}
+		else if (result == CropLogic::ActionResult::NoSeed)
+		{
+			LOG_D("아이템 부족");
 		}
 		break;
 	}
 	case EItemID::SeedCabbage:
 	{
-		if (m_id == EItemID::Tilled)
+		auto result = CropLogic::Plant(m_state, player->GetInventory().Core(), tool);
+		if (result == CropLogic::ActionResult::Success)
 		{
-			if (!player->UseItem(tool)) break;
-			SetCropState(EItemID::Cabbage, 0);
+			LOG_D("아이템 사용: %d개", 1);
+			RefreshModelFromState();
 			LOG_D("Cabbage planted");
+		}
+		else if (result == CropLogic::ActionResult::NoSeed)
+		{
+			LOG_D("아이템 부족");
 		}
 		break;
 	}
 	case EItemID::WateringCan:
 	{
-		if (m_id != EItemID::Empty && m_id != EItemID::Tilled)
+		auto result = CropLogic::Water(m_state);
+		if (result == CropLogic::ActionResult::Success)
 		{
-			AddWater(5.f);
 			WaterParticleSystem::Watering(m_pos);
 			player->m_action = true;
-			LOG_D("Crop watered. Current water: %.2f", m_water);
+			LOG_D("Crop watered. Current water: %.2f", m_state.water);
 		}
 		break;
 	}
 	case EItemID::Sickle:
 	{
-		const CropData* data = DataTable::GetCrop(m_id);
+		const CropData* data = DataTable::GetCrop(m_state.id);
 
-		if (data && m_level == (int)data->stageTypes.size() - 1)
+		if (!data) break;
+
+		auto result = CropLogic::Harvest(m_state, player->GetInventory().Core(), *data);
+		if (result == CropLogic::ActionResult::Success)
 		{
-			player->AddItem(m_id);
-			SetCropState(EItemID::Tilled, 0);
+			RefreshModelFromState();
 			LOG_D("Crop harvested");
 		}
 		break;
@@ -147,28 +133,28 @@ void Crop::OnInteract(Player* player)
 
 float Crop::GetWaterProgress() const
 {
-	const CropData* data = DataTable::GetCrop(m_id);
+	const CropData* data = DataTable::GetCrop(m_state.id);
 	if (!data) return 0.f;
 
-	float required = data->waterStages[m_level];
-	return std::clamp(m_water / required, 0.f, 1.f);
+	float required = data->waterStages[m_state.level];
+	return std::clamp(m_state.water / required, 0.f, 1.f);
 }
 
 float Crop::GetGrowProgress() const
 {
-	return std::clamp(m_growTime / m_requiredGrowTime, 0.f, 1.f);
+	return std::clamp(m_state.growTime / m_state.requiredGrowTime, 0.f, 1.f);
 }
 
 void Crop::DrawBar()
 {
-	if (m_id == EItemID::Empty || m_id == EItemID::Tilled)
+	if (m_state.id == EItemID::Empty || m_state.id == EItemID::Tilled)
 		return;
 	
-	const CropData* data = DataTable::GetCrop(m_id);
+	const CropData* data = DataTable::GetCrop(m_state.id);
 	if (!data) return;
 
 	int maxLevel = (int)data->stageTypes.size() - 1;
-	if (m_level >= maxLevel)
+	if (m_state.level >= maxLevel)
 		return;
 
 	float waterP = GetWaterProgress();
@@ -187,7 +173,7 @@ void Crop::DrawBar()
 	glm::vec2 fillPos = uiPos - glm::vec2(0.05f, 0.0f);
 
 	TextureInfo bg = TextureLoader::Load("Assets/ui_bar_bg.png");
-	TextureInfo fill = (m_id == EItemID::Carrot)
+	TextureInfo fill = (m_state.id == EItemID::Carrot)
 		? TextureLoader::Load("Assets/ui_bar_carrot.png")
 		: TextureLoader::Load("Assets/ui_bar_cabbage.png");
 
