@@ -43,6 +43,9 @@
     <ClCompile Include="..\..\Common\CropLogic.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\CropTable.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -139,6 +142,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Common\CropLogic.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\CropTable.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Common\InventoryCore.h">

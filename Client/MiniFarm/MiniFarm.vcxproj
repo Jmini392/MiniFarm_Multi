@@ -102,11 +102,15 @@
     <ClCompile Include="..\..\Common\CropLogic.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\..\Common\CropTable.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup Label="CommonHeaders">
     <ClInclude Include="..\..\Common\GameTypes.h" />
     <ClInclude Include="..\..\Common\CropState.h" />
     <ClInclude Include="..\..\Common\CropLogic.h" />
+    <ClInclude Include="..\..\Common\CropTable.h" />
     <ClInclude Include="..\..\Common\InventoryCore.h" />
     <ClInclude Include="..\..\Common\ShopLogic.h" />
   </ItemGroup>

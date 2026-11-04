@@ -1,0 +1,5 @@
+id,name,seedPrice,sellPrice,growStages,waterStages
+-1,Empty,0,0,Thick_Ground,0
+0,Tilled,0,0,Field,0
+1,Carrot,abc,15,Carrot1|Carrot2|Carrot3,10|15|20
+2,Cabbage,10,45,Cabbage1|Cabbage2|Cabbage3,12|18|25
