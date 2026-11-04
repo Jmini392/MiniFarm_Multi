@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "NetworkClient.h"
 #include "RecvBuffer.h"
+#include "PacketHandler.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -98,6 +99,18 @@ void NetworkClient::Update()
         Disconnect();
         return;
     }
+
+    std::vector<char> packet;
+
+    while (m_recvBuffer->PopPacket(packet))
+    {
+        if (!HandlePacket(packet.data()))
+        {
+            LOG_E("패킷 처리 실패");
+            Disconnect();
+            return;
+        }
+    }
 }
 
 void NetworkClient::Disconnect()
@@ -115,4 +128,6 @@ void NetworkClient::Disconnect()
         WSACleanup();
         m_wsaInitialized = false;
     }
+
+    m_recvBuffer->Clear();
 }
