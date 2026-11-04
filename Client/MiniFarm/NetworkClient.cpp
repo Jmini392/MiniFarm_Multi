@@ -1,11 +1,20 @@
 #include "PCH.h"
 #include "NetworkClient.h"
+#include "RecvBuffer.h"
 
 #pragma comment(lib, "Ws2_32.lib")
+
+#define DATASIZE    4096
+
+NetworkClient::NetworkClient()
+{
+    m_recvBuffer = new RecvBuffer;
+}
 
 NetworkClient::~NetworkClient()
 {
     Disconnect();
+    delete m_recvBuffer;
 }
 
 bool NetworkClient::Connect(const char* ip, unsigned short port)
@@ -55,6 +64,40 @@ bool NetworkClient::Connect(const char* ip, unsigned short port)
     m_connected = true;
     LOG("클라이언트 접속: IP 주소=%s, 포트번호=%u", ip, (unsigned int)port);
     return true;
+}
+
+void NetworkClient::Update()
+{
+    if (m_socket == INVALID_SOCKET)
+    {
+        return;
+    }
+
+    char data[DATASIZE];
+    int result;
+
+    result = recv(m_socket, data, sizeof(data), 0);
+
+    if (result == SOCKET_ERROR)
+    {
+        LOG_E("수신 실패");
+        Disconnect();
+        return;
+    }
+    else if (result == 0)
+    {
+        Disconnect();
+        return;
+    }
+
+    //LOG("수신 성공: %d바이트", result);
+
+    if (!m_recvBuffer->Append(data, result))
+    {
+        LOG_E("잘못된 패킷 크기");
+        Disconnect();
+        return;
+    }
 }
 
 void NetworkClient::Disconnect()
