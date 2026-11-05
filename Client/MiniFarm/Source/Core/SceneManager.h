@@ -3,11 +3,13 @@
 
 class Shader;
 class Camera;
+class NetworkClient;
 
 class SceneManager
 {
 public:
-    static void Init();
+    static void Init(NetworkClient* networkClient);
+    static NetworkClient& GetNetworkClient();
 
     static void Update(int);
     static void Draw();
@@ -24,4 +26,5 @@ private:
     static std::unique_ptr<Scene> s_currentScene;
     static Shader s_mainShader;
     static int s_prevTime;
+    static NetworkClient* s_networkClient;
 };

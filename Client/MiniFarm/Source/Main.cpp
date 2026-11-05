@@ -9,13 +9,6 @@
 
 static NetworkClient networkClient;
 
-void NetworkUpdate(int)
-{
-	networkClient.Update();
-
-	glutTimerFunc(FRAME_TIME_MS, SceneManager::Update, 0);
-}
-
 void main(int argc, char** argv) {
 
 	glutInit(&argc, argv);
@@ -32,7 +25,7 @@ void main(int argc, char** argv) {
 	UIRenderer::Init();
 	InputManager::Init();
 
-	SceneManager::Init();
+	SceneManager::Init(&networkClient);
 
 	glutKeyboardFunc(InputManager::KeyDown);
 	glutKeyboardUpFunc(InputManager::KeyUp);
@@ -42,12 +35,7 @@ void main(int argc, char** argv) {
 	glutDisplayFunc(SceneManager::Draw);
 	glutReshapeFunc(SceneManager::Reshape);
 
-	if (!networkClient.Connect("127.0.0.1", 9000))
-	{
-		LOG_E("서버 연결 실패");
-	}
-
-	glutTimerFunc(FRAME_TIME_MS, NetworkUpdate, 0);
+	glutTimerFunc(FRAME_TIME_MS, SceneManager::Update, 0);
 
 	glutMainLoop();
 }

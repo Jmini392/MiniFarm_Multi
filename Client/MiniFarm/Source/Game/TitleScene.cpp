@@ -6,6 +6,7 @@
 #include "InputManager.h"
 #include "ObjectLoader.h"
 #include "UIRenderer.h"
+#include "NetworkClient.h"
 
 void TitleScene::Init()
 {
@@ -28,10 +29,25 @@ void TitleScene::Init()
 
 void TitleScene::Update(int dt)
 {
-	if (InputManager::IsKeyPressed(' '))
+	bool StartPressed = InputManager::IsKeyPressed(' ');
+
+	// 타이틀에서도 이전 키 상태를 갱신한다.
+	// 접속 실패 후 키를 놓고 다시 누르면 재시도할 수 있다.
+	InputManager::Update();
+
+	if (StartPressed)
 	{
-		SceneManager::SetScene(std::make_unique<IngameScene>());
+		auto& networkClient = SceneManager::GetNetworkClient();
+
+		if (networkClient.Connect("127.0.0.1", 9000))
+		{
+			LOG("접속 성공: 인게임 전환");
+			SceneManager::SetScene(std::make_unique<IngameScene>());
+			return;
+		}
+		LOG_E("접속 실패: 서버 실행 상태를 확인하세요");
 	}
+
 	m_blinkTime += dt * 0.001f;
 	m_camera.AddYaw(0.01f * dt);
 	m_camera.FollowTarget(glm::vec3(0.f));

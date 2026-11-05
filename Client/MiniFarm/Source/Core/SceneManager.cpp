@@ -3,15 +3,24 @@
 #include "IngameScene.h"
 #include "TitleScene.h"
 #include "InputManager.h"
+#include "NetworkClient.h"
 
 std::unique_ptr<Scene> SceneManager::s_currentScene = nullptr;
 int SceneManager::s_prevTime = 0;
 Shader SceneManager::s_mainShader;
-void SceneManager::Init()
+NetworkClient* SceneManager::s_networkClient = nullptr;
+
+void SceneManager::Init(NetworkClient* networkClient)
 {
+	s_networkClient = networkClient;
+
 	SetScene(std::make_unique<TitleScene>());
 	s_mainShader.Init("Shaders/main.vert", "Shaders/main.frag");
+}
 
+NetworkClient& SceneManager::GetNetworkClient()
+{
+	return *s_networkClient;
 }
 
 void SceneManager::Update(int)
