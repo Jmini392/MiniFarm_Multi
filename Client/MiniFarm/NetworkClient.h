@@ -1,6 +1,7 @@
 #pragma once
 
 #include <WinSock2.h>
+#include <atomic>
 
 class RecvBuffer;
 
@@ -16,13 +17,18 @@ public:
 
     bool Connect(const char* ip, unsigned short port);
     void Update();
-
     void Disconnect();
 
 private:
+    static DWORD WINAPI ReceiveThread(LPVOID parameter);
+    void ReceiveLoop();
+
     SOCKET m_socket = INVALID_SOCKET;
     bool m_wsaInitialized = false;
     bool m_connected = false;
 
     RecvBuffer* m_recvBuffer = nullptr;
+
+    HANDLE m_recvThread = NULL;
+    std::atomic<bool> m_receiving{ false };
 };

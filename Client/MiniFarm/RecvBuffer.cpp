@@ -3,6 +3,17 @@
 #include "../../Shared/Protocol.h"
 
 #include <cstring>
+#include <utility>
+
+RecvBuffer::RecvBuffer()
+{
+    InitializeCriticalSection(&m_cs);
+}
+
+RecvBuffer::~RecvBuffer()
+{
+    DeleteCriticalSection(&m_cs);
+}
 
 bool RecvBuffer::Append(const char* data, int size)
 {
@@ -31,7 +42,9 @@ bool RecvBuffer::Append(const char* data, int size)
         // 완성된 패킷을 큐에 저장한다.
         std::vector<char> packet(m_buffer.begin(), m_buffer.begin() + header.size);
 
+        EnterCriticalSection(&m_cs);
         m_packets.push(packet);
+        LeaveCriticalSection(&m_cs);
 
         //LOG("패킷 완성: 크기=%u, 타입=%u",
         //    (unsigned int)header.size,
@@ -46,15 +59,21 @@ bool RecvBuffer::Append(const char* data, int size)
 
 bool RecvBuffer::PopPacket(std::vector<char>& packet)
 {
+    EnterCriticalSection(&m_cs);
+
     if (m_packets.empty())
     {
+        LeaveCriticalSection(&m_cs);
+
         packet.clear();
         return false;
     }
 
-    packet = m_packets.front();
+    // 복사 없이 큐의 패킷을 전달한다.
+    packet.swap(m_packets.front());
     m_packets.pop();
 
+    LeaveCriticalSection(&m_cs);
     return true;
 }
 
@@ -62,8 +81,10 @@ void RecvBuffer::Clear()
 {
     m_buffer.clear();
 
+    EnterCriticalSection(&m_cs);
     while (!m_packets.empty())
     {
         m_packets.pop();
     }
+    LeaveCriticalSection(&m_cs);
 }

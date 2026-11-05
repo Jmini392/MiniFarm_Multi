@@ -26,6 +26,10 @@ bool NetworkClient::Connect(const char* ip, unsigned short port)
         return false;
     }
 
+    // 중복 연결을 막는 검사
+    if (m_socket != INVALID_SOCKET)
+        return false;
+
     int result;
 
     // Winsock 초기화
@@ -62,43 +66,25 @@ bool NetworkClient::Connect(const char* ip, unsigned short port)
         return false;
     }
 
+    m_receiving = true;
+    m_recvThread = CreateThread(NULL, 0, ReceiveThread, this, 0, NULL);
+    if (m_recvThread == NULL)
+    {
+        LOG_E("수신 스레드 생성 실패");
+        Disconnect();
+        return false;
+    }
+
     m_connected = true;
-    LOG("클라이언트 접속: IP 주소=%s, 포트번호=%u", ip, (unsigned int)port);
+    LOG("서버 접속 및 수신 스레드 생성 성공");
     return true;
 }
 
+// 큐 처리만
 void NetworkClient::Update()
 {
     if (m_socket == INVALID_SOCKET)
-    {
         return;
-    }
-
-    char data[DATASIZE];
-    int result;
-
-    result = recv(m_socket, data, sizeof(data), 0);
-
-    if (result == SOCKET_ERROR)
-    {
-        LOG_E("수신 실패");
-        Disconnect();
-        return;
-    }
-    else if (result == 0)
-    {
-        Disconnect();
-        return;
-    }
-
-    //LOG("수신 성공: %d바이트", result);
-
-    if (!m_recvBuffer->Append(data, result))
-    {
-        LOG_E("잘못된 패킷 크기");
-        Disconnect();
-        return;
-    }
 
     std::vector<char> packet;
 
@@ -111,10 +97,27 @@ void NetworkClient::Update()
             return;
         }
     }
+
+    // 수신이 끝났다면 메인 스레드에서 정리한다.
+    if (!m_receiving)
+        Disconnect();
 }
 
 void NetworkClient::Disconnect()
 {
+    m_receiving = false;
+
+    // 블로킹 recv()에서 기다리는 스레드를 깨운다.
+    if (m_socket != INVALID_SOCKET)
+        shutdown(m_socket, SD_BOTH);
+
+    // 수신 스레드가 끝날 때까지 기다린다.
+    if (m_recvThread != NULL)
+    {
+        CloseHandle(m_recvThread);
+        m_recvThread = NULL;
+    }
+
     if (m_socket != INVALID_SOCKET)
     {
         closesocket(m_socket);
@@ -130,4 +133,47 @@ void NetworkClient::Disconnect()
     }
 
     m_recvBuffer->Clear();
+}
+
+DWORD WINAPI NetworkClient::ReceiveThread(LPVOID parameter)
+{
+    NetworkClient* client = (NetworkClient*)parameter;
+
+    client->ReceiveLoop();
+
+    return 0;
+}
+
+void NetworkClient::ReceiveLoop()
+{
+    while (m_receiving)
+    {
+        char data[DATASIZE];
+
+        int result;
+        result = recv(m_socket, data, sizeof(data), 0);
+
+        // Disconnect()가 종료를 요청했다면 끝낸다.
+        if (!m_receiving)
+            break;
+
+        if (result == SOCKET_ERROR)
+        {
+            LOG_E("수신 오류: %d", WSAGetLastError());
+            break;
+        }
+        else if (result == 0)
+        {
+            LOG("서버 연결 종료");
+            break;
+        }
+
+        if (!m_recvBuffer->Append(data, result))
+        {
+            LOG_E("잘못된 패킷 크기");
+            break;
+        }
+    }
+
+    m_receiving = false;
 }

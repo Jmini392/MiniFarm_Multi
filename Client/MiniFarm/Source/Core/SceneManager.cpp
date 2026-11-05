@@ -31,6 +31,9 @@ void SceneManager::Update(int)
 
 	if (dt < 0) dt = 0;
 
+	if (s_networkClient)
+		s_networkClient->Update();
+
 	if (s_currentScene && s_currentScene->IsValid())
 		s_currentScene->Update(dt);
 
@@ -104,7 +107,13 @@ void SceneManager::InputTestKey(char key)
 
 		break;
 	}
-	case 27: exit(0); //ESC
+	case 27:
+	{
+		if (s_networkClient)
+			s_networkClient->Disconnect();
+
+		exit(0); //ESC
+	}
 	}
 }
 
