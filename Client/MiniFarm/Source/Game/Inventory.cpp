@@ -12,9 +12,9 @@ Inventory::Inventory()
 	AddItem(EItemID::Cabbage, 1);
 }
 
-void Inventory::AddItem(EItemID id, int count)
+bool Inventory::AddItem(EItemID id, int count)
 {
-    m_core.AddItem(id, count);
+    return m_core.AddItem(id, count);
 }
 
 bool Inventory::UseItem(EItemID id, int count)
@@ -27,24 +27,10 @@ bool Inventory::HasItem(EItemID id) const
     return m_core.HasItem(id);
 }
 
-void Inventory::AddMoney(int amount)
-{
-    m_core.AddMoney(amount);
-}
-
-bool Inventory::SpendMoney(int amount)
-{
-    return m_core.SpendMoney(amount);
-}
-
 void Inventory::DrawUI() const
 {
 	glm::vec3 tcolor{ 0.f };
 	UIRenderer::DrawCenter(TextureLoader::Load("Assets/ui_inventory.png"), { 0.5f,0.1f }, 0.85f);
-	UIRenderer::Draw(TextureLoader::Load("Assets/ui_goldbar.png"), { 0.01f,0.9f }, 0.25f);
-
-	std::string moneyStr = std::to_string(m_core.GetMoney());
-	TextRenderer::Draw(moneyStr, 80, WINDOW_H - 35, 2, tcolor);
 
 	std::string cseedscnt = "x" + std::to_string(m_core.GetItemCount(EItemID::SeedCarrot));
 	std::string cabseedscnt = "x" + std::to_string(m_core.GetItemCount(EItemID::SeedCabbage));

@@ -96,7 +96,8 @@ CropLogic::ActionResult CropLogic::Harvest(CropState& state,
     if (state.level != (int)data.stageTypes.size() - 1)
         return ActionResult::NotApplicable;
 
-    inventory.AddItem(state.id);
+    if (!inventory.AddItem(state.id))
+        return ActionResult::NotApplicable;
     ResetState(state, EItemID::Tilled, 0);
     return ActionResult::Success;
 }

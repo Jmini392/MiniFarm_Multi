@@ -5,7 +5,7 @@
 
 void Boat::OnInteract(Player* player)
 {
-	int money = player->GetInventory().GetMoney();
+	int money = player->GetSharedWallet().GetMoney();
 	bool canEscape = money >= GOAL_MONEY;
 
 	auto msg = canEscape ? "Are you sure?\nYes[Y]\nNo[N]"

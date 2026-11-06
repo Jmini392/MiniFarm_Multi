@@ -1,16 +1,38 @@
 #include "InventoryCore.h"
+#include <limits>
 
-void InventoryCore::AddItem(EItemID id, int count)
+namespace
 {
-    m_items[id] += count;
+    bool IsInventoryItem(EItemID id)
+    {
+        return id == EItemID::Carrot || id == EItemID::Cabbage
+            || id == EItemID::SeedCarrot || id == EItemID::SeedCabbage;
+    }
+}
+
+bool InventoryCore::AddItem(EItemID id, int count)
+{
+    if (!IsInventoryItem(id) || count <= 0)
+        return false;
+
+    const int currentCount = GetItemCount(id);
+    if (count > (std::numeric_limits<int>::max)() - currentCount)
+        return false;
+
+    m_items[id] = currentCount + count;
+    return true;
 }
 
 bool InventoryCore::UseItem(EItemID id, int count)
 {
-    if (!HasItem(id))
+    if (!IsInventoryItem(id) || count <= 0)
         return false;
 
-    m_items[id] -= count;
+    const auto it = m_items.find(id);
+    if (it == m_items.end() || it->second < count)
+        return false;
+
+    it->second -= count;
     return true;
 }
 
@@ -23,16 +45,4 @@ int InventoryCore::GetItemCount(EItemID id) const
 {
     const auto it = m_items.find(id);
     return it != m_items.end() ? it->second : 0;
-}
-
-void InventoryCore::AddMoney(int amount)
-{
-    m_money += amount;
-}
-
-bool InventoryCore::SpendMoney(int amount)
-{
-    if (m_money < amount) return false;
-    m_money -= amount;
-    return true;
 }

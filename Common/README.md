@@ -2,7 +2,7 @@
 
 Crop·Inventory·Shop의 핵심 상태와 처리 규칙을 `Common`으로 분리했다. 현재 클라이언트가 이 코드를 호출해 기존 로컬 동작을 유지하며, 이후 서버가 서버 소유 상태에 같은 규칙을 적용할 수 있도록 구성했다.
 
-이 문서는 `ksc`의 공용 로직 분리 8개 커밋이 반영된 `bf3a2e4` 기준으로 작성했다. **공용 로직 분리는 구현 완료했으며, 서버 상태 구성·요청 처리·결과 동기화는 후속 작업이다.**
+공용 로직 분리에 이어 2026-11-06에 개인 아이템과 공동 지갑을 분리했다. **InventoryCore는 개인 아이템만, SharedWallet은 월드의 잔액만 관리한다. 서버 상태 구성·요청 처리·결과 동기화는 후속 작업이다.**
 
 ## 1. 목적과 현재 단계
 
@@ -13,9 +13,11 @@ Crop·Inventory·Shop의 핵심 상태와 처리 규칙을 `Common`으로 분리
 | 공통 타입, 인벤토리, 구매·판매, 작물 상태·성장·농사 행동 | `Common`에 분리했고 클라이언트에서 실제 사용 중 |
 | 입력, 상호작용 대상 선택, 모델, UI, 파티클, 로그 | 클라이언트에서 담당 |
 | 인벤토리와 작물 상태의 소유·변경 | 현재 클라이언트에서 담당 |
-| 서버의 Common 사용, 공유 지갑, 패킷 송수신, 동시 처리 보호 | 미구현, 서버 연결 단계에서 진행 |
+| 서버 프로젝트 등록 | InventoryCore와 SharedWallet 소스를 등록해 컴파일함. 실제 서버 월드·플레이어 연결은 후속 작업 |
+| 공동 지갑 | SharedWallet 모듈 구현. 현재 클라이언트는 IngameScene의 지갑 하나를 사용 |
+| 서버 상태 보관, 패킷 송수신, 동시 처리 보호 | 서버 연결 단계에서 진행 |
 
-`Common`은 현재 별도 라이브러리 프로젝트가 아니다. 클라이언트 프로젝트가 공용 `.cpp` 파일을 직접 컴파일한다. 서버 프로젝트에는 아직 이 소스들이 등록되어 있지 않다.
+`Common`은 현재 별도 라이브러리 프로젝트가 아니다. 클라이언트 프로젝트가 공용 `.cpp` 파일을 직접 컴파일한다. 서버 프로젝트에는 `InventoryCore.cpp`와 `SharedWallet.cpp`가 등록되어 있다. 서버의 `main`에서 상태를 생성하거나 패킷에 연결하는 처리는 아직 없다.
 
 ## 2. 파일별 역할
 
@@ -23,7 +25,9 @@ Crop·Inventory·Shop의 핵심 상태와 처리 규칙을 `Common`으로 분리
 Common/
 ├── GameTypes.h       아이템 ID와 작물 설정 데이터
 ├── InventoryCore.h   인벤토리 데이터와 조작 API
-├── InventoryCore.cpp 아이템·돈 추가, 사용, 조회, 지출
+├── InventoryCore.cpp 개인 아이템 수량 추가·소비·조회
+├── SharedWallet.h    공동 재화 인터페이스
+├── SharedWallet.cpp  잔액·입금·지출 검증
 ├── ShopLogic.h       거래 함수와 TradeResult
 ├── ShopLogic.cpp     구매·판매 계산과 인벤토리 변경
 ├── CropState.h       작물의 현재 상태
@@ -35,7 +39,8 @@ Common/
 | 파일 | 담당하는 내용 | 관련 클라이언트 코드 |
 | --- | --- | --- |
 | [GameTypes.h](GameTypes.h) | `ItemID`, `EItemID`, `CropData` | [GameTypes.h](../Client/MiniFarm/Source/Game/GameTypes.h)는 공용 헤더를 포함하고 모델·텍스처 경로인 `ObjectInfo`만 정의 |
-| [InventoryCore.h](InventoryCore.h) / [.cpp](InventoryCore.cpp) | 아이템 수량과 돈 보관·조작 | [Inventory](../Client/MiniFarm/Source/Game/Inventory.cpp)가 Core를 보유하고 기존 API와 UI 제공 |
+| [InventoryCore.h](InventoryCore.h) / [.cpp](InventoryCore.cpp) | 개인 아이템 수량 보관·검증 | [Inventory](../Client/MiniFarm/Source/Game/Inventory.cpp)가 Core를 보유하고 아이템 UI 제공 |
+| [SharedWallet.h](SharedWallet.h) / [.cpp](SharedWallet.cpp) | 월드 공동 잔액 보관·검증 | IngameScene이 하나를 보유하고 Player가 참조. 돈 UI·상점·보트가 같은 지갑 사용 |
 | [ShopLogic.h](ShopLogic.h) / [.cpp](ShopLogic.cpp) | 가격 계산, 결제, 아이템 지급·회수 | [Player](../Client/MiniFarm/Source/Game/Player.cpp)가 데이터 조회와 결과 로그 담당 |
 | [CropState.h](CropState.h) | 작물 종류, 성장 단계, 물, 성장 시간 | [Crop](../Client/MiniFarm/Source/Game/Crop.h)이 상태 보유 |
 | [CropLogic.h](CropLogic.h) / [.cpp](CropLogic.cpp) | 작물 상태 판정·변경, 씨앗 소비, 수확물 지급 | [Crop](../Client/MiniFarm/Source/Game/Crop.cpp)이 함수 호출과 모델·효과·진행 바 처리 |
@@ -46,7 +51,7 @@ Common/
 
 | 기존 클래스 | 분리 전 | 분리 후 |
 | --- | --- | --- |
-| `Inventory` | 아이템·돈 데이터, 수량 계산, UI를 함께 처리 | `InventoryCore`에 데이터·계산을 위임하고 UI 표시 |
+| `Inventory` | 아이템·돈 데이터, 수량 계산, UI를 함께 처리 | 개인 아이템은 InventoryCore에 위임. 돈은 IngameScene 소유 SharedWallet으로 분리 |
 | `Player` | 구매·판매 가격 계산과 돈·아이템 변경을 직접 처리 | 작물 데이터를 찾고 `ShopLogic`을 호출한 뒤 결과 로그 표시 |
 | `Crop` | 상태, 성장·농사 판정, 모델·파티클·진행 바를 함께 처리 | `CropState`를 보유하고 `CropLogic`에 판정·변경을 위임한 뒤 화면 갱신 |
 
@@ -54,13 +59,16 @@ Common/
 flowchart LR
     P["Client / Player"] -->|구매·판매| S["Common / ShopLogic"]
     I["Client / Inventory"] -->|보유·호출| C["Common / InventoryCore"]
-    S -->|아이템·돈 변경| C
+    S -->|개인 아이템 변경| C
+    G["Client / IngameScene"] -->|하나를 보유| W["Common / SharedWallet"]
+    P -->|같은 지갑 참조| W
+    S -->|공동 잔액 변경| W
     F["Client / Crop: CropState 보유"] -->|성장·농사 행동| L["Common / CropLogic"]
     L -->|전달받은 상태 변경| D["Common / CropState"]
     L -->|씨앗 소비·수확물 지급| C
 ```
 
-상태의 소유 관계는 아직 `Player → Inventory → InventoryCore`, `Crop → CropState`이다. Common 함수는 전달받은 객체를 직접 변경한다. 함수 호출은 같은 클라이언트 프로세스 안에서 이루어지며, 현재 네트워크 요청을 보내지는 않는다.
+아이템은 `Player → Inventory → InventoryCore`, 밭은 `Crop → CropState`, 공동 잔액은 `IngameScene → SharedWallet`이 보유한다. Player는 지갑을 소유하지 않고 생성자에서 같은 지갑의 참조를 받는다. 서버 연결 시에는 GameWorld가 SharedWallet 하나를 보유하고 플레이어별 Inventory와 함께 거래에 전달해야 한다. Common 함수는 전달받은 객체를 직접 변경한다. 함수 호출은 같은 클라이언트 프로세스 안에서 이루어지며, 현재 네트워크 요청을 보내지는 않는다.
 
 ### 구매 흐름
 
@@ -68,8 +76,8 @@ flowchart LR
 Shop::Buy(player)
   → Player::BuySeed(seedID, count)
       → 씨앗에 맞는 CropData 조회
-      → ShopLogic::BuySeed(inventory.Core(), seedID, count, data)
-          → 가격 계산 → 돈 지출 시도 → 성공하면 씨앗 지급
+      → ShopLogic::BuySeed(inventory.Core(), sharedWallet, seedID, count, data)
+          → 가격 검증 → Inventory·지갑 복사본에서 처리 → 모두 성공하면 두 원본에 반영
       → TradeResult에 따라 로그 표시
 ```
 
@@ -109,7 +117,8 @@ Crop::OnInteract(player)
 | `CropState::growTime` | 누적 성장 시간, 초 단위, 기본 0 |
 | `CropState::requiredGrowTime` | 한 단계 성장에 필요한 시간, 초 단위, 기본 3 |
 | `CropData` | 이름, 씨앗 가격, 판매 가격, 단계 키, 단계별 필요 물을 담은 설정 |
-| `InventoryCore` | 기본 아이템 없음, 돈 0 |
+| `InventoryCore` | 기본 아이템 없음. 돈은 보관하지 않음 |
+| `SharedWallet` | 기본 잔액 0. 월드당 하나를 생성하고 새 플레이어가 들어와도 초기화하지 않음 |
 
 현재 테스트용 시작 아이템은 클라이언트 `Inventory` 생성자가 지급한다. `InventoryCore`를 서버에서 생성해도 시작 아이템이 자동으로 생기지 않는다.
 
@@ -124,7 +133,7 @@ Crop::OnInteract(player)
 | `Plant(state, inventory, seedID)` | 갈린 밭에 당근/양배추 씨앗 1개를 소비하고 해당 작물로 초기화 |
 | `AddWater(state, amount)` | 조건 검사 없이 지정량을 더하는 보조 함수 |
 | `Water(state)` | 빈 땅·갈린 밭을 제외하고 물 5 추가 |
-| `Harvest(state, inventory, data)` | 마지막 단계와 일치하면 현재 ID의 아이템 1개 지급 후 갈린 밭으로 초기화 |
+| `Harvest(state, inventory, data)` | 마지막 단계와 일치하고 아이템 1개 지급에 성공하면 갈린 밭으로 초기화. 수량 제한으로 지급 실패 시 밭 유지 |
 | `UpdateGrowth(state, data, dt)` | 물 조건과 시간에 따라 성장 계산. 단계가 바뀌면 `true` 반환 |
 
 `ActionResult`는 `Success`(처리 성공), `NotApplicable`(대상 상태/입력에 적용 불가), `NoSeed`(파종할 씨앗 없음)를 나타낸다. 요청자·거리·도구 검증까지 끝났다는 의미는 아니다.
@@ -133,9 +142,9 @@ Crop::OnInteract(player)
 
 ### 거래 함수
 
-`ShopLogic::BuySeed()`와 `SellCrop()`은 `InventoryCore`를 직접 변경하고 `TradeResult { success, totalPrice }`를 반환한다. 구매 실패 시 `totalPrice`는 필요한 가격이고, 판매 실패 시에는 0이다. 실패 원인을 구분하는 별도 오류 코드는 현재 없다.
+`ShopLogic::BuySeed()`와 `SellCrop()`은 개인 `InventoryCore&`와 공동 `SharedWallet&`를 전달받아 `TradeResult { success, totalPrice }`를 반환한다. 두 복사본에서 처리한 뒤 모두 성공하면 반영하므로 실패 시 개인 아이템과 공동 잔액이 유지된다. 구매 실패 시 계산 가능한 가격은 `totalPrice`로 반환하고 잘못된 입력·가격 계산 실패는 0, 판매 실패는 0이다. 실패 원인별 오류 코드는 아직 없다. 이 처리는 스레드 동기화를 제공하지 않으며 서버는 거래 전체를 한 실행 흐름 또는 같은 보호 범위에서 처리해야 한다.
 
-호출자는 거래 대상 ID, 수량, 그 대상에 맞는 `CropData`를 준비해야 한다. 공용 함수에 요청값 전체의 유효성 검사나 서버 권한 검증이 포함되어 있지는 않다.
+아이템은 씨앗·수확물 네 종류만, 수량은 양수만 허용하며 int 범위 초과와 보유량 부족을 거부한다. 지갑은 음수 금액·잔액 초과·int 범위 초과를 거부하며 금액 0은 허용한다. 거래는 대상 종류와 수량·가격 곱셈도 검증한다. 호출자는 해당 작물에 맞는 CropData를 제공하고 요청자·거리·권한을 검증해야 한다.
 
 `Inventory::Core()`는 기존 클라이언트가 공용 함수에 내부 Core를 전달하기 위한 접근점이다. 네트워크 전환 시 이 경로를 포함해 클라이언트의 상태 변경 호출을 정리해야 한다.
 
@@ -149,7 +158,7 @@ Crop::OnInteract(player)
 
 ## 5. 협업과 머지 시 참고
 
-기존 `Player::BuySeed()`, `SellCrop()`, `Crop::OnInteract()`, `Inventory`의 호출 API는 유지했다. 이동·입력·오브젝트 생성 코드를 크게 바꾸지 않으면서 내부 처리를 공용 코드로 연결하기 위한 구조다.
+`Player::BuySeed()`, `SellCrop()`, `Crop::OnInteract()` 호출은 유지한다. Player 생성자는 SharedWallet 참조를 요구하고, ShopLogic도 지갑 참조를 요구한다. Inventory와 InventoryCore의 돈 API는 제거했으며 AddItem은 성공 여부를 반환한다. 이동·입력·오브젝트 생성 코드를 크게 바꾸지 않으면서 내부 처리를 공용 코드로 연결하기 위한 구조다.
 
 | 변경 위치 | 머지 시 확인할 내용 |
 | --- | --- |

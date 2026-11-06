@@ -14,7 +14,7 @@ void IngameScene::Init()
 
 	m_objects.clear();
 	m_camera.Init();
-	auto player = std::make_shared<Player>();
+	auto player = std::make_shared<Player>(m_wallet);
 	m_player = player.get();
 	AddObject(player);
 
@@ -87,6 +87,10 @@ void IngameScene::DrawUI()
 
 	m_player->GetInventory().DrawUI();
 
+	const int sharedMoney = m_wallet.GetMoney();
+	UIRenderer::Draw(TextureLoader::Load("Assets/ui_goldbar.png"), { 0.01f,0.9f }, 0.25f);
+	TextRenderer::Draw(std::to_string(sharedMoney), 80, WINDOW_H - 35, 2, glm::vec3(0.f));
+
 	float timeValue = m_timeSystem.GetDayTime();
 	int hour = (int)timeValue;
 	int minute = (int)((timeValue - hour) * 60.f);
@@ -153,5 +157,5 @@ void IngameScene::UpdateDayNightCycle()
 
 void IngameScene::TestAddMoney(int amount)
 {
-	m_player->AddMoney(amount);
+	m_wallet.AddMoney(amount);
 }

@@ -22,12 +22,17 @@
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\PacketHandler.cpp" />
     <ClCompile Include="Source\RecvPacket.cpp" />
+    <ClCompile Include="..\..\Common\InventoryCore.cpp" />
+    <ClCompile Include="..\..\Common\SharedWallet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Common.h" />
     <ClInclude Include="Source\PacketHandler.h" />
     <ClInclude Include="Source\RecvPacket.h" />
     <ClInclude Include="..\..\Shared\Protocol.h" />
+    <ClInclude Include="..\..\Common\InventoryCore.h" />
+    <ClInclude Include="..\..\Common\SharedWallet.h" />
+    <ClInclude Include="..\..\Common\GameTypes.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

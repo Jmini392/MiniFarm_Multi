@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{BE278FA0-21CE-4268-8F25-D93502235740}</UniqueIdentifier>
+    </Filter>
     <Filter Include="소스 파일">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
@@ -15,8 +18,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Common\InventoryCore.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\SharedWallet.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="Source\main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Common\InventoryCore.h"><Filter>Common</Filter></ClInclude>
+    <ClInclude Include="..\..\Common\SharedWallet.h"><Filter>Common</Filter></ClInclude>
+    <ClInclude Include="..\..\Common\GameTypes.h"><Filter>Common</Filter></ClInclude>
   </ItemGroup>
 </Project>

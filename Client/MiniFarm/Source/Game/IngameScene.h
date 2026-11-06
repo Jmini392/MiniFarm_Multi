@@ -6,6 +6,7 @@
 #include "Shader.h"
 #include "TimeSystem.h"
 #include "Crop.h"
+#include "Common/SharedWallet.h"
 
 class IngameScene : public Scene
 {
@@ -21,7 +22,8 @@ public:
 
 	void TestAddMoney(int amount);
 private:
-	Player* m_player;
+	SharedWallet m_wallet; // Local world wallet until server synchronization is connected.
+	Player* m_player = nullptr;
 	TimeSystem m_timeSystem;
 	std::vector<std::shared_ptr<Crop>> m_crops;
 

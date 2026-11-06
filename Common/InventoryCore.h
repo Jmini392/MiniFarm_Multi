@@ -5,16 +5,12 @@
 class InventoryCore
 {
 public:
-    void AddItem(EItemID id, int count = 1);
+    // Crop items and seeds only. A rejected change leaves quantities unchanged.
+    bool AddItem(EItemID id, int count = 1);
     bool UseItem(EItemID id, int count = 1);
     bool HasItem(EItemID id) const;
     int GetItemCount(EItemID id) const;
 
-    void AddMoney(int amount);
-    bool SpendMoney(int amount);
-    int GetMoney() const { return m_money; }
-
 private:
     std::unordered_map<EItemID, int> m_items;
-    int m_money = 0;
 };

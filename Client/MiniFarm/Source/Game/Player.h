@@ -1,6 +1,7 @@
 #pragma once
 #include "GameObject.h"
 #include "Inventory.h"
+#include "Common/SharedWallet.h"
 
 class IInteractable;
 class Text;
@@ -16,7 +17,7 @@ struct Limb {
 class Player : public GameObject
 {
 public:
-    Player();
+    explicit Player(SharedWallet& wallet);
     virtual void Update(int time);
     virtual void Draw();
 private:
@@ -37,12 +38,13 @@ public:
     void SellCrop(EItemID cropID, int count = 1);
     void AddItem(EItemID itemID, int count = 1);
     bool UseItem(EItemID itemID, int count = 1);
-    void AddMoney(int amount);
 
     bool HasInteractTarget() { return m_FocusedInteractable != nullptr; }
     EItemID GetEquippedTool() const { return m_equippedTool; }
     void SetEquippedTool(EItemID tool) { m_equippedTool = tool; }
     Inventory& GetInventory() { return m_inventory; }
+    SharedWallet& GetSharedWallet() { return m_wallet; }
+    const SharedWallet& GetSharedWallet() const { return m_wallet; }
 
     bool IsShopping() const { return m_shopping; }
     void SetShopping(bool shopping) { m_shopping = shopping; }
@@ -58,6 +60,7 @@ public:
 private:
     float m_speed = 0.2f;
     Inventory m_inventory;
+    SharedWallet& m_wallet; // Borrowed from the owning game scene.
     IInteractable* m_FocusedInteractable = nullptr;
     EItemID m_equippedTool = EItemID::Empty;
     Shop* m_CurrentShop = nullptr;

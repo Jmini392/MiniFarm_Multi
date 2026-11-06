@@ -37,6 +37,9 @@
     <ClCompile Include="..\..\Common\InventoryCore.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\SharedWallet.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\ShopLogic.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -154,6 +157,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Common\InventoryCore.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\SharedWallet.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Common\ShopLogic.h">

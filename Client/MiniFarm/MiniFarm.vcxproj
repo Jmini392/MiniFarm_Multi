@@ -100,6 +100,9 @@
     <ClCompile Include="..\..\Common\InventoryCore.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\..\Common\SharedWallet.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\..\Common\ShopLogic.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -116,6 +119,7 @@
     <ClInclude Include="..\..\Common\CropLogic.h" />
     <ClInclude Include="..\..\Common\CropTable.h" />
     <ClInclude Include="..\..\Common\InventoryCore.h" />
+    <ClInclude Include="..\..\Common\SharedWallet.h" />
     <ClInclude Include="..\..\Common\ShopLogic.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

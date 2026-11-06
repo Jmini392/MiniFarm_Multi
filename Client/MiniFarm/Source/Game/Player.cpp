@@ -10,7 +10,8 @@
 #include "Common/ShopLogic.h"
 #include "Shader.h"
 
-Player::Player()
+Player::Player(SharedWallet& wallet)
+    : m_wallet(wallet)
 {
 	m_model = std::make_shared<Model>("Models/player_body.obj", "Models/player.png");
 	m_limbs.emplace_back("Models/player_left_arm.obj", "Models/player.png");
@@ -247,7 +248,7 @@ void Player::BuySeed(EItemID seedID, int count)
 	default:
 		return;
 	}
-	auto result = ShopLogic::BuySeed(m_inventory.Core(), seedID, count, *data);
+	auto result = ShopLogic::BuySeed(m_inventory.Core(), m_wallet, seedID, count, *data);
 	if (result.success)
 	{
 		LOG_D("%s를 %d개 구매 (-%d원) ", data->name.c_str(), count, result.totalPrice);
@@ -273,7 +274,7 @@ void Player::SellCrop(EItemID cropID, int count)
 		return;
 	}
 
-	auto result = ShopLogic::SellCrop(m_inventory.Core(), cropID, count, *data);
+	auto result = ShopLogic::SellCrop(m_inventory.Core(), m_wallet, cropID, count, *data);
 	if (result.success)
 	{
 		LOG_D("아이템 사용: %d개", count);
@@ -300,10 +301,6 @@ bool Player::UseItem(EItemID itemID, int count)
 	}
 	LOG_D("아이템 부족");
 	return false;
-}
-void Player::AddMoney(int amount)
-{
-	m_inventory.AddMoney(amount);
 }
 
 void Player::Draw()
