@@ -122,7 +122,7 @@ Crop::OnInteract(player)
 
 현재 테스트용 시작 아이템은 클라이언트 `Inventory` 생성자가 지급한다. `InventoryCore`를 서버에서 생성해도 시작 아이템이 자동으로 생기지 않는다.
 
-작물 설정은 현재 클라이언트 [DataTable](../Client/MiniFarm/Source/Systems/DataTable.cpp)이 [crops.csv](../Client/MiniFarm/Data/crops.csv)에서 읽는다. Common 함수에는 호출자가 해당 작물에 맞는 `CropData`를 전달한다.
+작물 설정은 현재 클라이언트 [DataTable](../Client/MiniFarm/Source/Systems/DataTable.cpp)이 [crops.csv](../Client/MiniFarm/Data/crops.csv)에서 읽는다. Common 함수에는 호출자가 해당 작물에 맞는 `CropData`를 전달한다. 클라이언트 `DataTable::GetCrop()`은 없는 ID를 새로 삽입하지 않고 nullptr를 반환하며, 거래·수확 호출부가 설정 누락을 실패로 처리한다.
 
 ### 농사 함수
 
@@ -136,17 +136,27 @@ Crop::OnInteract(player)
 | `Harvest(state, inventory, data)` | 마지막 단계와 일치하고 아이템 1개 지급에 성공하면 갈린 밭으로 초기화. 수량 제한으로 지급 실패 시 밭 유지 |
 | `UpdateGrowth(state, data, dt)` | 물 조건과 시간에 따라 성장 계산. 단계가 바뀌면 `true` 반환 |
 
-`ActionResult`는 `Success`(처리 성공), `NotApplicable`(대상 상태/입력에 적용 불가), `NoSeed`(파종할 씨앗 없음)를 나타낸다. 요청자·거리·도구 검증까지 끝났다는 의미는 아니다.
+`ActionResult`는 기존 `Success`, `NotApplicable`, `NoSeed`에 수확 실패 사유인 `NotMature`(성장 중), `InventoryLimitExceeded`(수량 한도), `InvalidState`(잘못된 작물 종류·단계), `InvalidData`(비어 있거나 불완전한 성장 설정)를 추가했다. 빈 땅·갈린 밭의 수확은 `NotApplicable`이다. 실패 시 Inventory와 밭의 종류·단계·물·성장 시간을 모두 유지한다. 요청자·거리·도구 검증까지 끝났다는 의미는 아니다.
 
 `UpdateGrowth()`의 `dt` 인자는 **밀리초**이며, 내부에서 초로 변환해 `growTime`에 더한다. 호출자는 유효한 성장 단계와 그 단계에 대응하는 `stageTypes`, `waterStages`를 제공해야 한다.
 
 ### 거래 함수
 
-`ShopLogic::BuySeed()`와 `SellCrop()`은 개인 `InventoryCore&`와 공동 `SharedWallet&`를 전달받아 `TradeResult { success, totalPrice }`를 반환한다. 두 복사본에서 처리한 뒤 모두 성공하면 반영하므로 실패 시 개인 아이템과 공동 잔액이 유지된다. 구매 실패 시 계산 가능한 가격은 `totalPrice`로 반환하고 잘못된 입력·가격 계산 실패는 0, 판매 실패는 0이다. 실패 원인별 오류 코드는 아직 없다. 이 처리는 스레드 동기화를 제공하지 않으며 서버는 거래 전체를 한 실행 흐름 또는 같은 보호 범위에서 처리해야 한다.
+`ShopLogic::BuySeed()`와 `SellCrop()`은 개인 `InventoryCore&`와 공동 `SharedWallet&`를 전달받아 `TradeResult { success, totalPrice, reason }`를 반환한다. 두 복사본에서 처리한 뒤 모두 성공하면 반영하므로 실패 시 개인 아이템과 공동 잔액이 유지된다. 구매 실패 시 계산 가능한 가격은 `totalPrice`로 반환하고 잘못된 입력·가격 계산 실패는 0, 판매 실패는 0이다. `reason`은 성공 시 `TradeFailure::None`, 실패 시 잘못된 아이템·수량·가격, 가격 곱셈 초과, 잔액·보유량 부족, 아이템·잔액 한도를 구분한다. Player는 실패 사유를 Debug 빌드의 콘솔에만 남긴다. 실패 처리에서 상점 안내 문자열을 변경하지 않으므로 B/S/X 메뉴와 배치는 유지된다. 이 처리는 스레드 동기화를 제공하지 않으며 서버는 거래 전체를 한 실행 흐름 또는 같은 보호 범위에서 처리해야 한다.
 
 아이템은 씨앗·수확물 네 종류만, 수량은 양수만 허용하며 int 범위 초과와 보유량 부족을 거부한다. 지갑은 음수 금액·잔액 초과·int 범위 초과를 거부하며 금액 0은 허용한다. 거래는 대상 종류와 수량·가격 곱셈도 검증한다. 호출자는 해당 작물에 맞는 CropData를 제공하고 요청자·거리·권한을 검증해야 한다.
 
 `Inventory::Core()`는 기존 클라이언트가 공용 함수에 내부 Core를 전달하기 위한 접근점이다. 네트워크 전환 시 이 경로를 포함해 클라이언트의 상태 변경 호출을 정리해야 한다.
+
+### 실제 게임에서 실패 처리 확인
+
+1. 서버 솔루션을 Debug/x64로 먼저 실행하고, 별도 Visual Studio에서 클라이언트 솔루션을 Debug/x64로 실행한다. 스페이스바로 접속한다.
+2. c 키를 누르지 않은 초기 잔액 0에서 상점에 E로 접근한 뒤 B를 누른다. Debug 콘솔에 `Not enough money.`가 출력되고 돈과 씨앗은 유지되어야 한다. 인게임 상점 메뉴는 바뀌지 않아야 한다.
+3. 상점에서 시작 수확물을 S로 판매한 뒤 다시 S를 누른다. Debug 콘솔에 `Not enough crops.`가 출력되고 두 번째 요청에서는 돈과 수량이 유지되어야 한다.
+4. c 키로 공동 재화를 추가하고 B로 구매에 성공하는지 확인한다. 성공·실패를 반복해도 상점 메뉴와 화면 배치는 같아야 한다.
+5. 밭에 1(밭갈이 도구)+E, 4(당근 씨앗)+E로 파종한 뒤 물을 주기 전에 3(낫)+E로 수확을 시도한다. 콘솔의 `Harvest failed: Crop is not mature.`와 작물·수확물 수량 유지를 확인한다. 빈 땅이나 갈린 밭에서는 `No crop to harvest.`가 출력된다.
+
+수확의 잘못된 상태·설정·수량 한도는 공용 Harvest 함수에서 각각 거부한다. 수확 실패는 Debug 콘솔 로그로만 안내하며 인게임 문구·팝업·조작 모드를 추가하지 않는다. 실제 서버 판정·패킷 동기화는 후속 작업이다.
 
 ### 초기화와 화면 갱신 구분
 

@@ -5,6 +5,7 @@ class DataTable
 {
 public:
     static void Init();
+    // Missing data returns nullptr without inserting a default crop.
     static const CropData* GetCrop(EItemID  id);
     static const ObjectInfo* GetObjectInfo(const std::string& type);
 

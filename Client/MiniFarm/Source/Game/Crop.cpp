@@ -9,6 +9,26 @@
 #include "SceneManager.h"
 #include "WaterParticleSystem.h"
 
+
+#ifdef _DEBUG
+namespace
+{
+    const char* HarvestFailureMessage(CropLogic::ActionResult result)
+    {
+        switch (result)
+        {
+        case CropLogic::ActionResult::NotApplicable: return "No crop to harvest.";
+        case CropLogic::ActionResult::NotMature: return "Crop is not mature.";
+        case CropLogic::ActionResult::InventoryLimitExceeded: return "Item limit reached.";
+        case CropLogic::ActionResult::InvalidState: return "Invalid crop state.";
+        case CropLogic::ActionResult::InvalidData: return "Invalid crop data.";
+        default: return "Harvest rejected.";
+        }
+    }
+}
+
+#endif
+
 Crop::Crop(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale,
 	const std::string& model, const std::string& texture)
 	: InteractableObject(pos, rot, scale)
@@ -116,13 +136,17 @@ void Crop::OnInteract(Player* player)
 	{
 		const CropData* data = DataTable::GetCrop(m_state.id);
 
-		if (!data) break;
-
-		auto result = CropLogic::Harvest(m_state, player->GetInventory().Core(), *data);
+		const CropData missingData{};
+		const auto result = CropLogic::Harvest(m_state, player->GetInventory().Core(),
+			data ? *data : missingData);
 		if (result == CropLogic::ActionResult::Success)
 		{
 			RefreshModelFromState();
 			LOG_D("Crop harvested");
+		}
+		else
+		{
+			LOG_D("Harvest failed: %s", HarvestFailureMessage(result));
 		}
 		break;
 	}

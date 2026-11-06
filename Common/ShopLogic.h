@@ -4,10 +4,24 @@
 
 namespace ShopLogic
 {
+    enum class TradeFailure
+    {
+        None,
+        InvalidItem,
+        InvalidCount,
+        InvalidPrice,
+        PriceOverflow,
+        InsufficientMoney,
+        InsufficientItems,
+        ItemLimitExceeded,
+        MoneyLimitExceeded
+    };
+
     struct TradeResult
     {
         bool success;
         int totalPrice;
+        TradeFailure reason;
     };
 
     // All players in a world pass the same wallet. The caller supplies matching

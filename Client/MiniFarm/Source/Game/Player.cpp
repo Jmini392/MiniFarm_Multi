@@ -10,6 +10,39 @@
 #include "Common/ShopLogic.h"
 #include "Shader.h"
 
+
+namespace
+{
+#ifdef _DEBUG
+    const char* TradeFailureMessage(ShopLogic::TradeFailure reason)
+    {
+        switch (reason)
+        {
+        case ShopLogic::TradeFailure::InvalidItem: return "Invalid item.";
+        case ShopLogic::TradeFailure::InvalidCount: return "Invalid quantity.";
+        case ShopLogic::TradeFailure::InvalidPrice: return "Invalid price data.";
+        case ShopLogic::TradeFailure::PriceOverflow: return "Trade amount too large.";
+        case ShopLogic::TradeFailure::InsufficientMoney: return "Not enough money.";
+        case ShopLogic::TradeFailure::InsufficientItems: return "Not enough crops.";
+        case ShopLogic::TradeFailure::ItemLimitExceeded: return "Item limit reached.";
+        case ShopLogic::TradeFailure::MoneyLimitExceeded: return "Money limit reached.";
+        default: return "Trade failed.";
+        }
+    }
+
+#endif
+
+    void ReportTradeFailure(const ShopLogic::TradeResult& result)
+    {
+#ifdef _DEBUG
+        LOG_D("Trade failed: %s (reason=%d, total=%d)", TradeFailureMessage(result.reason),
+            static_cast<int>(result.reason), result.totalPrice);
+#else
+        (void)result;
+#endif
+    }
+}
+
 Player::Player(SharedWallet& wallet)
     : m_wallet(wallet)
 {
@@ -246,6 +279,12 @@ void Player::BuySeed(EItemID seedID, int count)
 		data = DataTable::GetCrop(EItemID::Cabbage);
 		break;
 	default:
+		ReportTradeFailure({ false, 0, ShopLogic::TradeFailure::InvalidItem });
+		return;
+	}
+	if (!data)
+	{
+		ReportTradeFailure({ false, 0, ShopLogic::TradeFailure::InvalidPrice });
 		return;
 	}
 	auto result = ShopLogic::BuySeed(m_inventory.Core(), m_wallet, seedID, count, *data);
@@ -255,7 +294,7 @@ void Player::BuySeed(EItemID seedID, int count)
 	}
 	else
 	{
-		LOG_D("금액 부족");
+		ReportTradeFailure(result);
 	}
 }
 
@@ -271,9 +310,15 @@ void Player::SellCrop(EItemID cropID, int count)
 		data = DataTable::GetCrop(EItemID::Cabbage);
 		break;
 	default:
+		ReportTradeFailure({ false, 0, ShopLogic::TradeFailure::InvalidItem });
 		return;
 	}
 
+	if (!data)
+	{
+		ReportTradeFailure({ false, 0, ShopLogic::TradeFailure::InvalidPrice });
+		return;
+	}
 	auto result = ShopLogic::SellCrop(m_inventory.Core(), m_wallet, cropID, count, *data);
 	if (result.success)
 	{
@@ -282,8 +327,7 @@ void Player::SellCrop(EItemID cropID, int count)
 	}
 	else
 	{
-		LOG_D("아이템 부족");
-		LOG_D("판매할 %s 없음", data->name.c_str());
+		ReportTradeFailure(result);
 	}
 }
 

@@ -93,11 +93,26 @@ CropLogic::ActionResult CropLogic::Water(CropState& state)
 CropLogic::ActionResult CropLogic::Harvest(CropState& state,
     InventoryCore& inventory, const CropData& data)
 {
-    if (state.level != (int)data.stageTypes.size() - 1)
+    if (state.id == EItemID::Empty || state.id == EItemID::Tilled)
         return ActionResult::NotApplicable;
+    if (state.id != EItemID::Carrot && state.id != EItemID::Cabbage)
+        return ActionResult::InvalidState;
+
+    if (data.stageTypes.empty() || data.waterStages.size() != data.stageTypes.size())
+        return ActionResult::InvalidData;
+    for (const auto& stage : data.stageTypes)
+    {
+        if (stage.empty())
+            return ActionResult::InvalidData;
+    }
+
+    if (state.level < 0 || static_cast<std::size_t>(state.level) >= data.stageTypes.size())
+        return ActionResult::InvalidState;
+    if (static_cast<std::size_t>(state.level) != data.stageTypes.size() - 1)
+        return ActionResult::NotMature;
 
     if (!inventory.AddItem(state.id))
-        return ActionResult::NotApplicable;
+        return ActionResult::InventoryLimitExceeded;
     ResetState(state, EItemID::Tilled, 0);
     return ActionResult::Success;
 }

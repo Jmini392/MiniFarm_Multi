@@ -103,7 +103,11 @@ void DataTable::LoadCrops(const std::string& path)
     }
 }
 
-const CropData* DataTable::GetCrop(EItemID  id) { return &s_crops[(int)id]; }
+const CropData* DataTable::GetCrop(EItemID id)
+{
+    const auto it = s_crops.find(static_cast<int>(id));
+    return it != s_crops.end() ? &it->second : nullptr;
+}
 
 void DataTable::LoadObjects(const std::string& path)
 {

@@ -9,7 +9,11 @@ namespace CropLogic
     {
         Success,
         NotApplicable,
-        NoSeed
+        NoSeed,
+        NotMature,
+        InventoryLimitExceeded,
+        InvalidState,
+        InvalidData
     };
 
     void ResetState(CropState& state, EItemID id, int level);
@@ -17,6 +21,7 @@ namespace CropLogic
     ActionResult Plant(CropState& state, InventoryCore& inventory, EItemID seedID);
     void AddWater(CropState& state, float amount);
     ActionResult Water(CropState& state);
+    // Failure preserves the entire field and inventory. Data must match state.id.
     ActionResult Harvest(CropState& state, InventoryCore& inventory, const CropData& data);
 
     // Returns true when the growth stage changes. dt is in milliseconds.
