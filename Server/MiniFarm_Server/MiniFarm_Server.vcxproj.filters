@@ -24,6 +24,12 @@
     <ClCompile Include="..\..\Common\SharedWallet.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\ShopLogic.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\CropLogic.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="Source\main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -31,6 +37,9 @@
   <ItemGroup>
     <ClInclude Include="..\..\Common\InventoryCore.h"><Filter>Common</Filter></ClInclude>
     <ClInclude Include="..\..\Common\SharedWallet.h"><Filter>Common</Filter></ClInclude>
+    <ClInclude Include="..\..\Common\ShopLogic.h"><Filter>Common</Filter></ClInclude>
+    <ClInclude Include="..\..\Common\CropLogic.h"><Filter>Common</Filter></ClInclude>
+    <ClInclude Include="..\..\Common\CropState.h"><Filter>Common</Filter></ClInclude>
     <ClInclude Include="..\..\Common\GameTypes.h"><Filter>Common</Filter></ClInclude>
   </ItemGroup>
 </Project>

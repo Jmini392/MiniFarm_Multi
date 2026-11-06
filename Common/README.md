@@ -13,11 +13,11 @@ Crop·Inventory·Shop의 핵심 상태와 처리 규칙을 `Common`으로 분리
 | 공통 타입, 인벤토리, 구매·판매, 작물 상태·성장·농사 행동 | `Common`에 분리했고 클라이언트에서 실제 사용 중 |
 | 입력, 상호작용 대상 선택, 모델, UI, 파티클, 로그 | 클라이언트에서 담당 |
 | 인벤토리와 작물 상태의 소유·변경 | 현재 클라이언트에서 담당 |
-| 서버 프로젝트 등록 | InventoryCore와 SharedWallet 소스를 등록해 컴파일함. 실제 서버 월드·플레이어 연결은 후속 작업 |
+| 서버 프로젝트 등록 | InventoryCore·SharedWallet·ShopLogic·CropLogic 소스를 등록해 컴파일함. 실제 서버 월드·플레이어 연결은 후속 작업 |
 | 공동 지갑 | SharedWallet 모듈 구현. 현재 클라이언트는 IngameScene의 지갑 하나를 사용 |
 | 서버 상태 보관, 패킷 송수신, 동시 처리 보호 | 서버 연결 단계에서 진행 |
 
-`Common`은 현재 별도 라이브러리 프로젝트가 아니다. 클라이언트 프로젝트가 공용 `.cpp` 파일을 직접 컴파일한다. 서버 프로젝트에는 `InventoryCore.cpp`와 `SharedWallet.cpp`가 등록되어 있다. 서버의 `main`에서 상태를 생성하거나 패킷에 연결하는 처리는 아직 없다.
+`Common`은 현재 별도 라이브러리 프로젝트가 아니다. 클라이언트 프로젝트가 공용 `.cpp` 파일을 직접 컴파일한다. 서버 프로젝트에는 `InventoryCore.cpp`, `SharedWallet.cpp`, `ShopLogic.cpp`, `CropLogic.cpp`와 관련 헤더가 등록되어 있다. 클라이언트와 같은 Common 원본을 참조하고 서버에서도 컴파일한다. 서버의 `main`에서 상태를 생성하거나 패킷에 연결하는 처리는 아직 없다.
 
 ## 2. 파일별 역할
 
