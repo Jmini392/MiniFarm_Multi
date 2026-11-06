@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <unordered_map>
+#include "FieldState.h"
 #include "../../../Common/CropTable.h"
 #include "../../../Common/InventoryCore.h"
 #include "../../../Common/SharedWallet.h"
@@ -19,15 +20,21 @@ public:
 	// 해당 플레이어의 인벤토리, 없으면 nullptr
 	InventoryCore* GetInventory(int sessionId);
 
+	// 빈 밭을 등록한다. 음수 ID나 중복 ID는 거부하며 기존 상태를 유지한다.
+	bool AddField(int objectId);
+	// 해당 밭의 상태, 없으면 nullptr. 조회만으로 밭을 만들지 않는다.
+	FieldState* GetField(int objectId);
+
 	// 월드에 하나뿐인 공동 지갑
 	SharedWallet& GetWallet() { return m_wallet; }
 	const CropTable& GetCropTable() const { return m_cropTable; }
 	int GetPlayerCount() const { return (int)m_inventories.size(); }
 
-	// TODO: 밭, 상점, 보트 같은 월드 오브젝트 관리와 배치 데이터 로딩
+	// TODO: 배치 데이터 로딩 후 밭 등록, 상점·보트 같은 월드 오브젝트 관리
 
 private:
 	CropTable m_cropTable; // 작물 설정
 	SharedWallet m_wallet; // 모든 플레이어가 함께 쓰는 돈
 	std::unordered_map<int, InventoryCore> m_inventories; // 세션 ID별 개인 인벤토리
+	std::unordered_map<int, FieldState> m_fields; // 월드 객체 ID별 밭 상태
 };

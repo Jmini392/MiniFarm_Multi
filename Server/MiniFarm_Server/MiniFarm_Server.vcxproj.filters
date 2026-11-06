@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Common\InventoryCore.h"><Filter>Common</Filter></ClInclude>
+    <ClInclude Include="Source\FieldState.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="..\..\Common\SharedWallet.h"><Filter>Common</Filter></ClInclude>
     <ClInclude Include="..\..\Common\ShopLogic.h"><Filter>Common</Filter></ClInclude>
     <ClInclude Include="..\..\Common\CropLogic.h"><Filter>Common</Filter></ClInclude>

@@ -31,3 +31,23 @@ InventoryCore* GameWorld::GetInventory(int sessionId)
 	}
 	return &it->second;
 }
+
+bool GameWorld::AddField(int objectId)
+{
+	if (objectId < 0) {
+		return false;
+	}
+
+	FieldState field;
+	field.objectId = objectId;
+	return m_fields.emplace(objectId, field).second;
+}
+
+FieldState* GameWorld::GetField(int objectId)
+{
+	auto it = m_fields.find(objectId);
+	if (it == m_fields.end()) {
+		return nullptr;
+	}
+	return &it->second;
+}

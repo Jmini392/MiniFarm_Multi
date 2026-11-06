@@ -36,6 +36,7 @@
     <ClInclude Include="Source\RecvPacket.h" />
     <ClInclude Include="Source\SendPacket.h" />
     <ClInclude Include="Source\GameWorld.h" />
+    <ClInclude Include="Source\FieldState.h" />
     <ClInclude Include="..\..\Shared\Protocol.h" />
     <ClInclude Include="..\..\Common\InventoryCore.h" />
     <ClInclude Include="..\..\Common\SharedWallet.h" />
