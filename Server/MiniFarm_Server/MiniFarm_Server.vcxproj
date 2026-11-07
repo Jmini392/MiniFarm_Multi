@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\PacketHandler.cpp" />
+    <ClCompile Include="Source\PlayerState.cpp" />
     <ClCompile Include="Source\RecvPacket.cpp" />
     <ClCompile Include="Source\SendPacket.cpp" />
     <ClCompile Include="Source\GameWorld.cpp" />
@@ -33,6 +34,7 @@
   <ItemGroup>
     <ClInclude Include="Source\Common.h" />
     <ClInclude Include="Source\PacketHandler.h" />
+    <ClInclude Include="Source\PlayerState.h" />
     <ClInclude Include="Source\RecvPacket.h" />
     <ClInclude Include="Source\SendPacket.h" />
     <ClInclude Include="Source\GameWorld.h" />

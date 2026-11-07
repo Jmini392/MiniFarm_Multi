@@ -15,21 +15,32 @@ bool GameWorld::Init(const char* cropCsvPath)
 
 void GameWorld::AddPlayer(int sessionId)
 {
-	m_inventories[sessionId]; // 없으면 빈 인벤토리를 만든다
+	m_players.try_emplace(sessionId, sessionId);
 }
 
 void GameWorld::RemovePlayer(int sessionId)
 {
-	m_inventories.erase(sessionId);
+	m_players.erase(sessionId);
+}
+
+PlayerState* GameWorld::GetPlayer(int sessionId)
+{
+	auto it = m_players.find(sessionId);
+
+	if (it == m_players.end())
+		return nullptr;
+
+	return &it->second;
 }
 
 InventoryCore* GameWorld::GetInventory(int sessionId)
 {
-	auto it = m_inventories.find(sessionId);
-	if (it == m_inventories.end()) {
+	PlayerState* player = GetPlayer(sessionId);
+
+	if (player == nullptr)
 		return nullptr;
-	}
-	return &it->second;
+
+	return &player->GetInventory();
 }
 
 bool GameWorld::AddField(int objectId)
