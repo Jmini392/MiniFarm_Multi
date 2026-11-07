@@ -1,4 +1,5 @@
 ﻿#include "GameWorld.h"
+#include "../../../Common/CropLogic.h"
 #include <cstdio>
 #include <string>
 
@@ -61,4 +62,17 @@ FieldState* GameWorld::GetField(int objectId)
 		return nullptr;
 	}
 	return &it->second;
+}
+
+void GameWorld::Update(int dtMs)
+{
+	// 모든 밭의 작물을 지난 시간만큼 성장시킨다
+	for (auto& pair : m_fields) {
+		CropState& crop = pair.second.crop;
+		const CropData* data = m_cropTable.GetCrop(crop.id);
+		if (data == nullptr) {
+			continue; // 빈 밭이거나 데이터가 없는 작물
+		}
+		CropLogic::UpdateGrowth(crop, *data, dtMs);
+	}
 }
