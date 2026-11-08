@@ -37,6 +37,22 @@ struct PacketHeader {
 	unsigned char size;
 	unsigned char type;
 };
+
+struct C2S_LOGIN_PACKET
+{
+    PacketHeader header;
+};
+
+struct S2C_LOGIN_INFO_PACKET
+{
+    PacketHeader header;
+    std::int32_t playerId;
+    float x;
+    float y;
+    float z;
+    float yaw;
+};
+
 #pragma pack(pop)
 
 constexpr unsigned char PACKET_HEADER_SIZE = sizeof(PacketHeader);
