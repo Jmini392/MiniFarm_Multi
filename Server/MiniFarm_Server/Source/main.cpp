@@ -164,6 +164,8 @@ int main(int argc, char* argv[]) {
 	// 게임 월드 준비 (Visual Studio에서 실행하면 작업 디렉터리가 프로젝트 폴더이다)
 	if (!g_world.Init("..\\..\\Client\\MiniFarm\\Data\\crops.csv")) return 1;
 	printf("[월드] 작물 %d종 로딩\n", (int)g_world.GetCropTable().GetCount());
+	if (!g_world.LoadObjects("..\\..\\Client\\MiniFarm\\Data\\Interactable_props_pos.json")) return 1;
+	printf("[월드] 객체 %d개 로딩 (밭 %d개)\n", (int)g_world.GetObjects().size(), g_world.GetFieldCount());
 
 	InitializeCriticalSection(&g_sessionCs);
 
