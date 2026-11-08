@@ -2,6 +2,7 @@
 #include "RecvPacket.h"
 #include "SendPacket.h"
 #include "GameWorld.h"
+#include "PacketHandler.h"
 #include <vector>
 #include <algorithm>
 
@@ -50,10 +51,31 @@ GameWorld g_world; // 게임 월드 (Lock/Unlock으로 보호)
 std::vector<ClientSession*> g_sessions; // 접속 중인 세션 목록
 CRITICAL_SECTION g_sessionCs; // 세션 목록 보호용 임계영역
 
+// 세션 ID로 접속 중인 클라이언트를 찾아 패킷을 전송한다.
+bool SendToClient(int sessionId, const char* packet)
+{
+	bool result = false;
+
+	// 세션을 조회
+	EnterCriticalSection(&g_sessionCs);
+	for (ClientSession* session : g_sessions)
+	{
+		if (session->GetId() == sessionId)
+		{
+			result = session->Send(packet);   // 해당 세션의 송신 함수를 통해 패킷 전체를 전송한다.
+			break;
+		}
+	}
+	LeaveCriticalSection(&g_sessionCs);
+
+	return result;
+}
+
 // 클라이언트 스레드: 클라이언트 한 명의 패킷을 연결이 끊길 때까지 받는다
 DWORD WINAPI ClientThread(LPVOID arg) {
 	ClientSession* session = (ClientSession*)arg;
 	char buf[MAX_PACKET_SIZE]; // 받은 패킷
+	bool loggedIn = false;		// 로그인 기록
 
 	while (1) {
 		int size = RecvPacket(session->GetSocket(), buf);
@@ -63,6 +85,23 @@ DWORD WINAPI ClientThread(LPVOID arg) {
 		PacketHeader header;
 		memcpy(&header, buf, sizeof(header));
 		printf("[패킷] %s: 타입 %d, 크기 %d\n", session->GetIp(), header.type, header.size);
+
+		// 로그인 전에 다른 요청을 보내면 거부
+		if (!loggedIn && header.type != C2S_LOGIN)
+			break;
+
+		// 로그인 완료 후 중복 로그인 요청 거부
+		if (loggedIn && header.type == C2S_LOGIN)
+			break;
+
+		if (!HandlePacket(session->GetId(), buf))
+		{
+			printf("[패킷 처리 실패] ID=%d\n", session->GetId());
+			break;
+		}
+
+		if (header.type == C2S_LOGIN)
+			loggedIn = true;
 	}
 
 	// 세션 목록에서 빼고, 월드에서 플레이어를 제거한다
@@ -150,10 +189,6 @@ int main(int argc, char* argv[]) {
 
 		// 접속한 클라이언트마다 세션 생성
 		ClientSession* session = new ClientSession(nextId++, client_sock, clientaddr);
-
-		g_world.Lock();
-		g_world.AddPlayer(session->GetId()); // 월드에 플레이어 추가
-		g_world.Unlock();
 
 		EnterCriticalSection(&g_sessionCs);
 		g_sessions.push_back(session);
