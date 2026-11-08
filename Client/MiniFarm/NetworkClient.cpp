@@ -2,6 +2,7 @@
 #include "NetworkClient.h"
 #include "RecvBuffer.h"
 #include "PacketHandler.h"
+#include "../../Shared/Protocol.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -133,6 +134,33 @@ void NetworkClient::Disconnect()
     }
 
     m_recvBuffer->Clear();
+}
+
+bool NetworkClient::SendLoginRequest()
+{
+    if (m_socket == INVALID_SOCKET)
+        return false;
+
+    C2S_LOGIN_PACKET packet{};
+    packet.header.size = (unsigned char)sizeof(packet);
+    packet.header.type = C2S_LOGIN;
+
+    const char* data = (const char*)&packet;
+    int totalSent = 0;
+    int packetSize = (int)sizeof(packet);
+
+    while (totalSent < packetSize)
+    {
+        int sent = send(m_socket,data + totalSent,packetSize - totalSent,0);
+
+        if (sent == SOCKET_ERROR || sent == 0)
+            return false;
+
+        totalSent += sent;
+    }
+
+    LOG("C2S_LOGIN 전송 완료");
+    return true;
 }
 
 DWORD WINAPI NetworkClient::ReceiveThread(LPVOID parameter)

@@ -41,11 +41,21 @@ void TitleScene::Update(int dt)
 
 		if (networkClient.Connect("127.0.0.1", 9000))
 		{
-			LOG("접속 성공: 인게임 전환");
-			SceneManager::SetScene(std::make_unique<IngameScene>());
-			return;
+			// 연결 성공 후 로그인 요청
+			if (!networkClient.SendLoginRequest())
+			{
+				LOG_E("로그인 요청 전송 실패");
+				networkClient.Disconnect();
+			}
+			else
+			{
+				LOG("서버 로그인 응답 대기");
+			}
 		}
-		LOG_E("접속 실패: 서버 실행 상태를 확인하세요");
+		else
+		{
+			LOG_E("서버 접속 실패");
+		}
 	}
 
 	m_blinkTime += dt * 0.001f;

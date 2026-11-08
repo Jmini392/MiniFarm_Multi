@@ -7,6 +7,8 @@
 #include "Shader.h"
 #include "ExitScene.h"
 #include "WaterParticleSystem.h"
+#include "Collider.h"
+#include "../../../../Shared/Protocol.h"
 
 void IngameScene::Init()
 {
@@ -158,4 +160,20 @@ void IngameScene::UpdateDayNightCycle()
 void IngameScene::TestAddMoney(int amount)
 {
 	m_wallet.AddMoney(amount);
+}
+
+void IngameScene::ApplyLoginInfo(
+	const S2C_LOGIN_INFO_PACKET& info)
+{
+	m_playerId = info.playerId;
+
+	m_player->m_pos = { info.x, info.y, info.z };
+	m_player->m_rot.y = info.yaw;
+
+	if (m_player->m_collider)
+		m_player->m_collider->UpdatePos(m_player->m_pos);
+
+	// 현재 Camera.cpp의 카메라·몸 방향 관계에 맞춤
+	m_camera.yaw = 180.f - info.yaw;
+	m_camera.FollowTarget(m_player->m_pos);
 }

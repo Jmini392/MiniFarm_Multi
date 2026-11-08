@@ -19,6 +19,8 @@ public:
     void Update();
     void Disconnect();
 
+    bool SendLoginRequest();        // 플레이어를 생성하고 초기 정보 얻기
+
 private:
     static DWORD WINAPI ReceiveThread(LPVOID parameter);
     void ReceiveLoop();

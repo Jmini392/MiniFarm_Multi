@@ -1,5 +1,8 @@
 #include "PCH.h"
 #include "PacketHandler.h"
+#include "SceneManager.h"
+#include "TitleScene.h"
+#include "IngameScene.h"
 #include "../../Shared/Protocol.h"
 
 #include <cstring>
@@ -14,9 +17,39 @@ bool HandlePacket(const char* packet)
 
     switch (header.type)
     {
-    case S2C_LOGIN_INFO:
-        // 내 플레이어 초기화
-        break;
+    case S2C_LOGIN_INFO:      // 내 플레이어 초기화
+    {
+        if (header.size != sizeof(S2C_LOGIN_INFO_PACKET))
+            return false;
+
+        // 로그인 응답은 타이틀에서만 처리한다.
+        if (dynamic_cast<TitleScene*>(SceneManager::GetScene()) == nullptr)
+        {
+            return false;
+        }
+
+        S2C_LOGIN_INFO_PACKET info;
+        memcpy(&info, packet, sizeof(info));
+
+        if (info.playerId <= 0 || !std::isfinite(info.x) || !std::isfinite(info.y) || !std::isfinite(info.z) || !std::isfinite(info.yaw))
+        {
+            return false;
+        }
+
+        auto scene = std::make_unique<IngameScene>();
+        IngameScene* ingame = scene.get();
+
+        // 여기서 IngameScene::Init()이 실행된다.
+        SceneManager::SetScene(std::move(scene));
+
+        // 생성된 플레이어에 서버 정보를 적용한다.
+        ingame->ApplyLoginInfo(info);
+
+        LOG("로그인 완료: ID=%d, 위치=(%.1f, %.1f, %.1f)",
+            (int)info.playerId, info.x, info.y, info.z);
+
+        return true;
+    }
 
     case S2C_ADD_OBJECT:
         // 월드 객체 생성

@@ -8,6 +8,8 @@
 #include "Crop.h"
 #include "Common/SharedWallet.h"
 
+struct S2C_LOGIN_INFO_PACKET;
+
 class IngameScene : public Scene
 {
 public:
@@ -21,7 +23,11 @@ public:
 	void UpdateDayNightCycle();
 
 	void TestAddMoney(int amount);
+
+	void ApplyLoginInfo(const S2C_LOGIN_INFO_PACKET& info);
 private:
+	int m_playerId = -1;
+
 	SharedWallet m_wallet; // Local world wallet until server synchronization is connected.
 	Player* m_player = nullptr;
 	TimeSystem m_timeSystem;
