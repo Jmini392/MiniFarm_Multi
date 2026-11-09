@@ -43,6 +43,12 @@ struct C2S_LOGIN_PACKET
     PacketHeader header;
 };
 
+struct C2S_EQUIP_PACKET
+{
+    PacketHeader header;
+    std::int32_t itemId; // 선택한 도구 또는 씨앗 ID. Empty(-1)도 표현한다.
+};
+
 struct S2C_LOGIN_INFO_PACKET
 {
     PacketHeader header;
@@ -51,8 +57,18 @@ struct S2C_LOGIN_INFO_PACKET
     float y;
     float z;
     float yaw;
+    // 로그인 시 서버가 전달할 개인 인벤토리 수량
+    std::int32_t carrotSeedCount;
+    std::int32_t cabbageSeedCount;
+    std::int32_t carrotCount;
+    std::int32_t cabbageCount;
 };
 
 #pragma pack(pop)
 
 constexpr unsigned char PACKET_HEADER_SIZE = sizeof(PacketHeader);
+
+static_assert(sizeof(PacketHeader) == 2, "PacketHeader must be 2 bytes.");
+static_assert(sizeof(C2S_LOGIN_PACKET) == 2, "C2S_LOGIN_PACKET must be 2 bytes.");
+static_assert(sizeof(C2S_EQUIP_PACKET) == 6, "C2S_EQUIP_PACKET must be 6 bytes.");
+static_assert(sizeof(S2C_LOGIN_INFO_PACKET) == 38, "S2C_LOGIN_INFO_PACKET must be 38 bytes.");
