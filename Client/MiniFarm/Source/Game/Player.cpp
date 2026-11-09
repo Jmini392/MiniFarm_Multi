@@ -1,6 +1,7 @@
 #include "PCH.H"
 #include "Player.h"
 #include "SceneManager.h"
+#include "NetworkClient.h"
 #include "InputManager.h"
 #include "DataTable.h"
 #include "BoxCollider.h"
@@ -155,31 +156,31 @@ void Player::HandleInteractInput()
 
 void Player::HandleEquipmentInput()
 {
-	if (InputManager::IsKeyPressed('1'))
-	{
-		SetEquippedTool(EItemID::Hoe);
-		LOG_D("도구 변경: 괭이");
-	}
-	else if (InputManager::IsKeyPressed('2'))
-	{
-		SetEquippedTool(EItemID::WateringCan);
-		LOG_D("도구 변경: 물뿌리개");
-	}
-	else if (InputManager::IsKeyPressed('3'))
-	{
-		SetEquippedTool(EItemID::Sickle);
-		LOG_D("도구 변경: 낫");
-	}
-	else if (InputManager::IsKeyPressed('4'))
-	{
-		SetEquippedTool(EItemID::SeedCarrot);
-		LOG_D("도구 변경: 당근 씨앗");
-	}
-	else if (InputManager::IsKeyPressed('5'))
-	{
-		SetEquippedTool(EItemID::SeedCabbage);
-		LOG_D("도구 변경: 양배추 씨앗");
-	}
+    EItemID selectedItem = GetEquippedTool();
+    if (InputManager::IsKeyPressed('1'))
+        selectedItem = EItemID::Hoe;
+    else if (InputManager::IsKeyPressed('2'))
+        selectedItem = EItemID::WateringCan;
+    else if (InputManager::IsKeyPressed('3'))
+        selectedItem = EItemID::Sickle;
+    else if (InputManager::IsKeyPressed('4'))
+        selectedItem = EItemID::SeedCarrot;
+    else if (InputManager::IsKeyPressed('5'))
+        selectedItem = EItemID::SeedCabbage;
+
+    if (selectedItem == GetEquippedTool())
+        return;
+
+    auto& network = SceneManager::GetNetworkClient();
+    if (!network.SendEquipRequest(selectedItem))
+    {
+        LOG_E("장비 변경 요청 전송 실패");
+        network.Disconnect();
+        return;
+    }
+
+    SetEquippedTool(selectedItem);
+    LOG_D("장비 변경 요청 전송: itemId=%d", static_cast<int>(selectedItem));
 }
 
 void Player::HandleShopDirectInput()

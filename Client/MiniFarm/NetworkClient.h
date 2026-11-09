@@ -2,6 +2,7 @@
 
 #include <WinSock2.h>
 #include <atomic>
+#include "../../Common/GameTypes.h"
 
 class RecvBuffer;
 
@@ -20,8 +21,11 @@ public:
     void Disconnect();
 
     bool SendLoginRequest();        // 플레이어를 생성하고 초기 정보 얻기
+    bool SendEquipRequest(EItemID item);
 
 private:
+    bool SendAll(const char* data, int size);
+
     static DWORD WINAPI ReceiveThread(LPVOID parameter);
     void ReceiveLoop();
 

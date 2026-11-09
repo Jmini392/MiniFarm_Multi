@@ -145,21 +145,38 @@ bool NetworkClient::SendLoginRequest()
     packet.header.size = (unsigned char)sizeof(packet);
     packet.header.type = C2S_LOGIN;
 
-    const char* data = (const char*)&packet;
+    if (!SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet))))
+        return false;
+
+    LOG("C2S_LOGIN 전송 완료");
+    return true;
+}
+
+bool NetworkClient::SendEquipRequest(EItemID item)
+{
+    C2S_EQUIP_PACKET packet{};
+    packet.header.size = (unsigned char)sizeof(packet);
+    packet.header.type = C2S_EQUIP;
+    packet.itemId = static_cast<std::int32_t>(item);
+
+    return SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
+}
+
+bool NetworkClient::SendAll(const char* data, int size)
+{
+    if (m_socket == INVALID_SOCKET || !m_connected || !m_receiving
+        || data == nullptr || size <= 0)
+        return false;
+
     int totalSent = 0;
-    int packetSize = (int)sizeof(packet);
-
-    while (totalSent < packetSize)
+    while (totalSent < size)
     {
-        int sent = send(m_socket,data + totalSent,packetSize - totalSent,0);
-
+        int sent = send(m_socket, data + totalSent, size - totalSent, 0);
         if (sent == SOCKET_ERROR || sent == 0)
             return false;
 
         totalSent += sent;
     }
-
-    LOG("C2S_LOGIN 전송 완료");
     return true;
 }
 

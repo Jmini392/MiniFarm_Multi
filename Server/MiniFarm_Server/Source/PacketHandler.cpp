@@ -64,8 +64,30 @@ bool HandlePacket(int sessionId, const char* packet) {
 
             return true;
 		}
-		case C2S_MOVE_OBJECT:    // 이동 처리
 		case C2S_EQUIP:          // 장비 변경 처리
+		{
+			if (header.size != sizeof(C2S_EQUIP_PACKET))
+				return false;
+
+			C2S_EQUIP_PACKET request{};
+			memcpy(&request, packet, sizeof(request));
+
+			bool success = false;
+			g_world.Lock();
+			PlayerState* player = g_world.GetPlayer(sessionId);
+			if (player != nullptr)
+			{
+				success = player->SetEquippedTool(static_cast<EItemID>(request.itemId));
+			}
+			g_world.Unlock();
+
+			if (!success)
+				return false;
+
+			printf("[장비 변경] ID=%d, itemId=%d\n", sessionId, (int)request.itemId);
+			return true;
+		}
+		case C2S_MOVE_OBJECT:    // 이동 처리
 		case C2S_INTERACT_FIELD: // 밭 상호작용 처리
 		case C2S_SHOP_BUY:       // 구매 처리
 		case C2S_SHOP_SELL:      // 판매 처리
