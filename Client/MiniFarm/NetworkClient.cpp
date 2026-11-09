@@ -115,6 +115,7 @@ void NetworkClient::Disconnect()
     // 수신 스레드가 끝날 때까지 기다린다.
     if (m_recvThread != NULL)
     {
+        WaitForSingleObject(m_recvThread, INFINITE);
         CloseHandle(m_recvThread);
         m_recvThread = NULL;
     }
