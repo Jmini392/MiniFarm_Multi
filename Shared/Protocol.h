@@ -64,6 +64,19 @@ struct S2C_LOGIN_INFO_PACKET
     std::int32_t cabbageCount;
 };
 
+// 월드 객체 하나를 알린다. 객체마다 패킷 하나씩 보낸다
+// 위치·회전·크기는 배치 데이터(JSON)에 적힌 값 그대로이다.
+// 클라이언트는 받은 뒤 x 반전, 회전 y 반전(ObjectLoader::FlipCoord)을 적용해 그린다
+struct S2C_ADD_OBJECT_PACKET
+{
+    PacketHeader header;
+    std::int32_t objectId;       // 서버와 클라이언트가 같은 객체에 같은 번호를 쓴다
+    unsigned char objectType;    // 객체 종류: 0 밭(Field), 1 집(House), 2 보트(Boat). JSON의 type과 같다
+    float pos[3];
+    float rot[3];
+    float scale[3];
+};
+
 #pragma pack(pop)
 
 constexpr unsigned char PACKET_HEADER_SIZE = sizeof(PacketHeader);
@@ -72,3 +85,4 @@ static_assert(sizeof(PacketHeader) == 2, "PacketHeader must be 2 bytes.");
 static_assert(sizeof(C2S_LOGIN_PACKET) == 2, "C2S_LOGIN_PACKET must be 2 bytes.");
 static_assert(sizeof(C2S_EQUIP_PACKET) == 6, "C2S_EQUIP_PACKET must be 6 bytes.");
 static_assert(sizeof(S2C_LOGIN_INFO_PACKET) == 38, "S2C_LOGIN_INFO_PACKET must be 38 bytes.");
+static_assert(sizeof(S2C_ADD_OBJECT_PACKET) == 43, "S2C_ADD_OBJECT_PACKET must be 43 bytes.");

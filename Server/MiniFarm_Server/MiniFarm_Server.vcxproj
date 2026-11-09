@@ -25,6 +25,7 @@
     <ClCompile Include="Source\RecvPacket.cpp" />
     <ClCompile Include="Source\SendPacket.cpp" />
     <ClCompile Include="Source\GameWorld.cpp" />
+    <ClCompile Include="Source\WorldSync.cpp" />
     <ClCompile Include="..\..\Common\InventoryCore.cpp" />
     <ClCompile Include="..\..\Common\SharedWallet.cpp" />
     <ClCompile Include="..\..\Common\ShopLogic.cpp" />
@@ -38,6 +39,7 @@
     <ClInclude Include="Source\RecvPacket.h" />
     <ClInclude Include="Source\SendPacket.h" />
     <ClInclude Include="Source\GameWorld.h" />
+    <ClInclude Include="Source\WorldSync.h" />
     <ClInclude Include="Source\FieldState.h" />
     <ClInclude Include="..\..\Shared\Protocol.h" />
     <ClInclude Include="..\..\Common\InventoryCore.h" />

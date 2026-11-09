@@ -1,5 +1,6 @@
 ﻿#include "PacketHandler.h"
 #include "GameWorld.h"
+#include "WorldSync.h"
 #include <cstring>
 #include "../../../Shared/Protocol.h"
 
@@ -66,7 +67,14 @@ bool HandlePacket(int sessionId, const char* packet) {
                 return false;
             }
 
-            printf("[로그인 완료] ID=%d\n", sessionId);
+            // 로그인 응답 뒤에 월드 객체를 보낸다.
+            if (!SendWorldObjects(sessionId))
+            {
+                printf("[객체 전송 실패] ID=%d\n", sessionId);
+                return false;
+            }
+
+            printf("[로그인 완료] ID=%d (객체 %d개 전송)\n", sessionId, (int)g_world.GetObjects().size());
 
             return true;
 		}
