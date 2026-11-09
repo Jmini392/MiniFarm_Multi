@@ -167,6 +167,17 @@ void IngameScene::ApplyLoginInfo(
 {
 	m_playerId = info.playerId;
 
+	InventoryCore& inventory = m_player->GetInventory().Core();
+	inventory = InventoryCore{};
+	if (info.carrotSeedCount > 0)
+		inventory.AddItem(EItemID::SeedCarrot, info.carrotSeedCount);
+	if (info.cabbageSeedCount > 0)
+		inventory.AddItem(EItemID::SeedCabbage, info.cabbageSeedCount);
+	if (info.carrotCount > 0)
+		inventory.AddItem(EItemID::Carrot, info.carrotCount);
+	if (info.cabbageCount > 0)
+		inventory.AddItem(EItemID::Cabbage, info.cabbageCount);
+
 	m_player->m_pos = { info.x, info.y, info.z };
 	m_player->m_rot.y = info.yaw;
 

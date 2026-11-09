@@ -36,6 +36,12 @@ bool HandlePacket(const char* packet)
             return false;
         }
 
+        if (info.carrotSeedCount < 0 || info.cabbageSeedCount < 0
+            || info.carrotCount < 0 || info.cabbageCount < 0)
+        {
+            return false;
+        }
+
         auto scene = std::make_unique<IngameScene>();
         IngameScene* ingame = scene.get();
 

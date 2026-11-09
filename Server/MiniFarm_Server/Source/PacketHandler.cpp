@@ -51,6 +51,12 @@ bool HandlePacket(int sessionId, const char* packet) {
             info.z = pos.z;
             info.yaw = player->GetYaw();
 
+            const InventoryCore& inventory = player->GetInventory();
+            info.carrotSeedCount = inventory.GetItemCount(EItemID::SeedCarrot);
+            info.cabbageSeedCount = inventory.GetItemCount(EItemID::SeedCabbage);
+            info.carrotCount = inventory.GetItemCount(EItemID::Carrot);
+            info.cabbageCount = inventory.GetItemCount(EItemID::Cabbage);
+
             g_world.Unlock();
 
             // 송신 중에는 월드 잠금을 잡지 않는다.

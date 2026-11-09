@@ -3,14 +3,7 @@
 #include "UIRenderer.h"
 #include "TextRenderer.h"
 
-Inventory::Inventory()
-{
-	//for test
-	AddItem(EItemID::SeedCarrot, 1);
-	AddItem(EItemID::SeedCabbage, 1);
-	AddItem(EItemID::Carrot, 1);
-	AddItem(EItemID::Cabbage, 1);
-}
+Inventory::Inventory() = default;
 
 bool Inventory::AddItem(EItemID id, int count)
 {

@@ -4,7 +4,10 @@
 
 PlayerState::PlayerState(int playerId) : m_id(playerId)
 {
-
+    m_inventory.AddItem(EItemID::SeedCarrot, 1);
+    m_inventory.AddItem(EItemID::SeedCabbage, 1);
+    m_inventory.AddItem(EItemID::Carrot, 1);
+    m_inventory.AddItem(EItemID::Cabbage, 1);
 }
 
 bool PlayerState::SetMovement(float x, float y, float z, float yaw, bool isMoving, bool isAirborne)
