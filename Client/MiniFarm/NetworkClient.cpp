@@ -153,6 +153,32 @@ bool NetworkClient::SendLoginRequest()
     return true;
 }
 
+bool NetworkClient::SendMoveRequest(float x, float y, float z,float yaw, bool isMoving, bool isAirborne)
+{
+    if (m_socket == INVALID_SOCKET)
+        return false;
+
+    C2S_MOVE_OBJECT_PACKET packet{};
+    packet.header.size = static_cast<unsigned char>(sizeof(packet));
+    packet.header.type = C2S_MOVE_OBJECT;
+
+    packet.x = x;
+    packet.y = y;
+    packet.z = z;
+    packet.yaw = yaw;
+    packet.isMoving = isMoving ? 1 : 0;
+    packet.isAirborne = isAirborne ? 1 : 0;
+
+    if (!SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet))))
+    {
+        LOG_E("이동 패킷 전송 실패");
+        Disconnect();
+        return false;
+    }
+
+    return true;
+}
+
 bool NetworkClient::SendEquipRequest(EItemID item)
 {
     C2S_EQUIP_PACKET packet{};

@@ -78,4 +78,6 @@ private:
     float m_gravity = -0.035f;
     float m_jumpForce = 0.4f;
     bool m_isGrounded = true;
+
+    int m_moveTimerMs = 0;
 };

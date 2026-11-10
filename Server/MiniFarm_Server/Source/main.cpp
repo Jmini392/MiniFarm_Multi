@@ -84,7 +84,7 @@ DWORD WINAPI ClientThread(LPVOID arg) {
 		// 패킷의 헤더에서 타입과 크기를 꺼내 출력
 		PacketHeader header;
 		memcpy(&header, buf, sizeof(header));
-		printf("[패킷] %s: 타입 %d, 크기 %d\n", session->GetIp(), header.type, header.size);
+		// printf("[패킷] %s: 타입 %d, 크기 %d\n", session->GetIp(), header.type, header.size);
 
 		// 로그인 전에 다른 요청을 보내면 거부
 		if (!loggedIn && header.type != C2S_LOGIN)

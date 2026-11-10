@@ -84,6 +84,17 @@ void Player::Update(int time)
 	ApplyGravity();
 
 	GameObject::Update(time);
+
+	constexpr int MOVE_SEND_INTERVAL_MS = 50;
+
+	m_moveTimerMs += time;
+	if (m_moveTimerMs >= MOVE_SEND_INTERVAL_MS)
+	{
+		m_moveTimerMs = 0;
+		bool isMoving = m_isWalking && !InputManager::IsUIMode();
+		SceneManager::GetNetworkClient().SendMoveRequest(m_pos.x,m_pos.y,m_pos.z,m_rot.y,isMoving,!m_isGrounded);
+	}
+
 	InputManager::Update();
 }
 

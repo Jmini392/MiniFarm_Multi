@@ -43,6 +43,18 @@ struct C2S_LOGIN_PACKET
     PacketHeader header;
 };
 
+struct C2S_MOVE_OBJECT_PACKET
+{
+    PacketHeader header;
+    float x;
+    float y;
+    float z;
+    float yaw;
+
+    std::uint8_t isMoving;   // 0: 정지, 1: 이동
+    std::uint8_t isAirborne; // 0: 지상, 1: 공중
+};
+
 struct C2S_EQUIP_PACKET
 {
     PacketHeader header;
@@ -83,6 +95,7 @@ constexpr unsigned char PACKET_HEADER_SIZE = sizeof(PacketHeader);
 
 static_assert(sizeof(PacketHeader) == 2, "PacketHeader must be 2 bytes.");
 static_assert(sizeof(C2S_LOGIN_PACKET) == 2, "C2S_LOGIN_PACKET must be 2 bytes.");
+static_assert(sizeof(C2S_MOVE_OBJECT_PACKET) == 20,"C2S_MOVE_OBJECT_PACKET must be 20 bytes.");
 static_assert(sizeof(C2S_EQUIP_PACKET) == 6, "C2S_EQUIP_PACKET must be 6 bytes.");
 static_assert(sizeof(S2C_LOGIN_INFO_PACKET) == 38, "S2C_LOGIN_INFO_PACKET must be 38 bytes.");
 static_assert(sizeof(S2C_ADD_OBJECT_PACKET) == 43, "S2C_ADD_OBJECT_PACKET must be 43 bytes.");

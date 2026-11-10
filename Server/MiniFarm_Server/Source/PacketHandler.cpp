@@ -78,6 +78,33 @@ bool HandlePacket(int sessionId, const char* packet) {
 
             return true;
 		}
+        case C2S_MOVE_OBJECT:    // 이동 처리
+        {
+            if (header.size != sizeof(C2S_MOVE_OBJECT_PACKET))
+                return false;
+
+            C2S_MOVE_OBJECT_PACKET request{};
+            memcpy(&request, packet, sizeof(request));
+
+            if (request.isMoving > 1 || request.isAirborne > 1)
+                return false;
+
+            bool success = false;
+
+            g_world.Lock();
+
+            PlayerState* player = g_world.GetPlayer(sessionId);
+
+            if (player != nullptr)
+            {
+                success = player->SetMovement(request.x,request.y,request.z,request.yaw,
+                    request.isMoving != 0, request.isAirborne != 0);
+            }
+
+            g_world.Unlock();
+
+            return success;
+        }
 		case C2S_EQUIP:          // 장비 변경 처리
 		{
 			if (header.size != sizeof(C2S_EQUIP_PACKET))
@@ -101,7 +128,6 @@ bool HandlePacket(int sessionId, const char* packet) {
 			printf("[장비 변경] ID=%d, itemId=%d\n", sessionId, (int)request.itemId);
 			return true;
 		}
-		case C2S_MOVE_OBJECT:    // 이동 처리
 		case C2S_INTERACT_FIELD: // 밭 상호작용 처리
 		case C2S_SHOP_BUY:       // 구매 처리
 		case C2S_SHOP_SELL:      // 판매 처리

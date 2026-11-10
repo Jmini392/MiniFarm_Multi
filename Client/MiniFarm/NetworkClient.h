@@ -21,6 +21,7 @@ public:
     void Disconnect();
 
     bool SendLoginRequest();        // 플레이어를 생성하고 초기 정보 얻기
+    bool SendMoveRequest(float x, float y, float z, float yaw, bool isMoving, bool isAirborne);
     bool SendEquipRequest(EItemID item);
 
 private:
