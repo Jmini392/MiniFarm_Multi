@@ -21,18 +21,10 @@ void IngameScene::Init()
 	AddObject(player);
 
 	auto staticObjs = ObjectLoader::LoadStaticObjects("Data/static_props_pos.json");
-	auto interactObjs = ObjectLoader::LoadInteractableObjects("Data/Interactable_props_pos.json");
 
 	for (auto& obj : staticObjs)
 		AddObject(obj);
 
-	for (auto& obj : interactObjs)
-	{
-		if (auto crop = std::dynamic_pointer_cast<Crop>(obj))
-			m_crops.push_back(crop);
-
-		AddObject(obj);
-	}
 	WaterParticleSystem::Init();
 }
 
@@ -187,4 +179,39 @@ void IngameScene::ApplyLoginInfo(
 	// 현재 Camera.cpp의 카메라·몸 방향 관계에 맞춤
 	m_camera.yaw = 180.f - info.yaw;
 	m_camera.FollowTarget(m_player->m_pos);
+}
+
+bool IngameScene::AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet)
+{
+	static const char* const TYPE_NAMES[] = { "Field", "House", "Boat" };
+	if (packet.objectType >= 3 || packet.objectId < 0)
+		return false;
+
+	for (int i = 0; i < 3; i++)
+	{
+		if (!std::isfinite(packet.pos[i]) || !std::isfinite(packet.rot[i]) || !std::isfinite(packet.scale[i]))
+			return false;
+	}
+
+	for (auto& obj : m_objects)
+	{
+		if (obj->m_netId == packet.objectId)
+			return false;
+	}
+
+	auto obj = ObjectLoader::CreateInteractable(
+		TYPE_NAMES[packet.objectType],
+		{ packet.pos[0], packet.pos[1], packet.pos[2] },
+		{ packet.rot[0], packet.rot[1], packet.rot[2] },
+		{ packet.scale[0], packet.scale[1], packet.scale[2] });
+	if (!obj)
+		return false;
+
+	obj->m_netId = packet.objectId;
+
+	if (auto crop = std::dynamic_pointer_cast<Crop>(obj))
+		m_crops.push_back(crop);
+
+	AddObject(obj);
+	return true;
 }

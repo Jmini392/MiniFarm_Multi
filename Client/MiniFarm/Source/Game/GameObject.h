@@ -10,6 +10,7 @@ public:
     glm::vec3 m_scale;
 
     bool m_alive = false;
+    int m_netId = -1;
 	std::string m_name = ""; // for debug
 	std::shared_ptr<class Collider> m_collider;
 public:

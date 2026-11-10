@@ -58,8 +58,19 @@ bool HandlePacket(const char* packet)
     }
 
     case S2C_ADD_OBJECT:
-        // 월드 객체 생성
-        break;
+    {
+        if (header.size != sizeof(S2C_ADD_OBJECT_PACKET))
+            return false;
+
+        IngameScene* ingame = dynamic_cast<IngameScene*>(SceneManager::GetScene());
+        if (ingame == nullptr)
+            return false;
+
+        S2C_ADD_OBJECT_PACKET add;
+        memcpy(&add, packet, sizeof(add));
+
+        return ingame->AddWorldObject(add);
+    }
 
     case S2C_REMOVE_OBJECT:
         // 월드 객체 삭제

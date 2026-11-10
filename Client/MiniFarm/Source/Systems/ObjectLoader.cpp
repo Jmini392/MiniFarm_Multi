@@ -60,6 +60,19 @@ std::vector<std::shared_ptr<GameObject>> ObjectLoader::LoadStaticObjects(const s
 	return results;
 }
 
+std::shared_ptr<GameObject> ObjectLoader::CreateInteractable(const std::string& type, glm::vec3 pos, glm::vec3 rot, const glm::vec3& scale)
+{
+	FlipCoord(pos, rot);
+
+	auto info = DataTable::GetObjectInfo((type == "Field") ? "Thick_Ground" : type);
+	if (!info) return nullptr;
+
+	auto inst = ObjectFactory::Create(type, pos, rot, scale, info);
+	inst->m_name = type;
+	inst->Init();
+	return inst;
+}
+
 std::vector<std::shared_ptr<GameObject>> ObjectLoader::LoadInteractableObjects(const std::string& path)
 {
 	std::vector<std::shared_ptr<GameObject>> results;
@@ -78,14 +91,8 @@ std::vector<std::shared_ptr<GameObject>> ObjectLoader::LoadInteractableObjects(c
 		glm::vec3 rot = ReadVec3(obj["rot"]);
 		glm::vec3 scale = ReadVec3(obj["scale"]);
 
-		FlipCoord(pos, rot);
-
-		auto info = DataTable::GetObjectInfo((type == "Field") ? "Thick_Ground" : type);
-		if (!info) continue;
-
-		auto inst = ObjectFactory::Create(type, pos, rot, scale, info);
-		inst->m_name = type;
-		inst->Init();
+		auto inst = CreateInteractable(type, pos, rot, scale);
+		if (!inst) continue;
 
 		results.push_back(inst);
 	}

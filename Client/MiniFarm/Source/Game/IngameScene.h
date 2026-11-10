@@ -9,6 +9,7 @@
 #include "Common/SharedWallet.h"
 
 struct S2C_LOGIN_INFO_PACKET;
+struct S2C_ADD_OBJECT_PACKET;
 
 class IngameScene : public Scene
 {
@@ -25,6 +26,7 @@ public:
 	void TestAddMoney(int amount);
 
 	void ApplyLoginInfo(const S2C_LOGIN_INFO_PACKET& info);
+	bool AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet);
 private:
 	int m_playerId = -1;
 
