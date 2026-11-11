@@ -11,6 +11,8 @@ extern GameWorld g_world;
 
 // main.cpp에 구현한 송신 함수를 사용한다.
 bool SendToClient(int sessionId, const char* packet);
+// main.cpp에 구현한 전체 전송 함수. exceptSessionId 세션에는 보내지 않는다.
+void BroadcastToAll(const char* packet, int exceptSessionId);
 
 namespace {
 	// 초기 상태와 변경 상태의 전송 순서를 맞춘다. 월드 잠금과는 별도로 관리한다.
@@ -194,4 +196,14 @@ void SendPlayerMove(int sessionId)
 			printf("[이동 전송 실패] 대상 ID=%d\n", receiverId);
 		}
 	}
+}
+
+void BroadcastRemoveObject(int objectId)
+{
+	S2C_REMOVE_OBJECT_PACKET remove{};
+	remove.header.size = (unsigned char)sizeof(remove);
+	remove.header.type = S2C_REMOVE_OBJECT;
+	remove.objectId = objectId;
+
+	BroadcastToAll((const char*)&remove, -1);
 }

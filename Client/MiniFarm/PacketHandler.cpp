@@ -72,8 +72,21 @@ bool HandlePacket(const char* packet)
         return ingame->AddWorldObject(add);
     }
 
-    case S2C_REMOVE_OBJECT:     // 월드 객체 삭제
-        break;
+    case S2C_REMOVE_OBJECT:
+    {
+        if (header.size != sizeof(S2C_REMOVE_OBJECT_PACKET))
+            return false;
+
+        IngameScene* ingame = dynamic_cast<IngameScene*>(SceneManager::GetScene());
+        if (ingame == nullptr)
+            return false;
+
+        S2C_REMOVE_OBJECT_PACKET remove;
+        memcpy(&remove, packet, sizeof(remove));
+
+        ingame->RemoveWorldObject(remove.objectId);
+        return true;
+    }
 
     case S2C_MOVE_OBJECT:       // 객체 위치와 방향 반영
     {

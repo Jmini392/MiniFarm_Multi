@@ -72,6 +72,27 @@ bool SendToClient(int sessionId, const char* packet)
 	return result;
 }
 
+// 로그인을 마친 모든 클라이언트에게 패킷을 전송한다. exceptSessionId 세션은 제외한다.
+void BroadcastToAll(const char* packet, int exceptSessionId)
+{
+	EnterCriticalSection(&g_sessionCs);
+	for (ClientSession* session : g_sessions)
+	{
+		if (session->GetId() == exceptSessionId)
+			continue;
+
+		// 로그인 전 세션에는 월드 소식을 보내지 않는다 (락 순서: 세션 목록 → 월드)
+		g_world.Lock();
+		bool inWorld = g_world.GetPlayer(session->GetId()) != nullptr;
+		g_world.Unlock();
+		if (!inWorld)
+			continue;
+
+		session->Send(packet);
+	}
+	LeaveCriticalSection(&g_sessionCs);
+}
+
 // 클라이언트 스레드: 클라이언트 한 명의 패킷을 연결이 끊길 때까지 받는다
 DWORD WINAPI ClientThread(LPVOID arg) {
 	ClientSession* session = (ClientSession*)arg;
@@ -112,8 +133,13 @@ DWORD WINAPI ClientThread(LPVOID arg) {
 	LeaveCriticalSection(&g_sessionCs);
 
 	g_world.Lock();
+	bool wasInWorld = g_world.GetPlayer(session->GetId()) != nullptr;
 	g_world.RemovePlayer(session->GetId());
 	g_world.Unlock();
+
+	// 월드에 있던 플레이어라면 남은 클라이언트에게 삭제를 알린다
+	if (wasInWorld)
+		BroadcastRemoveObject(session->GetId());
 
 	printf("[해제] %s (접속 %d명)\n", session->GetIp(), count);
 	delete session; // 소켓도 함께 닫힌다

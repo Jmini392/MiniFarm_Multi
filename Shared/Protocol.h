@@ -114,6 +114,12 @@ struct S2C_FIELD_UPDATE_PACKET
     float requiredGrowTime;
 };
 
+struct S2C_REMOVE_OBJECT_PACKET
+{
+    PacketHeader header;
+    std::int32_t objectId;
+};
+
 #pragma pack(pop)
 
 constexpr unsigned char PACKET_HEADER_SIZE = sizeof(PacketHeader);
@@ -125,4 +131,5 @@ static_assert(sizeof(C2S_EQUIP_PACKET) == 6, "C2S_EQUIP_PACKET must be 6 bytes."
 static_assert(sizeof(S2C_LOGIN_INFO_PACKET) == 38, "S2C_LOGIN_INFO_PACKET must be 38 bytes.");
 static_assert(sizeof(S2C_ADD_OBJECT_PACKET) == 43, "S2C_ADD_OBJECT_PACKET must be 43 bytes.");
 static_assert(sizeof(S2C_MOVE_OBJECT_PACKET) == 24, "S2C_MOVE_OBJECT_PACKET must be 24 bytes.");
+static_assert(sizeof(S2C_REMOVE_OBJECT_PACKET) == 6, "S2C_REMOVE_OBJECT_PACKET must be 6 bytes.");
 static_assert(sizeof(S2C_FIELD_UPDATE_PACKET) == 26, "S2C_FIELD_UPDATE_PACKET must be 26 bytes.");

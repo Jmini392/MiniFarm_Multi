@@ -15,3 +15,5 @@ void SendChangedFieldStates();
 
 // 플레이어의 현재 이동 상태를 초기 동기화가 끝난 다른 접속자에게 보낸다.
 void SendPlayerMove(int sessionId);
+// 로그인한 모든 클라이언트에게 객체 하나가 사라졌음을 알린다 (S2C_REMOVE_OBJECT)
+void BroadcastRemoveObject(int objectId);

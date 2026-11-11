@@ -266,3 +266,18 @@ bool IngameScene::ApplyFieldUpdate(const S2C_FIELD_UPDATE_PACKET& packet)
     // 아직 생성되지 않은 밭이나 밭이 아닌 객체의 ID는 거부한다.
     return false;
 }
+
+void IngameScene::RemoveWorldObject(int objectId)
+{
+	if (objectId < 0)
+		return;
+
+	auto it = std::find_if(m_objects.begin(), m_objects.end(),
+		[objectId](const std::shared_ptr<GameObject>& obj) { return obj->m_netId == objectId; });
+	if (it == m_objects.end())
+		return;
+
+	m_crops.erase(std::remove_if(m_crops.begin(), m_crops.end(),
+		[&it](const std::shared_ptr<Crop>& crop) { return crop.get() == it->get(); }), m_crops.end());
+	m_objects.erase(it);
+}

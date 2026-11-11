@@ -31,6 +31,7 @@ public:
 	void ApplyLoginInfo(const S2C_LOGIN_INFO_PACKET& info);
 	bool AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet);
 	bool ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet);
+	void RemoveWorldObject(int objectId);
 	bool ApplyFieldUpdate(const S2C_FIELD_UPDATE_PACKET& packet);
 private:
 	int m_playerId = -1;
