@@ -9,3 +9,6 @@ bool SendWorldObjects(int sessionId);
 
 // SendWorldObjects 이후 호출한다. 밭 상태를 복사한 뒤 월드 잠금 없이 전송한다.
 bool SendFieldStates(int sessionId);
+
+// Update 스레드에서 호출한다. 각 플레이어에게 마지막으로 보낸 값과 다른 밭만 전송한다.
+void SendChangedFieldStates();

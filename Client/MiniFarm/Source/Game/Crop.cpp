@@ -38,6 +38,10 @@ Crop::Crop(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale,
 
 void Crop::SetCropState(EItemID newID, int newLevel)
 {
+    // 서버가 관리하는 밭은 수신한 상태로만 바뀐다.
+    if (IsServerManaged())
+        return;
+
     CropLogic::ResetState(m_state, newID, newLevel);
     RefreshModelFromState();
 }
@@ -86,6 +90,10 @@ void Crop::RefreshModelFromState()
 
 void Crop::Update(int dt)
 {
+    // 서버가 관리하는 밭은 수신한 상태로만 바뀐다.
+    if (IsServerManaged())
+        return;
+
     if (m_state.id == EItemID::Empty || m_state.id == EItemID::Tilled)
         return;
 
@@ -102,11 +110,19 @@ void Crop::Update(int dt)
 
 void Crop::AddWater(float amount)
 {
+    // 서버가 관리하는 밭은 수신한 상태로만 바뀐다.
+    if (IsServerManaged())
+        return;
+
 	CropLogic::AddWater(m_state, amount);
 }
 
 void Crop::OnInteract(Player* player)
 {
+    // 서버가 관리하는 밭은 수신한 상태로만 바뀐다.
+    if (IsServerManaged())
+        return;
+
 	auto tool = static_cast<EItemID>(player->GetEquippedTool());
 
 	switch (tool)

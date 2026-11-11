@@ -7,11 +7,12 @@ class Crop : public InteractableObject
 private:
     CropState m_state;
     void RefreshModelFromState();
+    bool IsServerManaged() const { return m_netId >= 0; }
 public:
     Crop(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale,
         const std::string& model, const std::string& texture);
 
-	void SetCropID(EItemID id) { m_state.id = id; }
+	void SetCropID(EItemID id) { if (!IsServerManaged()) m_state.id = id; }
     void SetCropState(EItemID newID, int newLevel);
     // Apply the full server state without resetting water or growth time.
     bool ApplyServerState(const CropState& state);

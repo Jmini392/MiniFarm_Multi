@@ -63,6 +63,8 @@ public:
 	bool AddField(int objectId);
 	// 해당 밭의 상태, 없으면 nullptr. 조회만으로 밭을 만들지 않는다.
 	FieldState* GetField(int objectId);
+	// 초기 밭 상태 전송을 끝낸 플레이어 ID 목록. 호출하는 쪽이 Lock을 잡는다.
+	std::vector<int> GetFieldSyncPlayers() const;
 
 	// 월드에 하나뿐인 공동 지갑
 	SharedWallet& GetWallet() { return m_wallet; }

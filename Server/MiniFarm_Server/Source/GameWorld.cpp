@@ -172,6 +172,16 @@ FieldState* GameWorld::GetField(int objectId)
 	return &it->second;
 }
 
+std::vector<int> GameWorld::GetFieldSyncPlayers() const
+{
+	std::vector<int> players;
+	for (const auto& pair : m_players) {
+		if (pair.second.IsFieldSyncReady())
+			players.push_back(pair.first);
+	}
+	return players;
+}
+
 void GameWorld::Update(int dtMs)
 {
 	// 모든 밭의 작물을 지난 시간만큼 성장시킨다
