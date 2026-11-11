@@ -83,6 +83,19 @@ void Player::Update(int time)
 	Draw();
 	ApplyGravity();
 
+	// 맵 아래로 떨어지면 시작 지점으로 복귀
+	if (m_pos.y < -10.f)
+	{
+		m_pos = { 0.f, 8.f, 0.f };
+
+		m_verticalVelocity = 0.f;
+		m_isGrounded = false;
+		m_isWalking = false;
+		m_FocusedInteractable = nullptr;
+
+		SceneManager::GetCamera().FollowTarget(m_pos);
+	}
+
 	GameObject::Update(time);
 
 	constexpr int MOVE_SEND_INTERVAL_MS = 50;
