@@ -89,6 +89,19 @@ struct S2C_ADD_OBJECT_PACKET
     float scale[3];
 };
 
+struct S2C_MOVE_OBJECT_PACKET
+{
+    PacketHeader header;
+    std::int32_t objectId; // 이동한 객체 ID. 오늘은 플레이어의 세션 ID
+    float x;
+    float y;
+    float z;
+    float yaw;
+
+    std::uint8_t isMoving;
+    std::uint8_t isAirborne;
+};
+
 // 이미 생성된 밭 하나의 상태. CropState의 물과 성장 시간도 그대로 전달한다.
 struct S2C_FIELD_UPDATE_PACKET
 {
@@ -111,4 +124,5 @@ static_assert(sizeof(C2S_MOVE_OBJECT_PACKET) == 20,"C2S_MOVE_OBJECT_PACKET must 
 static_assert(sizeof(C2S_EQUIP_PACKET) == 6, "C2S_EQUIP_PACKET must be 6 bytes.");
 static_assert(sizeof(S2C_LOGIN_INFO_PACKET) == 38, "S2C_LOGIN_INFO_PACKET must be 38 bytes.");
 static_assert(sizeof(S2C_ADD_OBJECT_PACKET) == 43, "S2C_ADD_OBJECT_PACKET must be 43 bytes.");
+static_assert(sizeof(S2C_MOVE_OBJECT_PACKET) == 24, "S2C_MOVE_OBJECT_PACKET must be 24 bytes.");
 static_assert(sizeof(S2C_FIELD_UPDATE_PACKET) == 26, "S2C_FIELD_UPDATE_PACKET must be 26 bytes.");

@@ -149,3 +149,49 @@ void SendChangedFieldStates()
 		}
 	}
 }
+
+void SendPlayerMove(int sessionId)
+{
+	S2C_MOVE_OBJECT_PACKET update{};
+	update.header.size = (unsigned char)sizeof(update);
+	update.header.type = S2C_MOVE_OBJECT;
+
+	std::vector<int> receivers;
+
+	g_world.Lock();
+
+	PlayerState* player = g_world.GetPlayer(sessionId);
+
+	if (player == nullptr)
+	{
+		g_world.Unlock();
+		return;
+	}
+
+	const PlayerPosition& pos = player->GetPosition();
+
+	update.objectId = player->GetId();
+	update.x = pos.x;
+	update.y = pos.y;
+	update.z = pos.z;
+	update.yaw = player->GetYaw();
+	update.isMoving = player->IsMoving() ? 1 : 0;
+	update.isAirborne = player->IsAirborne() ? 1 : 0;
+
+	// 현재 이 목록은 초기 객체·밭 상태 전송까지 끝난 접속자들이다.
+	receivers = g_world.GetFieldSyncPlayers();
+
+	g_world.Unlock();
+
+	// 월드 잠금을 해제한 뒤 송신한다.
+	for (int receiverId : receivers)
+	{
+		if (receiverId == sessionId)
+			continue;
+
+		if (!SendToClient(receiverId, (const char*)&update))
+		{
+			printf("[이동 전송 실패] 대상 ID=%d\n", receiverId);
+		}
+	}
+}

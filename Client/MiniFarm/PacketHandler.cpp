@@ -72,16 +72,25 @@ bool HandlePacket(const char* packet)
         return ingame->AddWorldObject(add);
     }
 
-    case S2C_REMOVE_OBJECT:
-        // 월드 객체 삭제
+    case S2C_REMOVE_OBJECT:     // 월드 객체 삭제
         break;
 
-    case S2C_MOVE_OBJECT:
-        // 객체 위치와 방향 반영
-        break;
+    case S2C_MOVE_OBJECT:       // 객체 위치와 방향 반영
+    {
+        if (header.size != sizeof(S2C_MOVE_OBJECT_PACKET))
+            return false;
 
-    case S2C_EQUIP_OBJECT:
-        // 장착 도구 반영
+        IngameScene* ingame = dynamic_cast<IngameScene*>(SceneManager::GetScene());
+
+        if (ingame == nullptr)
+            return false;
+
+        S2C_MOVE_OBJECT_PACKET move{};
+        memcpy(&move, packet, sizeof(move));
+
+        return ingame->ApplyMoveObject(move);
+    }
+    case S2C_EQUIP_OBJECT:        // 장착 도구 반영
         break;
 
     case S2C_FIELD_UPDATE:
@@ -99,20 +108,16 @@ bool HandlePacket(const char* packet)
         return ingame->ApplyFieldUpdate(update);
     }
 
-    case S2C_SHOP_BUY_RESULT:
-        // 구매 결과 반영
+    case S2C_SHOP_BUY_RESULT:       // 구매 결과 반영
         break;
 
-    case S2C_SHOP_SELL_RESULT:
-        // 판매 결과 반영
+    case S2C_SHOP_SELL_RESULT:      // 판매 결과 반영
         break;
 
-    case S2C_TIME_SYNC:
-        // 게임 시간 반영
+    case S2C_TIME_SYNC:             // 게임 시간 반영
         break;
 
-    case S2C_ESCAPE_RESULT:
-        // 탈출 결과 반영
+    case S2C_ESCAPE_RESULT:         // 탈출 결과 반영
         break;
 
     default:

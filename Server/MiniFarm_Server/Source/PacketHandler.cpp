@@ -110,7 +110,12 @@ bool HandlePacket(int sessionId, const char* packet) {
 
             g_world.Unlock();
 
-            return success;
+            if (!success)
+                return false;
+
+            SendPlayerMove(sessionId);
+
+            return true;
         }
 		case C2S_EQUIP:          // 장비 변경 처리
 		{

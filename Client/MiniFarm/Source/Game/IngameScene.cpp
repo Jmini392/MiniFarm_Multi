@@ -19,6 +19,7 @@ void IngameScene::Init()
 	auto player = std::make_shared<Player>(m_wallet);
 	m_player = player.get();
 	AddObject(player);
+	m_moveStates.clear();
 
 	auto staticObjs = ObjectLoader::LoadStaticObjects("Data/static_props_pos.json");
 
@@ -213,6 +214,33 @@ bool IngameScene::AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet)
 		m_crops.push_back(crop);
 
 	AddObject(obj);
+	return true;
+}
+
+bool IngameScene::ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet)
+{
+	if (packet.objectId < 0)
+		return false;
+
+	if (!std::isfinite(packet.x) || !std::isfinite(packet.y) || !std::isfinite(packet.z) || !std::isfinite(packet.yaw))
+		return false;
+
+	if (packet.isMoving > 1 || packet.isAirborne > 1)
+		return false;
+
+	// 내 플레이어는 로컬에서 이동을 계산한다.
+	if (packet.objectId == m_playerId)
+		return true;
+
+	MoveState& state = m_moveStates[packet.objectId];
+
+	state.position = { packet.x, packet.y, packet.z };
+	state.yaw = packet.yaw;
+	state.isMoving = packet.isMoving != 0;
+	state.isAirborne = packet.isAirborne != 0;
+
+	// LOG("다른 객체 이동 수신: ID=%d, 위치=(%.1f, %.1f, %.1f)", (int)packet.objectId, state.position.x, state.position.y, state.position.z);
+
 	return true;
 }
 
