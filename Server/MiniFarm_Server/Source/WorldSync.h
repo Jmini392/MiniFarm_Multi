@@ -6,3 +6,6 @@
 // 월드에 배치된 객체(밭, 집, 보트)를 객체마다 S2C_ADD_OBJECT 패킷 하나씩 보낸다.
 // 하나라도 보내지 못하면 false를 반환한다
 bool SendWorldObjects(int sessionId);
+
+// SendWorldObjects 이후 호출한다. 밭 상태를 복사한 뒤 월드 잠금 없이 전송한다.
+bool SendFieldStates(int sessionId);

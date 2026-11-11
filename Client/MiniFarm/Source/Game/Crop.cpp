@@ -42,10 +42,39 @@ void Crop::SetCropState(EItemID newID, int newLevel)
     RefreshModelFromState();
 }
 
+bool Crop::ApplyServerState(const CropState& state)
+{
+    // 작물 종류와 모델 범위를 확인한 뒤 적용해야 잘못된 인덱스 접근을 막을 수 있다.
+    if (state.id != EItemID::Empty && state.id != EItemID::Tilled
+        && state.id != EItemID::Carrot && state.id != EItemID::Cabbage)
+        return false;
+
+    const CropData* data = DataTable::GetCrop(state.id);
+    if (data == nullptr || state.level < 0
+        || static_cast<std::size_t>(state.level) >= data->stageTypes.size()
+        || static_cast<std::size_t>(state.level) >= data->waterStages.size())
+        return false;
+
+    if (!std::isfinite(state.water) || state.water < 0.f
+        || !std::isfinite(state.growTime) || state.growTime < 0.f
+        || !std::isfinite(state.requiredGrowTime) || state.requiredGrowTime <= 0.f)
+        return false;
+
+    if (DataTable::GetObjectInfo(data->stageTypes[state.level]) == nullptr)
+        return false;
+
+    const bool modelChanged = m_state.id != state.id || m_state.level != state.level;
+    m_state = state; // ResetState를 사용하면 수신한 물과 성장 시간이 사라진다.
+    if (modelChanged)
+        RefreshModelFromState();
+    return true;
+}
+
 void Crop::RefreshModelFromState()
 {
 	const CropData* data = DataTable::GetCrop(m_state.id);
-	if (!data || data->stageTypes.empty())
+	if (!data || m_state.level < 0
+        || static_cast<std::size_t>(m_state.level) >= data->stageTypes.size())
 		return;
 
 	const std::string& typeName = data->stageTypes[m_state.level];

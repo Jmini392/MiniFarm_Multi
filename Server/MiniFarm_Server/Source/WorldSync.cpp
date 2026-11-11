@@ -28,3 +28,42 @@ bool SendWorldObjects(int sessionId)
 	}
 	return true;
 }
+
+bool SendFieldStates(int sessionId)
+{
+	std::vector<FieldState> fields;
+
+	// 같은 시점의 밭 상태를 복사한다. 송신 중에는 월드 잠금을 잡지 않는다.
+	g_world.Lock();
+	fields.reserve(g_world.GetFieldCount());
+	for (const WorldObject& obj : g_world.GetObjects()) {
+		if (obj.type != WorldObjectType::Field)
+			continue;
+
+		const FieldState* field = g_world.GetField(obj.objectId);
+		if (field == nullptr) {
+			g_world.Unlock();
+			return false;
+		}
+		fields.push_back(*field);
+	}
+	g_world.Unlock();
+
+	for (const FieldState& field : fields) {
+		const CropState& crop = field.crop;
+		S2C_FIELD_UPDATE_PACKET update{};
+		update.header.size = (unsigned char)sizeof(update);
+		update.header.type = S2C_FIELD_UPDATE;
+		update.objectId = field.objectId;
+		update.cropId = static_cast<std::int32_t>(crop.id);
+		update.level = crop.level;
+		update.water = crop.water;
+		update.growTime = crop.growTime;
+		update.requiredGrowTime = crop.requiredGrowTime;
+
+		if (!SendToClient(sessionId, (const char*)&update)) {
+			return false;
+		}
+	}
+	return true;
+}

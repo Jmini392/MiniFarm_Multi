@@ -215,3 +215,26 @@ bool IngameScene::AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet)
 	AddObject(obj);
 	return true;
 }
+
+bool IngameScene::ApplyFieldUpdate(const S2C_FIELD_UPDATE_PACKET& packet)
+{
+    if (packet.objectId < 0)
+        return false;
+
+    for (const auto& crop : m_crops)
+    {
+        if (crop->m_netId != packet.objectId)
+            continue;
+
+        CropState state;
+        state.id = static_cast<EItemID>(packet.cropId);
+        state.level = packet.level;
+        state.water = packet.water;
+        state.growTime = packet.growTime;
+        state.requiredGrowTime = packet.requiredGrowTime;
+        return crop->ApplyServerState(state);
+    }
+
+    // 아직 생성되지 않은 밭이나 밭이 아닌 객체의 ID는 거부한다.
+    return false;
+}

@@ -13,6 +13,8 @@ public:
 
 	void SetCropID(EItemID id) { m_state.id = id; }
     void SetCropState(EItemID newID, int newLevel);
+    // Apply the full server state without resetting water or growth time.
+    bool ApplyServerState(const CropState& state);
     void Update(int dt) override;
     void AddWater(float amount);
     virtual void OnInteract(Player* player) override;

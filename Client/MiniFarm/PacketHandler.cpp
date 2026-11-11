@@ -85,8 +85,19 @@ bool HandlePacket(const char* packet)
         break;
 
     case S2C_FIELD_UPDATE:
-        // 밭과 작물 상태 반영
-        break;
+    {
+        if (header.size != sizeof(S2C_FIELD_UPDATE_PACKET))
+            return false;
+
+        IngameScene* ingame = dynamic_cast<IngameScene*>(SceneManager::GetScene());
+        if (ingame == nullptr)
+            return false;
+
+        S2C_FIELD_UPDATE_PACKET update{};
+        memcpy(&update, packet, sizeof(update));
+
+        return ingame->ApplyFieldUpdate(update);
+    }
 
     case S2C_SHOP_BUY_RESULT:
         // 구매 결과 반영

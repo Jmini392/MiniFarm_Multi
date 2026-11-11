@@ -74,6 +74,13 @@ bool HandlePacket(int sessionId, const char* packet) {
                 return false;
             }
 
+            // 클라이언트에 밭 객체가 생성된 뒤 같은 ID의 상태를 적용한다.
+            if (!SendFieldStates(sessionId))
+            {
+                printf("[밭 상태 전송 실패] ID=%d\n", sessionId);
+                return false;
+            }
+
             printf("[로그인 완료] ID=%d (객체 %d개 전송)\n", sessionId, (int)g_world.GetObjects().size());
 
             return true;
