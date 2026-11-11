@@ -67,6 +67,11 @@ bool Crop::ApplyServerState(const CropState& state)
     if (DataTable::GetObjectInfo(data->stageTypes[state.level]) == nullptr)
         return false;
 
+    // 로컬 농사 중에는 첫 접속 상태만 적용하고 이후 서버 갱신은 덮어쓰지 않는다.
+    if (!GameConfig::ServerFarmingEnabled && m_netId >= 0 && m_receivedInitialState)
+        return true;
+
+    m_receivedInitialState = true;
     const bool modelChanged = m_state.id != state.id || m_state.level != state.level;
     m_state = state; // ResetState를 사용하면 수신한 물과 성장 시간이 사라진다.
     if (modelChanged)

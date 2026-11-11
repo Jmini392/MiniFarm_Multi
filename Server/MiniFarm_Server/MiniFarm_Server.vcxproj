@@ -49,6 +49,7 @@
     <ClInclude Include="..\..\Common\CropTable.h" />
     <ClInclude Include="..\..\Common\CropState.h" />
     <ClInclude Include="..\..\Common\GameTypes.h" />
+    <ClInclude Include="..\..\Common\GameConfig.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

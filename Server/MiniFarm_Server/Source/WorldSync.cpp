@@ -1,6 +1,7 @@
 ﻿#include "WorldSync.h"
 #include "GameWorld.h"
 #include "../../../Shared/Protocol.h"
+#include "../../../Common/GameConfig.h"
 #include <algorithm>
 #include <mutex>
 #include <unordered_map>
@@ -103,12 +104,17 @@ bool SendFieldStates(int sessionId)
 		return false;
 
 	// 각 접속자의 실제 전송값을 남겨 초기화 도중 바뀐 상태도 다음 갱신에서 찾는다.
-	s_sentFields[sessionId] = std::move(fields);
+	if (GameConfig::ServerFarmingEnabled)
+		s_sentFields[sessionId] = std::move(fields);
 	return true;
 }
 
 void SendChangedFieldStates()
 {
+	// 로컬 농사를 유지하는 동안 서버의 반복 갱신으로 클라이언트 상태를 덮지 않는다.
+	if (!GameConfig::ServerFarmingEnabled)
+		return;
+
 	std::lock_guard<std::mutex> syncLock(s_fieldSyncMutex);
 	std::vector<FieldState> fields;
 	if (!CopyFieldStates(fields))

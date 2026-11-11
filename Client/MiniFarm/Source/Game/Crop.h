@@ -1,13 +1,15 @@
 #pragma once
 #include "InteractableObject.h"
 #include "Common/CropState.h"
+#include "Common/GameConfig.h"
 
 class Crop : public InteractableObject
 {
 private:
     CropState m_state;
+    bool m_receivedInitialState = false;
     void RefreshModelFromState();
-    bool IsServerManaged() const { return m_netId >= 0; }
+    bool IsServerManaged() const { return GameConfig::ServerFarmingEnabled && m_netId >= 0; }
 public:
     Crop(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scale,
         const std::string& model, const std::string& texture);

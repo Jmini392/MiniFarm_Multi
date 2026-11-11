@@ -114,6 +114,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup Label="CommonHeaders">
+    <ClInclude Include="..\..\Common\GameConfig.h" />
     <ClInclude Include="..\..\Common\GameTypes.h" />
     <ClInclude Include="..\..\Common\CropState.h" />
     <ClInclude Include="..\..\Common\CropLogic.h" />
