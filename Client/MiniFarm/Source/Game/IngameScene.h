@@ -9,6 +9,8 @@
 #include "Common/SharedWallet.h"
 #include <unordered_map>
 
+class OtherPlayer;
+
 struct S2C_LOGIN_INFO_PACKET;
 struct S2C_ADD_OBJECT_PACKET;
 struct S2C_MOVE_OBJECT_PACKET;
@@ -50,6 +52,7 @@ private:
 	};
 
 	std::unordered_map<int, MoveState> m_moveStates;
+	std::unordered_map<int, std::shared_ptr<OtherPlayer>> m_OtherPlayers;
 
 	const float LIGHT_WIDTH = 20.f;
 	const float LIGHT_HEIGHT = 40.f;

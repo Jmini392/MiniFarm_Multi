@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NetworkClient.cpp" />
+    <ClCompile Include="OtherPlayer.cpp" />
     <ClCompile Include="PacketHandler.cpp" />
     <ClCompile Include="RecvBuffer.cpp" />
     <ClCompile Include="Source\Render\WaterParticleSystem.cpp" />
@@ -58,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkClient.h" />
+    <ClInclude Include="OtherPlayer.h" />
     <ClInclude Include="PacketHandler.h" />
     <ClInclude Include="RecvBuffer.h" />
     <ClInclude Include="Source\Render\WaterParticleSystem.h" />

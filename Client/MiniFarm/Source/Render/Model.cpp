@@ -34,10 +34,6 @@ Model::~Model()
 {
 	glDeleteBuffers(1, &m_vbo);
 	glDeleteVertexArrays(1, &m_vao);
-	
-	if (m_textureID != 0) {
-		glDeleteTextures(1, &m_textureID);
-	}
 }
 
 void Model::LoadOBJ(const std::string& path)

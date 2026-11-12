@@ -8,6 +8,7 @@
 #include "ExitScene.h"
 #include "WaterParticleSystem.h"
 #include "Collider.h"
+#include "OtherPlayer.h"
 #include "../../../../Shared/Protocol.h"
 
 void IngameScene::Init()
@@ -20,6 +21,7 @@ void IngameScene::Init()
 	m_player = player.get();
 	AddObject(player);
 	m_moveStates.clear();
+	m_OtherPlayers.clear();
 
 	auto staticObjs = ObjectLoader::LoadStaticObjects("Data/static_props_pos.json");
 
@@ -155,8 +157,7 @@ void IngameScene::TestAddMoney(int amount)
 	m_wallet.AddMoney(amount);
 }
 
-void IngameScene::ApplyLoginInfo(
-	const S2C_LOGIN_INFO_PACKET& info)
+void IngameScene::ApplyLoginInfo(const S2C_LOGIN_INFO_PACKET& info)
 {
 	m_playerId = info.playerId;
 
@@ -241,6 +242,26 @@ bool IngameScene::ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet)
 
 	// LOG("다른 객체 이동 수신: ID=%d, 위치=(%.1f, %.1f, %.1f)", (int)packet.objectId, state.position.x, state.position.y, state.position.z);
 
+	auto it = m_OtherPlayers.find(packet.objectId);
+
+	// 처음 받은 플레이어라면 객체를 생성한다.
+	if (it == m_OtherPlayers.end())
+	{
+		auto otherplayer = std::make_shared<OtherPlayer>(packet.objectId,m_wallet);
+
+		it = m_OtherPlayers.emplace(packet.objectId, otherplayer).first;
+
+		AddObject(otherplayer);
+
+		LOG("상대 플레이어 생성: ID=%d", (int)packet.objectId);
+	}
+
+	// 받은 좌표와 방향을 화면에 표시할 객체에 적용한다.
+	OtherPlayer& otherplayer = *it->second;
+
+	otherplayer.m_pos = state.position;
+	otherplayer.m_rot.y = state.yaw;
+
 	return true;
 }
 
@@ -271,6 +292,9 @@ void IngameScene::RemoveWorldObject(int objectId)
 {
 	if (objectId < 0)
 		return;
+
+	m_OtherPlayers.erase(objectId);
+	m_moveStates.erase(objectId);
 
 	auto it = std::find_if(m_objects.begin(), m_objects.end(),
 		[objectId](const std::shared_ptr<GameObject>& obj) { return obj->m_netId == objectId; });
