@@ -51,7 +51,7 @@ public:
     }
 
 private:
-    bool m_fieldSyncReady = false; // 초기 밭 상태 전송이 끝나야 변경 상태를 받는다.
+    bool m_fieldSyncReady = false; // 객체·밭·플레이어 초기 전송을 모두 마친 뒤 변경 상태를 받는다.
 
     int m_id;                                   // 플레이어를 식별하는 ID
 

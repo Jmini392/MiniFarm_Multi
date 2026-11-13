@@ -81,6 +81,13 @@ bool HandlePacket(int sessionId, const char* packet) {
                 return false;
             }
 
+            // 현재 접속자들의 위치·장비를 보내고, 새 플레이어도 기존 접속자에게 알린다.
+            if (!SendPlayerStates(sessionId))
+            {
+                printf("[플레이어 상태 전송 실패] ID=%d\n", sessionId);
+                return false;
+            }
+
             printf("[로그인 완료] ID=%d (객체 %d개 전송)\n", sessionId, (int)g_world.GetObjects().size());
 
             return true;

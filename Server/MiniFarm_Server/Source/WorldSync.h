@@ -10,6 +10,11 @@ bool SendWorldObjects(int sessionId);
 // SendWorldObjects 이후 호출한다. 밭 상태를 복사한 뒤 월드 잠금 없이 전송한다.
 bool SendFieldStates(int sessionId);
 
+// SendFieldStates 이후 호출한다. 기존 접속자의 위치·장비를 보내고 준비 완료로 표시한다.
+// 기존 접속자에게 새 플레이어도 알린다. 초기 전송 실패 시 false를 반환한다.
+// 초기 상태와 실시간 이동·장비·퇴장 전송은 같은 잠금으로 순서를 맞춘다.
+bool SendPlayerStates(int sessionId);
+
 // Update 스레드에서 호출한다. 각 플레이어에게 마지막으로 보낸 값과 다른 밭만 전송한다.
 void SendChangedFieldStates();
 
@@ -20,5 +25,5 @@ void SendPlayerMove(int sessionId);
 // 장비 변경이 확인된 경우에만 호출한다. 송신자에게는 되돌려 보내지 않는다.
 void SendPlayerEquip(int sessionId);
 
-// 로그인한 모든 클라이언트에게 객체 하나가 사라졌음을 알린다 (S2C_REMOVE_OBJECT)
+// 초기 동기화가 끝난 클라이언트에게 객체 하나가 사라졌음을 알린다 (S2C_REMOVE_OBJECT)
 void BroadcastRemoveObject(int objectId);
