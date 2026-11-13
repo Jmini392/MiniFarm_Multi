@@ -155,7 +155,43 @@ bool HandlePacket(int sessionId, const char* packet) {
 			printf("[장비 변경] ID=%d, itemId=%d\n", sessionId, (int)request.itemId);
 			return true;
 		}
-		case C2S_INTERACT_FIELD: // 밭 상호작용 처리
+        case C2S_INTERACT_FIELD:
+        {
+            if (header.size != sizeof(C2S_INTERACT_FIELD_PACKET))
+                return false;
+
+            C2S_INTERACT_FIELD_PACKET request{};
+            memcpy(&request, packet, sizeof(request));
+
+            bool playerReady = false;
+            bool fieldExists = false;
+            EItemID equippedTool = EItemID::Empty;
+            g_world.Lock();
+            const PlayerState* player = g_world.GetPlayer(sessionId);
+            if (player != nullptr && player->IsFieldSyncReady())
+            {
+                playerReady = true;
+                equippedTool = player->GetEquippedTool();
+                fieldExists = g_world.GetField(request.objectId) != nullptr;
+            }
+            g_world.Unlock();
+
+            if (!playerReady)
+                return false;
+            if (!fieldExists)
+            {
+                // An invalid target does not disconnect a logged-in player.
+                printf("[Field request ignored] playerId=%d, objectId=%d (unknown field)\n",
+                    sessionId, static_cast<int>(request.objectId));
+                return true;
+            }
+
+            // Receive only. Distance checks and farming actions are the next step.
+            // No world pointers are used after releasing the world lock.
+            printf("[Field request received] playerId=%d, objectId=%d, itemId=%d (receive only)\n",
+                sessionId, static_cast<int>(request.objectId), static_cast<int>(equippedTool));
+            return true;
+        }
 		case C2S_SHOP_BUY:       // 구매 처리
 		case C2S_SHOP_SELL:      // 판매 처리
 		case C2S_BOAT_ESCAPE:    // 탈출 처리

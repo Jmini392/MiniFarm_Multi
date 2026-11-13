@@ -189,6 +189,19 @@ bool NetworkClient::SendEquipRequest(EItemID item)
     return SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
 }
 
+bool NetworkClient::SendInteractFieldRequest(int objectId)
+{
+    if (objectId < 0)
+        return false;
+
+    C2S_INTERACT_FIELD_PACKET packet{};
+    packet.header.size = static_cast<unsigned char>(sizeof(packet));
+    packet.header.type = C2S_INTERACT_FIELD;
+    packet.objectId = static_cast<std::int32_t>(objectId);
+
+    return SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
+}
+
 bool NetworkClient::SendAll(const char* data, int size)
 {
     if (m_socket == INVALID_SOCKET || !m_connected || !m_receiving

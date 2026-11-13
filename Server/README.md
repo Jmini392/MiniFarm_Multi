@@ -1,5 +1,61 @@
 # 서버 밭 상태 관리
 
+## 2026-11-14: 밭 상호작용 요청·서버 수신 (1단계)
+
+- `C2S_INTERACT_FIELD_PACKET`은 6바이트이며 `header`와 대상 밭의 `objectId`만 전송한다. 요청자는 접속 세션으로 구분하고 도구는 서버 `PlayerState`의 장착 정보를 사용한다.
+- 클라이언트 `NetworkClient::SendInteractFieldRequest(objectId)`가 기존 `SendAll()`로 전송한다. 음수 ID 또는 연결되지 않은 상태에서는 false를 반환한다. 전송 성공은 서버 농사 성공을 뜻하지 않는다.
+- 서버는 패킷 크기, 로그인·초기 동기화가 끝난 플레이어, 존재하는 밭인지 확인한다. 플레이어와 밭은 월드 잠금 안에서 조회하고 로그는 잠금을 해제한 뒤 출력한다.
+- 유효한 밭은 `[Field request received] ... (receive only)`로 기록한다. 없는 ID와 상점·보트 ID는 `[Field request ignored]`로 기록하고 접속은 유지한다. 잘못된 패킷 크기나 준비되지 않은 요청자는 기존 패킷 오류 처리에 따라 연결을 종료한다.
+- 이번 단계에서는 거리·도구별 농사 가능 여부를 판정하지 않고, 밭과 개인 아이템 수량도 변경하지 않는다. 성공·실패 응답 패킷은 아직 없다.
+- **E 입력 자동 전송과 서버 모드 기본값 변경은 다음 작업이다.** 현재 `Common/GameConfig.h`의 `ServerFarmingEnabled`는 여전히 false이며 기존 로컬 농사는 유지된다. 아래 테스트는 E 입력 없이 송수신 경계를 확인하는 절차다.
+
+### 직접 확인: 서버 중단점과 PowerShell 테스트 요청
+
+1. 서버 솔루션 `Server/MiniFarm_Server.sln`을 열고 **Debug / x64**로 빌드한다.
+2. `Source/PacketHandler.cpp`의 `case C2S_INTERACT_FIELD` 안에서 `printf("[Field request received] ...`가 시작하는 줄에 F9로 중단점을 건다. 이동·장비 등 다른 중단점은 해제한다.
+3. 서버를 F5로 실행한다. 아직 접속자가 없어 중단되지 않는 것이 정상이다.
+4. 별도 PowerShell 창에서 아래 코드를 한 번 실행한다. 서버 접속 → 로그인 → 물뿌리개 장착 → 밭 1000번 요청 순서다. 같은 TCP 연결에서 순서대로 처리되므로 별도 대기 시간을 넣지 않는다.
+
+```powershell
+$fieldTestClient = [System.Net.Sockets.TcpClient]::new('127.0.0.1', 9000)
+$fieldTestStream = $fieldTestClient.GetStream()
+[byte[]]$fieldTestPackets = 2,1, 6,3,4,0,0,0, 6,4,232,3,0,0
+$fieldTestStream.Write($fieldTestPackets, 0, $fieldTestPackets.Length)
+```
+
+5. 서버 Visual Studio에 노란 실행 화살표가 나타나면 **디버그 → 창 → 지역**에서 `request`, `sessionId`, `playerReady`, `fieldExists`, `equippedTool`을 확인한다. 아래 값이면 정상이다.
+
+| 항목 | 기대값 |
+| --- | --- |
+| `request.header.size` | 6 |
+| `request.header.type` | 4 (`C2S_INTERACT_FIELD`) |
+| `request.objectId` | 1000 |
+| `sessionId` | 방금 접속한 테스트 연결의 ID. 첫 접속이면 1 |
+| `playerReady` / `fieldExists` | 둘 다 true |
+| `equippedTool` | WateringCan (4) |
+
+6. F5로 재개하면 서버 콘솔에 `[Field request received] playerId=..., objectId=1000, itemId=4 (receive only)`가 출력된다. 밭이 바뀌지 않는 것이 이번 단계의 정상 동작이다.
+7. 확인 후 PowerShell에서 `$fieldTestClient.Close()`를 실행한다. 이 연결은 게임 클라이언트가 아니라 수신 확인용 접속이므로 테스트가 끝나면 닫는다.
+
+### 실제 클라이언트 송신 함수까지 직접 확인
+
+서버와 클라이언트를 각각 Debug / x64로 실행한다. 클라이언트도 F5로 디버깅하고 로그인한다. 클라이언트 `Player.cpp`의 `HandleEquipmentInput()` 안에 있는 `SetEquippedTool(selectedItem);` 줄에 중단점을 걸고, 게임에서 현재와 다른 숫자키를 누른다. 클라이언트가 이 줄에서 멈추면 **디버그 → 창 → 직접 실행**에서 다음을 한 번 실행한다.
+
+```cpp
+network.SendInteractFieldRequest(1000)
+```
+
+반환값 true는 실제 전송 함수가 패킷을 보냈다는 뜻이다. 서버는 위와 같은 중단점에서 멈춰야 하고, `equippedTool`은 방금 선택한 도구여야 한다. 이 위치에서는 장비 변경 패킷이 먼저 전송된 상태다. 서버와 클라이언트 양쪽을 F5로 재개하고, 확인이 끝나면 클라이언트 중단점을 해제한다.
+
+### 모드 전환 계획
+
+- 이후 E 요청 연결과 함께 서버 처리를 기본값으로 전환한다. ON은 요청·서버 판정·상태 수신, OFF는 기존 로컬 농사 확인용으로 유지한다. OFF에서 서버의 농사 상태를 변경하는 요청을 보내지 않는다.
+- 설정은 실행 중 전환하는 기능이 아니다. 서버와 클라이언트에 같은 값을 적용하고 모두 다시 빌드·재접속한다. 서로 다른 모드로 실행하거나 실행 중 상태를 이관하는 것은 지원하지 않는다.
+- 서버 모드에서 로컬 구매·판매가 개인 수량을 바꾸면 서버 인벤토리와 어긋나므로, 서버 상점 연동 전까지 해당 로컬 거래를 제한하는 처리는 다음 작업에 포함한다.
+- 이후 작업: 11/16 밭갈이·파종 및 거리 검사(배치 좌표의 X 반전 고려), 11/18 개인 수량 수신, 11/20 거부 결과, 11/21 물주기·성장, 11/23 수확 통합.
+
+검증: 서버·클라이언트 Debug/x64 빌드 통과. 실제 빌드된 NetworkClient 송신 코드의 TCP 바이트와 서버 수신 함수를 사용하는 33개 검사 통과. 별도 서버 프로세스와 TCP 연결로 요청자 2명, 잘못된 대상의 접속 유지, 늦은 접속자의 초기 밭 상태, 잘못된 크기의 연결 종료 등 12개 검사 통과. 수신 단계에서 밭·개인 수량이 바뀌지 않는 것도 확인했다. 임시 검증 코드는 저장소에 추가하지 않았다.
+
 ## 2026-11-13: 후접속 장비 전달 및 통합 확인 (3단계)
 
 - 로그인 응답 → 배치 객체 → 밭 상태 → 기존 플레이어의 위치·장비 순서로 보낸다. `SendPlayerStates(sessionId)`가 기존 `S2C_MOVE_OBJECT`와 `S2C_EQUIP_OBJECT`를 사용하므로 새 패킷 형식은 추가하지 않는다.

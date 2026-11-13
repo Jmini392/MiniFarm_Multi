@@ -61,6 +61,13 @@ struct C2S_EQUIP_PACKET
     std::int32_t itemId; // 선택한 도구 또는 씨앗 ID. Empty(-1)도 표현한다.
 };
 
+// The session identifies the requester; the server uses its stored equipment.
+struct C2S_INTERACT_FIELD_PACKET
+{
+    PacketHeader header;
+    std::int32_t objectId;
+};
+
 struct S2C_LOGIN_INFO_PACKET
 {
     PacketHeader header;
@@ -136,6 +143,7 @@ static_assert(sizeof(PacketHeader) == 2, "PacketHeader must be 2 bytes.");
 static_assert(sizeof(C2S_LOGIN_PACKET) == 2, "C2S_LOGIN_PACKET must be 2 bytes.");
 static_assert(sizeof(C2S_MOVE_OBJECT_PACKET) == 20,"C2S_MOVE_OBJECT_PACKET must be 20 bytes.");
 static_assert(sizeof(C2S_EQUIP_PACKET) == 6, "C2S_EQUIP_PACKET must be 6 bytes.");
+static_assert(sizeof(C2S_INTERACT_FIELD_PACKET) == 6, "C2S_INTERACT_FIELD_PACKET must be 6 bytes.");
 static_assert(sizeof(S2C_LOGIN_INFO_PACKET) == 38, "S2C_LOGIN_INFO_PACKET must be 38 bytes.");
 static_assert(sizeof(S2C_ADD_OBJECT_PACKET) == 43, "S2C_ADD_OBJECT_PACKET must be 43 bytes.");
 static_assert(sizeof(S2C_MOVE_OBJECT_PACKET) == 24, "S2C_MOVE_OBJECT_PACKET must be 24 bytes.");
