@@ -104,7 +104,19 @@ bool HandlePacket(const char* packet)
         return ingame->ApplyMoveObject(move);
     }
     case S2C_EQUIP_OBJECT:        // 장착 도구 반영
-        break;
+    {
+        if (header.size != sizeof(S2C_EQUIP_OBJECT_PACKET))
+            return false;
+
+        IngameScene* ingame = dynamic_cast<IngameScene*>(SceneManager::GetScene());
+        if (ingame == nullptr)
+            return false;
+
+        S2C_EQUIP_OBJECT_PACKET equip{};
+        memcpy(&equip, packet, sizeof(equip));
+
+        return ingame->ApplyEquipObject(equip);
+    }
 
     case S2C_FIELD_UPDATE:
     {

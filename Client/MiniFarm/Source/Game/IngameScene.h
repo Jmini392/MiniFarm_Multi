@@ -14,6 +14,7 @@ class OtherPlayer;
 struct S2C_LOGIN_INFO_PACKET;
 struct S2C_ADD_OBJECT_PACKET;
 struct S2C_MOVE_OBJECT_PACKET;
+struct S2C_EQUIP_OBJECT_PACKET;
 struct S2C_FIELD_UPDATE_PACKET;
 
 class IngameScene : public Scene
@@ -33,6 +34,7 @@ public:
 	void ApplyLoginInfo(const S2C_LOGIN_INFO_PACKET& info);
 	bool AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet);
 	bool ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet);
+	bool ApplyEquipObject(const S2C_EQUIP_OBJECT_PACKET& packet);
 	void RemoveWorldObject(int objectId);
 	bool ApplyFieldUpdate(const S2C_FIELD_UPDATE_PACKET& packet);
 private:
@@ -53,6 +55,7 @@ private:
 
 	std::unordered_map<int, MoveState> m_moveStates;
 	std::unordered_map<int, std::shared_ptr<OtherPlayer>> m_OtherPlayers;
+	std::unordered_map<int, EItemID> m_pendingEquipment; // Received before the player is created.
 
 	const float LIGHT_WIDTH = 20.f;
 	const float LIGHT_HEIGHT = 40.f;

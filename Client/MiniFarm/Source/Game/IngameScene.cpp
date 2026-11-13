@@ -22,6 +22,7 @@ void IngameScene::Init()
 	AddObject(player);
 	m_moveStates.clear();
 	m_OtherPlayers.clear();
+	m_pendingEquipment.clear();
 
 	auto staticObjs = ObjectLoader::LoadStaticObjects("Data/static_props_pos.json");
 
@@ -249,6 +250,14 @@ bool IngameScene::ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet)
 	{
 		auto otherplayer = std::make_shared<OtherPlayer>(packet.objectId,m_wallet);
 
+		// 이동보다 먼저 받은 장비가 있다면 생성 시 적용한다.
+		auto pending = m_pendingEquipment.find(packet.objectId);
+		if (pending != m_pendingEquipment.end())
+		{
+			otherplayer->SetEquippedTool(pending->second);
+			m_pendingEquipment.erase(pending);
+		}
+
 		it = m_OtherPlayers.emplace(packet.objectId, otherplayer).first;
 
 		AddObject(otherplayer);
@@ -262,6 +271,42 @@ bool IngameScene::ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet)
 	otherplayer.m_pos = state.position;
 	otherplayer.m_rot.y = state.yaw;
 
+	return true;
+}
+
+bool IngameScene::ApplyEquipObject(const S2C_EQUIP_OBJECT_PACKET& packet)
+{
+	if (packet.objectId <= 0)
+		return false;
+
+	const EItemID item = static_cast<EItemID>(packet.itemId);
+	switch (item)
+	{
+	case EItemID::Empty:
+	case EItemID::Hoe:
+	case EItemID::WateringCan:
+	case EItemID::Sickle:
+	case EItemID::SeedCarrot:
+	case EItemID::SeedCabbage:
+		break;
+	default:
+		return false;
+	}
+
+	// 내 장비는 로컬 입력으로 이미 반영되어 있다.
+	if (packet.objectId == m_playerId)
+		return true;
+
+	auto it = m_OtherPlayers.find(packet.objectId);
+	if (it == m_OtherPlayers.end())
+	{
+		// 상대는 첫 이동 패킷으로 생성된다. 마지막으로 받은 장비만 보관한다.
+		m_pendingEquipment[packet.objectId] = item;
+		return true;
+	}
+
+	OtherPlayer& otherplayer = *it->second;
+	otherplayer.SetEquippedTool(item);
 	return true;
 }
 
@@ -295,6 +340,7 @@ void IngameScene::RemoveWorldObject(int objectId)
 
 	m_OtherPlayers.erase(objectId);
 	m_moveStates.erase(objectId);
+	m_pendingEquipment.erase(objectId);
 
 	auto it = std::find_if(m_objects.begin(), m_objects.end(),
 		[objectId](const std::shared_ptr<GameObject>& obj) { return obj->m_netId == objectId; });
