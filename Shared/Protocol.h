@@ -102,6 +102,14 @@ struct S2C_MOVE_OBJECT_PACKET
     std::uint8_t isAirborne;
 };
 
+// 서버가 확인한 플레이어의 장비 변경. objectId는 플레이어의 세션 ID다.
+struct S2C_EQUIP_OBJECT_PACKET
+{
+    PacketHeader header;
+    std::int32_t objectId;
+    std::int32_t itemId; // 도구, 씨앗 또는 Empty(-1)
+};
+
 // 이미 생성된 밭 하나의 상태. CropState의 물과 성장 시간도 그대로 전달한다.
 struct S2C_FIELD_UPDATE_PACKET
 {
@@ -131,5 +139,6 @@ static_assert(sizeof(C2S_EQUIP_PACKET) == 6, "C2S_EQUIP_PACKET must be 6 bytes."
 static_assert(sizeof(S2C_LOGIN_INFO_PACKET) == 38, "S2C_LOGIN_INFO_PACKET must be 38 bytes.");
 static_assert(sizeof(S2C_ADD_OBJECT_PACKET) == 43, "S2C_ADD_OBJECT_PACKET must be 43 bytes.");
 static_assert(sizeof(S2C_MOVE_OBJECT_PACKET) == 24, "S2C_MOVE_OBJECT_PACKET must be 24 bytes.");
+static_assert(sizeof(S2C_EQUIP_OBJECT_PACKET) == 10, "S2C_EQUIP_OBJECT_PACKET must be 10 bytes.");
 static_assert(sizeof(S2C_REMOVE_OBJECT_PACKET) == 6, "S2C_REMOVE_OBJECT_PACKET must be 6 bytes.");
 static_assert(sizeof(S2C_FIELD_UPDATE_PACKET) == 26, "S2C_FIELD_UPDATE_PACKET must be 26 bytes.");

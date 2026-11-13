@@ -198,6 +198,41 @@ void SendPlayerMove(int sessionId)
 	}
 }
 
+void SendPlayerEquip(int sessionId)
+{
+	S2C_EQUIP_OBJECT_PACKET update{};
+	update.header.size = (unsigned char)sizeof(update);
+	update.header.type = S2C_EQUIP_OBJECT;
+
+	std::vector<int> receivers;
+
+	g_world.Lock();
+	PlayerState* player = g_world.GetPlayer(sessionId);
+	if (player == nullptr)
+	{
+		g_world.Unlock();
+		return;
+	}
+
+	update.objectId = player->GetId();
+	update.itemId = static_cast<std::int32_t>(player->GetEquippedTool());
+	receivers = g_world.GetFieldSyncPlayers();
+	g_world.Unlock();
+
+	// 초기 동기화가 끝난 상대에게만 월드 잠금 없이 전송한다.
+	for (int receiverId : receivers)
+	{
+		if (receiverId == sessionId)
+			continue;
+
+		const bool sent = SendToClient(receiverId, (const char*)&update);
+		if (!sent)
+		{
+			printf("[장비 전송 실패] 대상 ID=%d\n", receiverId);
+		}
+	}
+}
+
 void BroadcastRemoveObject(int objectId)
 {
 	S2C_REMOVE_OBJECT_PACKET remove{};

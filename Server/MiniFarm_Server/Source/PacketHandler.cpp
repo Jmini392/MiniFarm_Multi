@@ -126,16 +126,24 @@ bool HandlePacket(int sessionId, const char* packet) {
 			memcpy(&request, packet, sizeof(request));
 
 			bool success = false;
+			bool changed = false;
 			g_world.Lock();
 			PlayerState* player = g_world.GetPlayer(sessionId);
 			if (player != nullptr)
 			{
+				const EItemID previous = player->GetEquippedTool();
 				success = player->SetEquippedTool(static_cast<EItemID>(request.itemId));
+				changed = success && previous != player->GetEquippedTool();
 			}
 			g_world.Unlock();
 
 			if (!success)
 				return false;
+			if (!changed)
+				return true;
+
+			// 서버에 저장된 장비를 월드 잠금 없이 다른 접속자에게 알린다.
+			SendPlayerEquip(sessionId);
 
 			printf("[장비 변경] ID=%d, itemId=%d\n", sessionId, (int)request.itemId);
 			return true;

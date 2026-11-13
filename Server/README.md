@@ -1,5 +1,36 @@
 # 서버 밭 상태 관리
 
+## 2026-11-13: 장비 변경 서버 전송 (1단계)
+
+- `S2C_EQUIP_OBJECT_PACKET`은 10바이트이며, `objectId`(플레이어 세션 ID)와 `itemId`를 보낸다.
+- 서버 `C2S_EQUIP` 처리에서 기존 장비 검사·저장에 성공하고 값이 실제로 바뀌면 `SendPlayerEquip(sessionId)`를 호출한다. 같은 장비의 중복 요청은 전송하지 않는다.
+- `WorldSync.cpp`에서 서버에 저장된 장비와 초기 객체·밭 동기화를 마친 수신자 목록을 복사한다. 월드 잠금을 해제한 뒤 본인을 제외한 수신자에게 기존 `SendToClient()` 경로로 전송한다.
+- 이번 단계는 서버 전송까지다. 클라이언트의 장비 수신·상대 손 도구 적용과 후접속 시 현재 장비 전송은 다음 단계다. 현재 클라이언트는 이 패킷을 받아도 기존 빈 처리에서 종료하므로 손 도구가 바뀌지 않는 것이 정상이다.
+- `Common/GameConfig.h`의 `ServerFarmingEnabled = false`는 유지한다.
+
+### Visual Studio에서 직접 확인
+
+1. 서버 솔루션 `Server/MiniFarm_Server.sln`을 **Debug / x64**로 연다.
+2. `Source/WorldSync.cpp`의 `SendPlayerEquip()`에서 `const bool sent = SendToClient(receiverId, (const char*)&update);` 바로 다음 줄인 `if (!sent)`에 **F9**로 중단점을 건다. 이 함수 안의 줄인지 확인한다.
+3. 서버를 **F5**로 실행한다. 별도 Visual Studio에서 클라이언트 솔루션 `Client/MiniFarm.sln`을 Debug / x64로 빌드하고 **Ctrl+F5**를 두 번 사용해 클라이언트 두 개를 실행한다. 각각 Space로 접속한다.
+4. 한쪽 클라이언트에서 숫자 **2**를 누른다. 기본 장비가 비어 있는 상태에서 시작하거나, 이미 물뿌리개를 선택했다면 1을 누른 뒤 2를 누른다.
+5. 서버가 노란 화살표로 멈추면 **디버그 → 창 → 지역**에서 `update`를 펼친다. `header.size=10`, `header.type=12`, `itemId=4`(물뿌리개)를 확인한다. `update.objectId`와 `sessionId`는 장비를 바꾼 사람의 ID, `receiverId`는 다른 사람의 ID이며 `sent=true`여야 한다.
+6. 지역 창에서 찾기 어렵다면 **디버그 → 창 → 조사식 → 조사식 1**에 `update`, `sessionId`, `receiverId`, `sent`를 각각 한 줄씩 적는다. 명령을 실행하는 직접 실행 창은 필요 없다.
+7. **F5**로 재개하고 다른 클라이언트에서도 1 또는 3을 눌러 확인한다. 이번에는 송신자와 수신자 ID가 바뀌어야 한다. 중단점을 해제하거나 다시 F5로 재개해야 게임이 계속된다.
+
+| 입력 키 | 장비 | itemId |
+| --- | --- | ---: |
+| 1 | 밭갈이 도구 | 3 |
+| 2 | 물뿌리개 | 4 |
+| 3 | 낫 | 5 |
+| 4 | 당근 씨앗 | 6 |
+| 5 | 양배추 씨앗 | 7 |
+
+`sent=true`는 서버가 패킷 전체를 소켓에 보냈다는 뜻이다. 상대 화면에 적용됐다는 뜻은 아니다. 수신 도착도 직접 보려면, 받는 클라이언트를 F5로 실행하고 `Client/MiniFarm/PacketHandler.cpp`의 `case S2C_EQUIP_OBJECT` 아래 `break;`에 중단점을 걸어 `header.type=12`, `header.size=10`을 확인한다. 이때 서버의 중단점은 해제해 둔다.
+
+검증: 서버·클라이언트 Debug/x64 빌드 통과. 실제 서버에 TCP 테스트 클라이언트를 연결해 모든 허용 장비 값, 본인·미로그인 세션 제외, 양방향·다중 수신자 전달, 중복 요청 생략, 로그인 전 요청·잘못된 장비·잘못된 크기 거부를 확인했다. 이동 전달도 함께 확인했다. 임시 테스트 서버는 종료했고 테스트 코드는 저장소에 추가하지 않았다.
+
+
 ## 현재 기본 실행: 기존 로컬 농사 유지
 
 - 공통 설정은 `Common/GameConfig.h`의 `GameConfig::ServerFarmingEnabled` 한 곳에서 관리한다. 기본값은 **false**이다. 서버 농사 요청과 판정이 준비되면 true로 전환하고 서버와 클라이언트를 모두 다시 빌드한다.
