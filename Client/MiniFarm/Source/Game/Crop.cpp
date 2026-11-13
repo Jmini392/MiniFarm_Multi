@@ -7,6 +7,7 @@
 #include "UIRenderer.h"
 #include "TextureLoader.h"
 #include "SceneManager.h"
+#include "NetworkClient.h"
 #include "WaterParticleSystem.h"
 
 
@@ -124,9 +125,30 @@ void Crop::AddWater(float amount)
 
 void Crop::OnInteract(Player* player)
 {
-    // 서버가 관리하는 밭은 수신한 상태로만 바뀐다.
-    if (IsServerManaged())
+    if (player == nullptr)
         return;
+
+    if (GameConfig::ServerFarmingEnabled)
+    {
+        // Never fall back to local farming for an unregistered or uninitialized field.
+        if (m_netId < 0 || !m_receivedInitialState)
+        {
+            LOG_D("Field request skipped: initial server state is not ready (objectId=%d)", m_netId);
+            return;
+        }
+
+        auto& network = SceneManager::GetNetworkClient();
+        const bool sent = network.SendInteractFieldRequest(m_netId);
+        if (!sent)
+        {
+            LOG_E("Field request send failed: objectId=%d", m_netId);
+            network.Disconnect();
+            return;
+        }
+
+        LOG_D("Field request sent: objectId=%d (awaiting server handling)", m_netId);
+        return;
+    }
 
 	auto tool = static_cast<EItemID>(player->GetEquippedTool());
 

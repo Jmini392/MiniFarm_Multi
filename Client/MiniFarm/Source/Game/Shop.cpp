@@ -2,13 +2,17 @@
 #include "Shop.h"
 #include "Player.h"
 #include "InputManager.h"
+#include "Common/GameConfig.h"
 
 void Shop::OnInteract(Player* player)
 {
 	static constexpr const char* cropNames[] = { "None",  "Carrot",  "Cabbage" };
 	int type = static_cast<int>(m_cropType);
 	InputManager::SetUIMode(true);
-	player->SetSysMsg(std::format("- {} Shop -\nBuy[B]\nSell[S]\nExit[X]", cropNames[type]));
+    if (GameConfig::ServerFarmingEnabled)
+        player->SetSysMsg(std::format("- {} Shop -\nTrading unavailable\nExit[X]", cropNames[type]));
+    else
+        player->SetSysMsg(std::format("- {} Shop -\nBuy[B]\nSell[S]\nExit[X]", cropNames[type]));
 	player->SetShopping(true);
 }
 

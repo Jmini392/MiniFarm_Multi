@@ -9,6 +9,7 @@
 #include "IInteractable.h"
 #include "Shop.h"
 #include "Common/ShopLogic.h"
+#include "Common/GameConfig.h"
 #include "Shader.h"
 
 
@@ -71,8 +72,8 @@ Player::Player(SharedWallet& wallet)
 void Player::Update(int time)
 {
 	TryUpdateInteractTarget();
-	HandleInteractInput();
 	HandleEquipmentInput();
+	HandleInteractInput();
 	HandleShopDirectInput();
 	HandleBoatDirectInput();
 
@@ -168,7 +169,7 @@ void Player::HandleMove()
 
 void Player::HandleInteractInput()
 {
-	if (m_FocusedInteractable == nullptr)
+	if (InputManager::IsUIMode() || m_FocusedInteractable == nullptr)
 		return;
 
 	if (InputManager::IsKeyPressed('e'))
@@ -294,6 +295,14 @@ void Player::TryUpdateInteractTarget()
 
 void Player::BuySeed(EItemID seedID, int count)
 {
+    // Local trading must not diverge from the server-owned personal inventory.
+    if (GameConfig::ServerFarmingEnabled)
+    {
+        SetSysMsg("Trading unavailable\nExit[X]");
+        LOG_D("Trade skipped: server shop handling is not connected yet.");
+        return;
+    }
+
 	const CropData* data = nullptr;
 	switch (seedID)
 	{
@@ -325,6 +334,14 @@ void Player::BuySeed(EItemID seedID, int count)
 
 void Player::SellCrop(EItemID cropID, int count)
 {
+    // Local trading must not diverge from the server-owned personal inventory.
+    if (GameConfig::ServerFarmingEnabled)
+    {
+        SetSysMsg("Trading unavailable\nExit[X]");
+        LOG_D("Trade skipped: server shop handling is not connected yet.");
+        return;
+    }
+
 	const CropData* data = nullptr;
 	switch (cropID)
 	{
