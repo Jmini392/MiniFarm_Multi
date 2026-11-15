@@ -26,6 +26,8 @@
 #include <unordered_map>
 #include <functional>
 #include <format>
+#include <algorithm>
+#include <cmath>
 
 #include "FileUtils.h"
 #include "MathUtils.h"

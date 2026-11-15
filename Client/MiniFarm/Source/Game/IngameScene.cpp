@@ -268,8 +268,7 @@ bool IngameScene::ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet)
 	// 받은 좌표와 방향을 화면에 표시할 객체에 적용한다.
 	OtherPlayer& otherplayer = *it->second;
 
-	otherplayer.m_pos = state.position;
-	otherplayer.m_rot.y = state.yaw;
+	otherplayer.SetMoveTarget(state.position, state.yaw, state.isMoving, state.isAirborne);
 
 	return true;
 }
