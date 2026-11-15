@@ -30,7 +30,6 @@ private:
     void HandleShopDirectInput();
     void HandleBoatDirectInput();
 
-    void UpdateWalkAnimations();
 	void UpdateToolAnimation();
     void ApplyGravity();
 public:
@@ -73,11 +72,14 @@ private:
 
     std::vector<Limb> m_limbs;
     float m_walkAnimTime = 0.0f;
-    bool m_isWalking = false;
     float m_verticalVelocity = 0.0f;
     float m_gravity = -0.035f;
     float m_jumpForce = 0.4f;
     bool m_isGrounded = true;
 
     int m_moveTimerMs = 0;
+protected:
+    void UpdateWalkAnimations();
+
+    bool m_isWalking = false;
 };

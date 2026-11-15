@@ -49,8 +49,10 @@ void OtherPlayer::Update(int time)
 
         // 시작 방향에서 목표 방향까지 짧은 쪽으로 회전한다.
         float yawDifference = std::remainder(m_targetYaw - m_startYaw, 360.f);
-
         m_rot.y = std::remainder(m_startYaw + yawDifference * ratio, 360.f);
+
+        m_isWalking = m_isMoving;
+        UpdateWalkAnimations();
     }
 
     GameObject::Update(time);
