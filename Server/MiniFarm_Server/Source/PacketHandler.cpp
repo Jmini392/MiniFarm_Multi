@@ -163,33 +163,22 @@ bool HandlePacket(int sessionId, const char* packet) {
             C2S_INTERACT_FIELD_PACKET request{};
             memcpy(&request, packet, sizeof(request));
 
-            bool playerReady = false;
-            bool fieldExists = false;
-            EItemID equippedTool = EItemID::Empty;
+            // 검사부터 밭 변경·씨앗 차감까지 같은 잠금 안에서 처리한다.
             g_world.Lock();
-            const PlayerState* player = g_world.GetPlayer(sessionId);
-            if (player != nullptr && player->IsFieldSyncReady())
-            {
-                playerReady = true;
-                equippedTool = player->GetEquippedTool();
-                fieldExists = g_world.GetField(request.objectId) != nullptr;
-            }
+            const FieldInteractResult result = g_world.InteractField(sessionId, request.objectId);
             g_world.Unlock();
 
-            if (!playerReady)
+            // 형식은 정상인 행동 실패와, 준비되지 않은 요청자를 구분한다.
+            if (result.status == FieldInteractStatus::PlayerNotReady)
                 return false;
-            if (!fieldExists)
-            {
-                // An invalid target does not disconnect a logged-in player.
-                printf("[Field request ignored] playerId=%d, objectId=%d (unknown field)\n",
-                    sessionId, static_cast<int>(request.objectId));
-                return true;
-            }
 
-            // Receive only. Distance checks and farming actions are the next step.
-            // No world pointers are used after releasing the world lock.
-            printf("[Field request received] playerId=%d, objectId=%d, itemId=%d (receive only)\n",
-                sessionId, static_cast<int>(request.objectId), static_cast<int>(equippedTool));
+            // result는 사본이므로 월드 잠금 없이 로그와 디버그에 사용한다.
+            printf("[Field action] playerId=%d, objectId=%d, itemId=%d, result=%s, "
+                "crop=%d->%d, seed=%d->%d, distanceSquared=%.3f\n",
+                sessionId, static_cast<int>(request.objectId), static_cast<int>(result.equippedTool),
+                GetFieldInteractStatusName(result.status),
+                static_cast<int>(result.before.id), static_cast<int>(result.after.id),
+                result.seedCountBefore, result.seedCountAfter, result.distanceSquared);
             return true;
         }
 		case C2S_SHOP_BUY:       // 구매 처리

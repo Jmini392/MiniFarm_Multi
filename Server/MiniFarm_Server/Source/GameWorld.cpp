@@ -1,5 +1,7 @@
 ﻿#include "GameWorld.h"
 #include "../../../Common/CropLogic.h"
+#include "../../../Common/GameConfig.h"
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -170,6 +172,104 @@ FieldState* GameWorld::GetField(int objectId)
 		return nullptr;
 	}
 	return &it->second;
+}
+
+const char* GetFieldInteractStatusName(FieldInteractStatus status)
+{
+    switch (status) {
+    case FieldInteractStatus::Success: return "Success";
+    case FieldInteractStatus::PlayerNotReady: return "PlayerNotReady";
+    case FieldInteractStatus::ServerFarmingDisabled: return "ServerFarmingDisabled";
+    case FieldInteractStatus::UnknownField: return "UnknownField";
+    case FieldInteractStatus::TooFar: return "TooFar";
+    case FieldInteractStatus::UnsupportedTool: return "UnsupportedTool";
+    case FieldInteractStatus::NotApplicable: return "NotApplicable";
+    case FieldInteractStatus::NoSeed: return "NoSeed";
+    case FieldInteractStatus::InvalidCropData: return "InvalidCropData";
+    default: return "Unknown";
+    }
+}
+
+FieldInteractResult GameWorld::InteractField(int sessionId, int objectId)
+{
+    // 호출부의 월드 잠금을 유지한 채 검사와 두 상태 변경을 함께 처리한다.
+    FieldInteractResult result;
+    PlayerState* player = GetPlayer(sessionId);
+    if (player == nullptr || !player->IsFieldSyncReady())
+        return result;
+
+    result.equippedTool = player->GetEquippedTool();
+    if (!GameConfig::ServerFarmingEnabled) {
+        result.status = FieldInteractStatus::ServerFarmingDisabled;
+        return result;
+    }
+
+    FieldState* field = GetField(objectId);
+    const WorldObject* object = nullptr;
+    for (const WorldObject& candidate : m_objects) {
+        if (candidate.objectId == objectId && candidate.type == WorldObjectType::Field) {
+            object = &candidate;
+            break;
+        }
+    }
+    if (field == nullptr || object == nullptr) {
+        result.status = FieldInteractStatus::UnknownField;
+        return result;
+    }
+
+    result.before = field->crop;
+    result.after = field->crop;
+    InventoryCore& inventory = player->GetInventory();
+    const bool isSeed = result.equippedTool == EItemID::SeedCarrot
+        || result.equippedTool == EItemID::SeedCabbage;
+    if (isSeed) {
+        result.seedCountBefore = inventory.GetItemCount(result.equippedTool);
+        result.seedCountAfter = result.seedCountBefore;
+    }
+
+    // 배치 원본의 X만 반전하면 이동 패킷의 플레이어 좌표와 같아진다.
+    // 클라이언트의 InteractableObject와 같은 3차원 거리 2.5를 사용한다.
+    const PlayerPosition& pos = player->GetPosition();
+    const double dx = static_cast<double>(pos.x) + object->pos.x;
+    const double dy = static_cast<double>(pos.y) - object->pos.y;
+    const double dz = static_cast<double>(pos.z) - object->pos.z;
+    result.distanceSquared = dx * dx + dy * dy + dz * dz;
+    constexpr double INTERACT_DISTANCE = 2.5;
+    if (!std::isfinite(result.distanceSquared)
+        || result.distanceSquared > INTERACT_DISTANCE * INTERACT_DISTANCE) {
+        result.status = FieldInteractStatus::TooFar;
+        return result;
+    }
+
+    CropLogic::ActionResult action;
+    if (result.equippedTool == EItemID::Hoe) {
+        action = CropLogic::Till(field->crop);
+    }
+    else if (isSeed) {
+        const EItemID cropId = result.equippedTool == EItemID::SeedCarrot
+            ? EItemID::Carrot : EItemID::Cabbage;
+        if (m_cropTable.GetCrop(cropId) == nullptr) {
+            result.status = FieldInteractStatus::InvalidCropData;
+            return result;
+        }
+        // Plant가 씨앗 1개를 차감한다. 여기서 다시 차감하지 않는다.
+        action = CropLogic::Plant(field->crop, inventory, result.equippedTool);
+        result.seedCountAfter = inventory.GetItemCount(result.equippedTool);
+    }
+    else {
+        // 물주기·수확은 이후 작업에서 연결한다.
+        result.status = FieldInteractStatus::UnsupportedTool;
+        return result;
+    }
+
+    result.after = field->crop;
+    if (action == CropLogic::ActionResult::Success)
+        result.status = FieldInteractStatus::Success;
+    else if (action == CropLogic::ActionResult::NoSeed)
+        result.status = FieldInteractStatus::NoSeed;
+    else
+        result.status = FieldInteractStatus::NotApplicable;
+    return result;
 }
 
 std::vector<int> GameWorld::GetFieldSyncPlayers() const

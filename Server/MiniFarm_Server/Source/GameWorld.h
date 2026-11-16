@@ -32,6 +32,32 @@ struct WorldObject {
 // 플레이어 ID(세션 ID는 1부터)와 겹치지 않게 하려는 것이다
 const int WORLD_OBJECT_ID_BASE = 1000;
 
+// 행동 실패와 패킷 오류를 구분한다. 일반적인 행동 실패는 접속을 끊지 않는다.
+enum class FieldInteractStatus {
+    Success,
+    PlayerNotReady,
+    ServerFarmingDisabled,
+    UnknownField,
+    TooFar,
+    UnsupportedTool,
+    NotApplicable,
+    NoSeed,
+    InvalidCropData
+};
+
+// 잠금을 해제한 뒤에도 로그와 디버거에서 확인할 수 있는 값의 사본이다.
+struct FieldInteractResult {
+    FieldInteractStatus status = FieldInteractStatus::PlayerNotReady;
+    EItemID equippedTool = EItemID::Empty;
+    CropState before;
+    CropState after;
+    int seedCountBefore = -1; // 씨앗을 선택하지 않은 경우 -1
+    int seedCountAfter = -1;
+    double distanceSquared = -1.0; // 거리 검사 전이면 -1
+};
+
+const char* GetFieldInteractStatusName(FieldInteractStatus status);
+
 // 서버가 가지고 있는 게임 월드
 // 공용 로직(Common)이 변경할 상태를 이곳에서 가진다
 // 여러 스레드가 함께 쓰므로, 월드를 읽거나 바꾸는 동안에는 Lock()/Unlock()으로 감싸야 한다
@@ -63,6 +89,10 @@ public:
 	bool AddField(int objectId);
 	// 해당 밭의 상태, 없으면 nullptr. 조회만으로 밭을 만들지 않는다.
 	FieldState* GetField(int objectId);
+
+    // 호출하는 쪽이 Lock()/Unlock()으로 전체 호출을 감싼다. 송신은 하지 않는다.
+    // 서버의 위치·장비·밭·개인 수량을 검사하고 밭갈이 또는 파종을 처리한다.
+    FieldInteractResult InteractField(int sessionId, int objectId);
 	// 객체·밭·플레이어 초기 전송을 끝낸 ID 목록. 호출하는 쪽이 Lock을 잡는다.
 	std::vector<int> GetFieldSyncPlayers() const;
 
