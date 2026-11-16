@@ -4,6 +4,7 @@
 #include <vector>
 #include "FieldState.h"
 #include "PlayerState.h"
+#include "TimeSystem.h"
 #include "../../../Common/CropTable.h"
 #include "../../../Common/InventoryCore.h"
 #include "../../../Common/SharedWallet.h"
@@ -107,6 +108,8 @@ public:
 	const std::vector<WorldObject>& GetObjects() const { return m_objects; }
 	int GetFieldCount() const { return (int)m_fields.size(); }
 
+	float GetDayTime() const { return m_timeSystem.GetDayTime();}
+
 	// 시간이 지난 만큼 월드를 갱신한다 (밭의 작물 성장). dtMs는 밀리초. 호출하는 쪽이 Lock을 잡아야 한다
 	void Update(int dtMs);
 
@@ -119,4 +122,6 @@ private:
 	std::unordered_map<int, PlayerState> m_players; // 세션 ID별 플레이어 상태
 	std::unordered_map<int, FieldState> m_fields; // 월드 객체 ID별 밭 상태
 	std::vector<WorldObject> m_objects; // 배치 데이터에서 읽은 월드 객체 (밭, 집, 보트)
+
+	TimeSystem m_timeSystem; // 공유하는 서버 게임 시간
 };

@@ -284,6 +284,8 @@ std::vector<int> GameWorld::GetFieldSyncPlayers() const
 
 void GameWorld::Update(int dtMs)
 {
+	m_timeSystem.Update(dtMs);
+
 	// 모든 밭의 작물을 지난 시간만큼 성장시킨다
 	for (auto& pair : m_fields) {
 		CropState& crop = pair.second.crop;
