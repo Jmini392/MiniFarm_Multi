@@ -75,8 +75,11 @@ bool Crop::ApplyServerState(const CropState& state)
     m_receivedInitialState = true;
     const bool modelChanged = m_state.id != state.id || m_state.level != state.level;
     m_state = state; // ResetState를 사용하면 수신한 물과 성장 시간이 사라진다.
-    if (modelChanged)
+    if (modelChanged) {
         RefreshModelFromState();
+        LOG_D("Field state applied: objectId=%d, cropId=%d, level=%d",
+            m_netId, static_cast<int>(m_state.id), m_state.level);
+    }
     return true;
 }
 
@@ -146,7 +149,7 @@ void Crop::OnInteract(Player* player)
             return;
         }
 
-        LOG_D("Field request sent: objectId=%d (awaiting server handling)", m_netId);
+        LOG_D("Field request sent: objectId=%d (awaiting server state)", m_netId);
         return;
     }
 

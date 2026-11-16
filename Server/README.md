@@ -1,6 +1,51 @@
 # 서버 밭 상태 관리
 
-## 2026-11-16: 서버 밭갈이·파종 판정 함수 (현재 상태)
+## 2026-11-16: 기존 요청·밭 상태 전송 연결 확인 (2단계, 현재 상태)
+
+- 요청 처리부에서 판정 함수를 호출하는 연결은 앞 단계 커밋 `974dea5`에 포함돼 있다. 이번 단계에서는 기존 전송 경로와 실제 클라이언트의 수신·모델 반영까지 연결을 검증하고, 전송·적용을 구분할 디버그 로그를 보강했다.
+- 전체 경로: `Player::HandleInteractInput()` → `Crop::OnInteract()` → `SendInteractFieldRequest()` → 서버 `HandlePacket()` → `GameWorld::InteractField()` → 100ms 갱신의 `SendChangedFieldStates()` → `S2C_FIELD_UPDATE` → 클라이언트 `ApplyFieldUpdate()` → `Crop::ApplyServerState()` → 모델 교체.
+- 서버는 요청자도 포함하여 초기 동기화를 마친 접속자에게 변경된 밭만 보낸다. 밭 상태를 복사한 뒤 월드 잠금 없이 송신하며, 성공한 전송만 접속자별 전송 기록에 반영한다. 초기 접속에는 객체 생성 뒤 현재 밭 상태를 보내는 기존 순서를 유지한다.
+- 서버 `WorldSync.cpp`에는 전송 결과를 확인할 `sent` 지역 변수를 두고, 실제 변경 전송에 성공하면 Debug 콘솔에 `[Field update sent] receiverId=..., objectId=..., cropId=..., level=...`를 출력한다. 종류나 단계가 바뀐 경우에만 로그를 남겨 성장 시간 갱신 때마다 출력하지 않는다. `receiverId`는 요청자가 아니라 이 패킷을 받는 접속자의 ID다.
+- 클라이언트는 수신 상태를 적용하여 모델을 바꾼 뒤 `Field state applied: objectId=..., cropId=..., level=...`를 Debug 콘솔에 출력한다. E 전송 로그는 `awaiting server state`로 표현한다. 전송 성공과 서버 판정·클라이언트 적용 성공을 구분한다.
+- 씨앗 부족·중복 파종 등 밭이 바뀌지 않은 요청은 새 밭 갱신을 발생시키지 않는다. 개인 수량 UI 갱신, 물주기·수확, 클라이언트 거부 사유 안내는 이후 일정이다.
+
+### 화면으로 연결 확인
+
+1. 서버와 클라이언트를 **Debug / x64**로 빌드한다. 이전 서버는 종료하고 새 서버를 Ctrl+F5로 실행한다.
+2. 클라이언트 A와 B를 각각 Ctrl+F5로 실행하고 Space로 접속한다. 중단점은 모두 해제한다.
+3. A에서 가까운 빈 밭을 1 → E로 갈고, 4 → E로 당근을 심는다. 각 입력 뒤 모델이 바뀌는 것을 보고 다음 입력을 한다. A와 B가 같은 밭의 변경을 보아야 한다. 서버 콘솔에는 같은 objectId로 A·B 각각에 대한 전송 로그가 남는다.
+4. 클라이언트를 추가로 실행해 접속하면 이미 심어진 당근과 갈아진 밭이 처음부터 같은 상태로 보여야 한다.
+5. 하단 씨앗 숫자는 아직 갱신되지 않는다. 서버 수량은 앞 단계의 `result.seedCountBefore/After`로 확인한다.
+
+### 서버에서 변경 패킷 전송 확인
+
+1. 서버 `Source/WorldSync.cpp`의 **`SendChangedFieldStates()` 안**에서 `const bool sent = SendFieldState(sessionId, fields[i]);` 바로 다음 **`if (!sent)`** 줄에 F9로 중단점을 건다. 현재 219줄이다. 다른 함수의 같은 문구와 구분한다.
+2. 서버는 F5, 클라이언트 A·B는 Ctrl+F5로 실행한다. A에서 빈 밭에 1 → E를 누른다. 초기 로그인 전송은 이 위치를 지나지 않으므로, 실제 밭 변경을 보낼 때 멈춘다.
+3. 서버에 노란 실행 화살표가 나타나면 **디버그 → 창 → 조사식 → 조사식 1**에 아래 값을 한 줄씩 입력한다.
+
+| 조사식 | 밭갈이 시 기대값 |
+| --- | --- |
+| `sent` | true |
+| `sessionId` | 지금 전송한 대상 접속자 ID |
+| `fields[i].objectId` | 상호작용한 밭 ID |
+| `fields[i].crop.id` | Tilled (0) |
+| `fields[i].crop.level` | 0 |
+
+4. F5로 재개하면 다른 접속자에게 보내는 차례에서도 멈출 수 있다. objectId는 같고 sessionId는 다른지 확인한다. 접속자 전송 순서는 고정하지 않는다. 화면을 확인하려면 모든 중단을 F5로 재개한다.
+5. 4 → E로 파종했을 때는 `fields[i].crop.id=Carrot (1)`이어야 한다. 실제 패킷 필드를 보고 싶다면 `SendFieldState()`의 `return sent;`에 중단점을 걸어 `update`와 `sent`를 확인할 수 있다. 이 위치는 초기 로그인 전송에서도 멈춘다.
+
+### 받는 클라이언트에서 상태·모델 적용 확인
+
+1. 서버 중단점을 해제하고 서버를 Ctrl+F5로 실행한다. A는 Ctrl+F5, 받는 B는 F5로 실행한다.
+2. B의 `Client/MiniFarm/Source/Game/Crop.cpp`에서 **`ApplyServerState()` 안의 `LOG_D("Field state applied: ...`** 줄에 F9로 중단점을 건다. 현재 80줄이며, 상태 대입과 모델 교체가 끝난 위치다.
+3. A가 밭갈이 또는 파종하면 B를 디버그하는 Visual Studio가 멈춰야 한다. 지역 창 또는 조사식에서 `m_netId=대상 밭 ID`, `m_state.id=Tilled (0) 또는 Carrot (1)`, `m_state.level=0`, `modelChanged=true`를 확인한다. F5로 재개한 뒤 B 화면의 모델을 확인한다.
+4. 패킷 자체를 확인하려면 B의 `IngameScene.cpp`에서 `ApplyFieldUpdate()` 안의 `return crop->ApplyServerState(state);`에 중단점을 걸어 `packet`과 `state`를 확인한다. 이 위치는 모델 적용 전이고, 초기 로그인 때 빈 밭 18개도 처리하므로 필요할 때만 사용한다.
+
+검증: 서버·클라이언트 Debug/x64 빌드 통과. 저장소의 실제 클라이언트 오브젝트와 OpenGL 컨텍스트를 사용하는 임시 실행 파일로, 게임 입력 코드의 E 요청부터 실제 서버 판정·네트워크 수신 버퍼·패킷 처리·밭 상태 적용·모델 교체까지 50개 검사를 통과했다. 요청자와 관찰자의 변경 수신, 후접속자의 현재 모델, 로컬 선행 변경 없음, 서버에서 소진한 씨앗의 재사용 거절을 확인했다. 사용자 게임 창을 직접 조작하는 수동 검사는 위 절차로 진행한다. 임시 검증 코드는 저장소에 추가하지 않았고 검증용 서버와 클라이언트는 종료했다.
+
+이하 1단계와 이전 날짜의 설명은 당시 기록이다. 현재 연결 상태와 디버그 방법은 이 2단계 설명을 우선한다.
+
+## 2026-11-16: 서버 밭갈이·파종 판정 함수 (1단계 기록)
 
 - `GameWorld::InteractField(sessionId, objectId)`가 서버에 저장된 준비 상태, 밭 ID, 위치, 장비, 개인 씨앗 수량을 기준으로 판정한다. 호출부가 `Lock()/Unlock()`으로 전체 호출을 감싸므로 밭 상태 검사·씨앗 차감·파종이 같은 보호 범위에서 처리된다.
 - 게임에서 확인할 수 있도록 기존 `C2S_INTERACT_FIELD` 수신부에 함수 호출을 연결했다. 패킷 형식은 유지하며, 밭 변경은 기존 100ms 갱신의 `SendChangedFieldStates()`가 전송한다. 함수 내부에서는 송신하지 않는다.

@@ -77,7 +77,8 @@ namespace {
 		update.water = crop.water;
 		update.growTime = crop.growTime;
 		update.requiredGrowTime = crop.requiredGrowTime;
-		return SendToClient(sessionId, (const char*)&update);
+		const bool sent = SendToClient(sessionId, (const char*)&update);
+		return sent; // 초기·변경 상태의 전송 결과를 디버거에서 확인한다.
 	}
 
 	bool SameFieldState(const FieldState& a, const FieldState& b)
@@ -214,8 +215,18 @@ void SendChangedFieldStates()
 			if (i < previous.size() && SameFieldState(previous[i], fields[i]))
 				continue;
 
-			if (!SendFieldState(sessionId, fields[i]))
+			const bool sent = SendFieldState(sessionId, fields[i]);
+			if (!sent)
 				break;
+
+#ifdef _DEBUG
+			// 성장 시간 갱신마다 출력하지 않고 종류·단계가 바뀐 경우만 기록한다.
+			if (i >= previous.size() || previous[i].crop.id != fields[i].crop.id
+				|| previous[i].crop.level != fields[i].crop.level) {
+				printf("[Field update sent] receiverId=%d, objectId=%d, cropId=%d, level=%d\n",
+					sessionId, fields[i].objectId, static_cast<int>(fields[i].crop.id), fields[i].crop.level);
+			}
+#endif
 
 			// 성공한 전송만 기록한다. 성장 시간만 바뀐 경우도 다음 비교에 포함된다.
 			if (i < previous.size())
