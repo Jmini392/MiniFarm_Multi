@@ -1,6 +1,101 @@
 # 서버 밭 상태 관리
 
-## 2026-11-16: 기존 요청·밭 상태 전송 연결 확인 (2단계, 현재 상태)
+## 2026-11-16: 두 클라이언트·실패 상황 검증 (3단계, 현재 상태)
+
+앞의 두 단계 커밋 `974dea5`, `e6b24ce`를 기준으로 검증했다. 기능 수정이 필요한 문제는 발견되지 않아 이번 단계에서는 이 문서에 결과와 직접 디버그 절차를 기록했다. 서버·클라이언트 Debug/x64 빌드 통과. 개인 씨앗 수량 UI는 아직 서버 변경을 받지 않으므로, 수량 검증에는 서버 실제 수량을 사용했다.
+
+### 검증 결과
+
+실제 서버 코드에 검증용 상태 조회만 추가한 임시 실행 파일을 사용했다. TCP 클라이언트 두 개의 요청 전후에 밭 18개 전체, 접속자별 개인 아이템 4종, 공동 잔액을 비교했다. 실패 시 이 값들이 그대로인지와 접속 유지 여부를 확인했다. 34개 시나리오의 144개 검사가 통과했다.
+
+| 상황 | 실제 확인 결과 |
+| --- | --- |
+| A의 밭갈이·당근 파종 | 양쪽에 같은 밭 상태 전달. A의 당근 씨앗만 1 → 0 |
+| B의 양배추 파종 | 양쪽에 양배추 상태 전달. B의 양배추 씨앗만 1 → 0 |
+| 경작 전 파종·반복 밭갈이 | NotApplicable. 밭·모든 개인 수량·공동 잔액 유지 |
+| 같은 사람·다른 사람의 중복 파종 | NotApplicable. 이미 심어진 작물과 실패한 사람의 씨앗 유지 |
+| 씨앗 소진 후 다른 갈아진 밭에 파종 | NoSeed. 밭은 Tilled, 씨앗은 0 → 0 |
+| 물뿌리개·낫·빈손 | UnsupportedTool. 이번 단계에서는 상태 변경 없음 |
+| 음수·없는 ID·상점·보트 ID | UnknownField. 상태 보존 및 접속 유지 |
+| 거리 초과·X축 반전 전 좌표·경계 밖 | TooFar. 상태 보존 및 접속 유지 |
+| 정확히 거리 2.5인 요청 | 성공. 클라이언트와 같은 3차원 거리 기준 적용 |
+| 같은 밭에 동시 파종 7회 | 매회 Success 1개, NotApplicable 1개. 성공한 사람의 씨앗만 차감 |
+| 중복 파종 요청 20회 연속 | 모두 거절. 전체 밭·아이템 수량·잔액 유지 |
+| 후접속·재접속 | 현재 밭 18개의 종류·단계·물·성장 시간이 초기 수신값과 일치 |
+| 크기가 잘못된 밭 요청 | 해당 접속자만 연결 종료. 기존 A·B의 상태와 이후 조작 정상 |
+
+추가로 실제 클라이언트 코드와 OpenGL 컨텍스트를 사용하는 요청자·관찰자·후접속자 실행 파일로 50개 검사가 통과했다. 게임 입력 코드의 E 요청, 실제 서버 판정, 수신 버퍼와 패킷 처리, 밭 상태 적용, 모델 교체까지 확인했다. 사용자 게임 창에서 직접 키를 누르는 수동 검사는 아래 절차로 진행한다. 임시 검증 코드는 저장소에 추가하지 않았으며 검증용 프로세스는 종료했다.
+
+실제 서버 로그 일부:
+
+```text
+[Field action] playerId=1, objectId=1000, itemId=6, result=Success, crop=0->1, seed=1->0, distanceSquared=0.000
+[Field action] playerId=2, objectId=1000, itemId=6, result=NotApplicable, crop=1->1, seed=1->1, distanceSquared=0.000
+[Field action] playerId=1, objectId=1001, itemId=6, result=NoSeed, crop=0->0, seed=0->0, distanceSquared=0.000
+[Field action] playerId=1, objectId=1002, itemId=7, result=TooFar, crop=-1->-1, seed=1->1, distanceSquared=120.000
+```
+
+### 서버 한 곳에 중단점을 걸어 시작하기
+
+1. 이전 서버·클라이언트를 종료한다. 서버와 클라이언트를 각각 **Debug / x64**로 빌드한다. 서버는 하나만 실행한다.
+2. **서버 솔루션 `Server/MiniFarm_Server.sln`의** `Source/PacketHandler.cpp`를 연다. 클라이언트의 같은 이름 파일과 구분한다.
+3. `C2S_INTERACT_FIELD` 안의 **`if (result.status == FieldInteractStatus::PlayerNotReady)`** 줄에 F9로 중단점을 건다. 현재 172줄이며 성공·일반적인 실패 모두 판정 직후 이 줄에 도착한다.
+4. **서버 Visual Studio에서 `디버그 → 디버깅 시작(F5)`**을 누른다. Ctrl+F5는 중단점으로 멈추지 않는다. 게임 창이 떠 있는 것과 디버거가 붙어 있는 것은 다르다. 디버깅 중에는 Visual Studio에 중지·일시 중지 도구가 표시된다.
+5. 별도 클라이언트 Visual Studio에서 Ctrl+F5로 A·B를 실행하고 각각 Space로 접속한다. 게임 창을 클릭하고 밭에 충분히 가까이 가서 잠깐 멈춘 뒤, **숫자 1로 도구 선택 → E로 상호작용**한다. 숫자 1만 누르면 밭 요청은 발생하지 않는다.
+6. 서버에 노란 실행 화살표가 나타나면 **디버그 → 창 → 지역**에서 `result`를 펼친다. 보이지 않으면 **디버그 → 창 → 조사식 → 조사식 1**에 `result.status`, `result.before.id`, `result.after.id`, `result.seedCountBefore`, `result.seedCountAfter`, `sessionId`, `request.objectId`를 한 줄씩 입력한다.
+7. 각 결과를 확인한 뒤 **F5로 재개**한다. 서버가 중단된 동안에는 다음 요청과 상태 전송도 진행되지 않는다.
+
+### 정상·실패를 같은 중단점에서 순서대로 확인
+
+서버를 새로 시작한 상태에서 진행한다. A·B는 각각 당근 씨앗과 양배추 씨앗을 1개씩 가진다. 아래에서 같은 밭과 다른 빈 밭을 구분한다.
+
+| 순서 | 게임에서 할 일 | result의 기대값 |
+| --- | --- | --- |
+| 1 | A가 빈 밭에서 4 → E | NotApplicable. Empty → Empty, 씨앗 1 → 1 |
+| 2 | A가 그 밭에서 1 → E | Success. Empty → Tilled, 씨앗 -1 → -1 |
+| 3 | A가 다시 E | NotApplicable. Tilled → Tilled |
+| 4 | A가 같은 밭에서 4 → E | Success. Tilled → Carrot, 당근 씨앗 1 → 0 |
+| 5 | B가 이미 심어진 그 밭에서 4 → E | NotApplicable. Carrot → Carrot, B 씨앗 1 → 1 |
+| 6 | A가 다른 빈 밭을 1 → E로 갈아 놓은 뒤 4 → E | NoSeed. Tilled → Tilled, A 씨앗 0 → 0 |
+| 7 | B가 6번의 갈아진 밭에서 5 → E | Success. Tilled → Cabbage, B 양배추 씨앗 1 → 0 |
+| 8 | A가 작물이 있는 밭에서 2 → E 또는 3 → E | UnsupportedTool. 물·작물·수량 유지 |
+
+밭갈이 도구의 seed=-1은 씨앗 장비가 아니라는 표시다. 하단 UI에 씨앗 1이 남아 보여도 6번의 서버 NoSeed 결과가 현재 정상 동작이다. UI 수량 갱신은 11/18 작업이다.
+
+**실패는 새 모델 변경을 만들지 않으므로 클라이언트 Crop.cpp 80줄에서 멈추지 않는 것이 정상이다.** 성공·실패 판정은 위 서버 172줄에서 확인한다. 화면 동기화는 중단점을 해제한 뒤 A·B가 같은 밭을 보는지 확인한다. 동시 요청의 실행 순서를 바꾸지 않으려면 경쟁 테스트 중에는 중단점을 해제하고 서버 로그를 본다. 이번 자동 검증은 두 TCP 요청을 함께 시작하여 검사했다.
+
+### 거리 초과·잘못된 대상 직접 요청 (선택)
+
+정상 게임 입력은 거리 밖의 밭을 미리 걸러내므로 멀리서 E를 누르는 것만으로 서버 TooFar를 재현할 수 없다. 아래는 현재 서버에 별도 테스트 접속 하나를 만들어 초기 위치에서 밭 1000을 요청하는 PowerShell 예시다. 서버 172줄 중단점은 유지한다. 테스트 접속의 초기 위치는 (0, 8, 0)이므로 결과는 TooFar다.
+
+```powershell
+$fieldProbeClient = [System.Net.Sockets.TcpClient]::new('127.0.0.1', 9000)
+$fieldProbeStream = $fieldProbeClient.GetStream()
+# 로그인 → 밭갈이 도구 장착 → 밭 1000 요청
+[byte[]]$fieldProbePackets = 2,1, 6,3,3,0,0,0, 6,4,232,3,0,0
+$fieldProbeStream.Write($fieldProbePackets, 0, $fieldProbePackets.Length)
+```
+
+서버가 멈추면 `result.status=TooFar`를 확인하고 F5로 재개한다. 같은 PowerShell에서 아래를 실행하면 상점 1018을 밭으로 요청하므로 UnknownField가 나와야 한다.
+
+```powershell
+[byte[]]$fieldProbeBadTarget = 6,4,250,3,0,0
+$fieldProbeStream.Write($fieldProbeBadTarget, 0, $fieldProbeBadTarget.Length)
+```
+
+UnknownField 확인 후 F5로 재개하고, 테스트 접속을 아래처럼 닫는다. 게임 플레이어의 연결은 유지된다.
+
+```powershell
+$fieldProbeClient.Close()
+```
+
+### 클라이언트 중단점 자체가 작동하는지 확인
+
+서버는 Ctrl+F5, **클라이언트 하나는 F5**로 실행한다. 클라이언트 `Crop.cpp` 80줄 대신 **77줄 `m_state = state;`**에 중단점을 걸고 Space로 접속한다. 최초 빈 밭 상태를 받으면서도 멈추므로 모델 변경 조건과 디버거 연결을 분리해 확인할 수 있다. 한 번 멈춘 뒤 77줄 중단점을 해제하고 F5로 재개하면 초기 밭 18개마다 반복해서 멈추는 것을 피할 수 있다. 이후 모델 변경은 80줄에서 확인한다.
+
+이하 내용은 앞 단계의 기록이다. 현재 검증 결과와 실패 확인 방법은 이 3단계 설명을 우선한다.
+
+## 2026-11-16: 기존 요청·밭 상태 전송 연결 확인 (2단계 기록)
 
 - 요청 처리부에서 판정 함수를 호출하는 연결은 앞 단계 커밋 `974dea5`에 포함돼 있다. 이번 단계에서는 기존 전송 경로와 실제 클라이언트의 수신·모델 반영까지 연결을 검증하고, 전송·적용을 구분할 디버그 로그를 보강했다.
 - 전체 경로: `Player::HandleInteractInput()` → `Crop::OnInteract()` → `SendInteractFieldRequest()` → 서버 `HandlePacket()` → `GameWorld::InteractField()` → 100ms 갱신의 `SendChangedFieldStates()` → `S2C_FIELD_UPDATE` → 클라이언트 `ApplyFieldUpdate()` → `Crop::ApplyServerState()` → 모델 교체.
