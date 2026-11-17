@@ -33,6 +33,17 @@ struct WorldObject {
 // 플레이어 ID(세션 ID는 1부터)와 겹치지 않게 하려는 것이다
 const int WORLD_OBJECT_ID_BASE = 1000;
 
+// 까마귀 ID는 이 값부터 만든 순서대로 붙는다. 플레이어(1~)와 월드 객체(1000~)와 겹치지 않는다
+const int CROW_ID_BASE = 2000;
+
+// 서버가 움직이는 까마귀 하나
+// 위치는 플레이어와 같은 월드 좌표이다 (월드 객체처럼 JSON 값 그대로가 아니다).
+// 위치가 나중에 바뀌므로 읽거나 바꿀 때 월드 잠금이 필요하다
+struct CrowState {
+	int id = -1;
+	Vec3f pos;
+};
+
 // 행동 실패와 패킷 오류를 구분한다. 일반적인 행동 실패는 접속을 끊지 않는다.
 enum class FieldInteractStatus {
     Success,
@@ -108,6 +119,13 @@ public:
 	const std::vector<WorldObject>& GetObjects() const { return m_objects; }
 	int GetFieldCount() const { return (int)m_fields.size(); }
 
+	// 까마귀를 만들고 ID를 정해 돌려준다. 좌표가 유한한 값이 아니면 -1
+	// 호출하는 쪽이 Lock을 잡는다. 클라이언트로 보내는 일은 하지 않는다
+	int AddCrow(const Vec3f& pos);
+	// 해당 까마귀, 없으면 nullptr. 호출하는 쪽이 Lock을 잡는다
+	CrowState* GetCrow(int crowId);
+	const std::vector<CrowState>& GetCrows() const { return m_crows; }
+
 	float GetDayTime() const { return m_timeSystem.GetDayTime();}
 
 	// 시간이 지난 만큼 월드를 갱신한다 (밭의 작물 성장). dtMs는 밀리초. 호출하는 쪽이 Lock을 잡아야 한다
@@ -122,6 +140,7 @@ private:
 	std::unordered_map<int, PlayerState> m_players; // 세션 ID별 플레이어 상태
 	std::unordered_map<int, FieldState> m_fields; // 월드 객체 ID별 밭 상태
 	std::vector<WorldObject> m_objects; // 배치 데이터에서 읽은 월드 객체 (밭, 집, 보트)
+	std::vector<CrowState> m_crows; // 서버가 움직이는 까마귀
 
 	TimeSystem m_timeSystem; // 공유하는 서버 게임 시간
 };

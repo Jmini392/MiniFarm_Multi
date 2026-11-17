@@ -197,6 +197,16 @@ int main(int argc, char* argv[]) {
 	if (!g_world.LoadObjects("..\\..\\Client\\MiniFarm\\Data\\Interactable_props_pos.json")) return 1;
 	printf("[월드] 객체 %d개 로딩 (밭 %d개)\n", (int)g_world.GetObjects().size(), g_world.GetFieldCount());
 
+	// 까마귀 한 마리를 밭 위쪽에 만든다.
+	{
+		const Vec3f CROW_START = { -3.0f, 10.0f, 7.0f };
+		g_world.Lock();
+		const int crowId = g_world.AddCrow(CROW_START);
+		g_world.Unlock();
+		if (crowId < 0) return 1;
+		printf("[월드] 까마귀 생성 ID=%d 위치=(%.1f, %.1f, %.1f)\n", crowId, CROW_START.x, CROW_START.y, CROW_START.z);
+	}
+
 	InitializeCriticalSection(&g_sessionCs);
 
 	// Update 스레드 시작 (끝나기를 기다리지 않으므로 핸들은 바로 닫는다)

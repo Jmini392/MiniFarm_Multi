@@ -165,6 +165,29 @@ bool GameWorld::AddField(int objectId)
 	return m_fields.emplace(objectId, field).second;
 }
 
+int GameWorld::AddCrow(const Vec3f& pos)
+{
+	if (!std::isfinite(pos.x) || !std::isfinite(pos.y) || !std::isfinite(pos.z)) {
+		return -1;
+	}
+
+	CrowState crow;
+	crow.id = CROW_ID_BASE + (int)m_crows.size();
+	crow.pos = pos;
+	m_crows.push_back(crow);
+	return crow.id;
+}
+
+CrowState* GameWorld::GetCrow(int crowId)
+{
+	// 까마귀는 지워지지 않으므로 ID에서 순서를 바로 알 수 있다
+	const int index = crowId - CROW_ID_BASE;
+	if (index < 0 || index >= (int)m_crows.size()) {
+		return nullptr;
+	}
+	return &m_crows[index];
+}
+
 FieldState* GameWorld::GetField(int objectId)
 {
 	auto it = m_fields.find(objectId);
