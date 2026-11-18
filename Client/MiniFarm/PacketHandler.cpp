@@ -141,6 +141,24 @@ bool HandlePacket(const char* packet)
         return ingame->ApplyFieldUpdate(update);
     }
 
+    case S2C_WALLET_BALANCE:
+    {
+        if (header.size != sizeof(S2C_WALLET_BALANCE_PACKET))
+            return false;
+
+        IngameScene* ingame = dynamic_cast<IngameScene*>(SceneManager::GetScene());
+        if (ingame == nullptr)
+            return false;
+
+        S2C_WALLET_BALANCE_PACKET update{};
+        memcpy(&update, packet, sizeof(update));
+        if (update.balance < 0)
+            return false;
+
+        ingame->ApplyServerWalletBalance(update.balance);
+        return true;
+    }
+
     case S2C_INVENTORY_UPDATE:
     {
         if (header.size != sizeof(S2C_INVENTORY_UPDATE_PACKET))

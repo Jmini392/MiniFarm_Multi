@@ -163,6 +163,7 @@ DWORD WINAPI UpdateThread(LPVOID arg) {
 
 		// 월드 잠금을 해제한 뒤, 접속 초기화가 끝난 클라이언트에 변경 상태를 보낸다.
 		SendChangedFieldStates();
+		SendChangedWalletBalances();
 	}
 	return 0;
 }

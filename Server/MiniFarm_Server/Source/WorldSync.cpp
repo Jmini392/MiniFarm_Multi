@@ -186,6 +186,39 @@ bool SendPlayerStates(int sessionId)
 	return true;
 }
 
+void SendChangedWalletBalances()
+{
+	S2C_WALLET_BALANCE_PACKET update{};
+	update.header.size = static_cast<unsigned char>(sizeof(update));
+	update.header.type = S2C_WALLET_BALANCE;
+
+	std::vector<int> receivers;
+	g_world.Lock();
+	update.balance = g_world.GetWallet().GetMoney();
+	for (int sessionId : g_world.GetFieldSyncPlayers())
+	{
+		if (g_world.GetPlayer(sessionId)->GetLastSentWalletBalance() != update.balance)
+			receivers.push_back(sessionId);
+	}
+	g_world.Unlock();
+
+	// The update thread sends both initial and changed balances in order.
+	for (int sessionId : receivers)
+	{
+		if (!SendToClient(sessionId, reinterpret_cast<const char*>(&update)))
+			continue;
+
+		g_world.Lock();
+		PlayerState* player = g_world.GetPlayer(sessionId);
+		if (player != nullptr)
+			player->SetLastSentWalletBalance(update.balance);
+		g_world.Unlock();
+#ifdef _DEBUG
+		printf("[Wallet sent] playerId=%d, balance=%d\n", sessionId, static_cast<int>(update.balance));
+#endif
+	}
+}
+
 void SendChangedFieldStates()
 {
 	// 로컬 농사를 유지하는 동안 서버의 반복 갱신으로 클라이언트 상태를 덮지 않는다.

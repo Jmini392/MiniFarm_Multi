@@ -18,6 +18,9 @@ bool SendPlayerStates(int sessionId);
 // Update 스레드에서 호출한다. 각 플레이어에게 마지막으로 보낸 값과 다른 밭만 전송한다.
 void SendChangedFieldStates();
 
+// Called by the update thread for initial balances and later changes.
+void SendChangedWalletBalances();
+
 // 플레이어의 현재 이동 상태를 초기 동기화가 끝난 다른 접속자에게 보낸다.
 void SendPlayerMove(int sessionId);
 

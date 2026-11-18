@@ -45,12 +45,16 @@ public:
     bool IsFieldSyncReady() const { return m_fieldSyncReady; }
     void SetFieldSyncReady(bool ready) { m_fieldSyncReady = ready; }
 
+    int GetLastSentWalletBalance() const { return m_lastSentWalletBalance; }
+    void SetLastSentWalletBalance(int balance) { m_lastSentWalletBalance = balance; }
+
     InventoryCore& GetInventory()
     {
         return m_inventory;
     }
 
 private:
+    int m_lastSentWalletBalance = -1; // No balance has been sent yet.
     bool m_fieldSyncReady = false; // 객체·밭·플레이어 초기 전송을 모두 마친 뒤 변경 상태를 받는다.
 
     int m_id;                                   // 플레이어를 식별하는 ID

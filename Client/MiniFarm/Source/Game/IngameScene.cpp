@@ -158,6 +158,12 @@ void IngameScene::TestAddMoney(int amount)
 	m_wallet.AddMoney(amount);
 }
 
+void IngameScene::ApplyServerWalletBalance(int balance)
+{
+	m_serverWalletBalance = balance;
+	LOG_D("[Wallet received] playerId=%d, balance=%d", m_playerId, m_serverWalletBalance);
+}
+
 void IngameScene::ApplyLoginInfo(const S2C_LOGIN_INFO_PACKET& info)
 {
 	m_playerId = info.playerId;

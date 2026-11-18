@@ -2,9 +2,13 @@
 
 #include <WinSock2.h>
 #include <atomic>
+#include <cstdint>
 #include "../../Common/GameTypes.h"
 
 class RecvBuffer;
+#ifdef _DEBUG
+enum class DebugWalletAction : std::uint8_t;
+#endif
 
 class NetworkClient
 {
@@ -24,6 +28,9 @@ public:
     bool SendMoveRequest(float x, float y, float z, float yaw, bool isMoving, bool isAirborne);
     bool SendEquipRequest(EItemID item);
     bool SendInteractFieldRequest(int objectId);
+#ifdef _DEBUG
+    bool SendDebugWalletChangeRequest(DebugWalletAction action);
+#endif
 
 private:
     bool SendAll(const char* data, int size);

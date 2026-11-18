@@ -202,6 +202,18 @@ bool NetworkClient::SendInteractFieldRequest(int objectId)
     return SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
 }
 
+#ifdef _DEBUG
+bool NetworkClient::SendDebugWalletChangeRequest(DebugWalletAction action)
+{
+    C2S_DEBUG_WALLET_CHANGE_PACKET packet{};
+    packet.header.size = static_cast<unsigned char>(sizeof(packet));
+    packet.header.type = C2S_DEBUG_WALLET_CHANGE;
+    packet.action = action;
+
+    return SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
+}
+#endif
+
 bool NetworkClient::SendAll(const char* data, int size)
 {
     if (m_socket == INVALID_SOCKET || !m_connected || !m_receiving

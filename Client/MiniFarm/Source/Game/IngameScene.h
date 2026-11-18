@@ -34,6 +34,8 @@ public:
 
 	void ApplyLoginInfo(const S2C_LOGIN_INFO_PACKET& info);
 	void ApplyInventoryCounts(const InventoryCounts& counts);
+	void ApplyServerWalletBalance(int balance);
+	int GetServerWalletBalance() const { return m_serverWalletBalance; }
 	bool AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet);
 	bool ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet);
 	bool ApplyEquipObject(const S2C_EQUIP_OBJECT_PACKET& packet);
@@ -42,7 +44,8 @@ public:
 private:
 	int m_playerId = -1;
 
-	SharedWallet m_wallet; // Local world wallet until server synchronization is connected.
+	SharedWallet m_wallet;
+	int m_serverWalletBalance = -1; // No server balance has arrived yet.
 	Player* m_player = nullptr;
 	TimeSystem m_timeSystem;
 	std::vector<std::shared_ptr<Crop>> m_crops;

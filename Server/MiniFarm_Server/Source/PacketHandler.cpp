@@ -170,6 +170,38 @@ bool HandlePacket(int sessionId, const char* packet) {
 			printf("[장비 변경] ID=%d, itemId=%d\n", sessionId, (int)request.itemId);
 			return true;
 		}
+#ifdef _DEBUG
+        case C2S_DEBUG_WALLET_CHANGE:
+        {
+            if (header.size != sizeof(C2S_DEBUG_WALLET_CHANGE_PACKET))
+                return false;
+
+            C2S_DEBUG_WALLET_CHANGE_PACKET request{};
+            memcpy(&request, packet, sizeof(request));
+            if (request.action != DebugWalletAction::Add && request.action != DebugWalletAction::Spend)
+                return false;
+
+            g_world.Lock();
+            const PlayerState* player = g_world.GetPlayer(sessionId);
+            if (player == nullptr || !player->IsFieldSyncReady())
+            {
+                g_world.Unlock();
+                return false;
+            }
+
+            constexpr int DEBUG_WALLET_AMOUNT = 10000;
+            SharedWallet& wallet = g_world.GetWallet();
+            const int before = wallet.GetMoney();
+            const bool added = request.action == DebugWalletAction::Add;
+            const bool success = added ? wallet.AddMoney(DEBUG_WALLET_AMOUNT) : wallet.SpendMoney(DEBUG_WALLET_AMOUNT);
+            const int after = wallet.GetMoney();
+            g_world.Unlock();
+
+            printf("[Wallet debug] playerId=%d, action=%s, success=%d, balance=%d->%d\n",
+                sessionId, added ? "add" : "spend", static_cast<int>(success), before, after);
+            return true;
+        }
+#endif
         case C2S_INTERACT_FIELD:
         {
             if (header.size != sizeof(C2S_INTERACT_FIELD_PACKET))

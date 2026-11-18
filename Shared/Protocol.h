@@ -19,6 +19,7 @@ enum PacketType : unsigned char {
 	C2S_SHOP_BUY = 5,
 	C2S_SHOP_SELL = 6,
 	C2S_BOAT_ESCAPE = 7,
+	C2S_DEBUG_WALLET_CHANGE = 20,
 	// Server to Client
 	S2C_LOGIN_INFO = 8,
 	S2C_ADD_OBJECT = 9,
@@ -31,6 +32,13 @@ enum PacketType : unsigned char {
 	S2C_TIME_SYNC = 16,
 	S2C_ESCAPE_RESULT = 17,
 	S2C_INVENTORY_UPDATE = 18,
+	S2C_WALLET_BALANCE = 19,
+};
+
+enum class DebugWalletAction : std::uint8_t
+{
+    Add = 1,
+    Spend = 2,
 };
 
 #pragma pack(push, 1)
@@ -67,6 +75,18 @@ struct C2S_INTERACT_FIELD_PACKET
 {
     PacketHeader header;
     std::int32_t objectId;
+};
+
+struct C2S_DEBUG_WALLET_CHANGE_PACKET
+{
+    PacketHeader header;
+    DebugWalletAction action;
+};
+
+struct S2C_WALLET_BALANCE_PACKET
+{
+    PacketHeader header;
+    std::int32_t balance;
 };
 
 struct InventoryCounts
@@ -156,6 +176,8 @@ static_assert(sizeof(C2S_LOGIN_PACKET) == 2, "C2S_LOGIN_PACKET must be 2 bytes."
 static_assert(sizeof(C2S_MOVE_OBJECT_PACKET) == 20,"C2S_MOVE_OBJECT_PACKET must be 20 bytes.");
 static_assert(sizeof(C2S_EQUIP_PACKET) == 6, "C2S_EQUIP_PACKET must be 6 bytes.");
 static_assert(sizeof(C2S_INTERACT_FIELD_PACKET) == 6, "C2S_INTERACT_FIELD_PACKET must be 6 bytes.");
+static_assert(sizeof(C2S_DEBUG_WALLET_CHANGE_PACKET) == 3, "C2S_DEBUG_WALLET_CHANGE_PACKET must be 3 bytes.");
+static_assert(sizeof(S2C_WALLET_BALANCE_PACKET) == 6, "S2C_WALLET_BALANCE_PACKET must be 6 bytes.");
 static_assert(sizeof(InventoryCounts) == 16, "InventoryCounts must be 16 bytes.");
 static_assert(sizeof(S2C_LOGIN_INFO_PACKET) == 38, "S2C_LOGIN_INFO_PACKET must be 38 bytes.");
 static_assert(sizeof(S2C_INVENTORY_UPDATE_PACKET) == 18, "S2C_INVENTORY_UPDATE_PACKET must be 18 bytes.");

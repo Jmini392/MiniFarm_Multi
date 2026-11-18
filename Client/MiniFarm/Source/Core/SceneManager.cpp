@@ -4,6 +4,10 @@
 #include "TitleScene.h"
 #include "InputManager.h"
 #include "NetworkClient.h"
+#ifdef _DEBUG
+#include "Common/GameConfig.h"
+#include "Shared/Protocol.h"
+#endif
 
 std::unique_ptr<Scene> SceneManager::s_currentScene = nullptr;
 int SceneManager::s_prevTime = 0;
@@ -98,15 +102,27 @@ void SceneManager::InputTestKey(char key)
 		InputManager::SetUIMode(bShowCursor);
 		break;
 	}
+#ifdef _DEBUG
 	case 'c':
+	case 'v':
 	{
-		if (auto* s = dynamic_cast<IngameScene*>(s_currentScene.get()))
+		auto* ingame = dynamic_cast<IngameScene*>(s_currentScene.get());
+		if (ingame == nullptr || !InputManager::IsKeyPressed(key))
+			break;
+
+		if (!GameConfig::ServerFarmingEnabled)
 		{
-			s->TestAddMoney(GOAL_MONEY);
+			if (key == 'c')
+				ingame->TestAddMoney(GOAL_MONEY);
+			break;
 		}
 
+		const DebugWalletAction action = key == 'c' ? DebugWalletAction::Add : DebugWalletAction::Spend;
+		if (!GetNetworkClient().SendDebugWalletChangeRequest(action))
+			LOG_E("Debug wallet request send failed.");
 		break;
 	}
+#endif
 	case 27:
 	{
 		if (s_networkClient)
