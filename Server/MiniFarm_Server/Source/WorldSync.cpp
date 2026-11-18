@@ -108,6 +108,26 @@ bool SendWorldObjects(int sessionId)
 			return false;
 		}
 	}
+
+	// 까마귀는 위치가 바뀔 수 있으므로 월드 잠금을 잡고 복사한 뒤 보낸다
+	std::vector<CrowState> crows;
+	g_world.Lock();
+	crows = g_world.GetCrows();
+	g_world.Unlock();
+
+	for (const CrowState& crow : crows) {
+		S2C_ADD_OBJECT_PACKET add{};
+		add.header.size = (unsigned char)sizeof(add);
+		add.header.type = S2C_ADD_OBJECT;
+		add.objectId = crow.id;
+		add.objectType = 3; // 까마귀
+		add.pos[0] = crow.pos.x; add.pos[1] = crow.pos.y; add.pos[2] = crow.pos.z;
+		add.scale[0] = 1.f;      add.scale[1] = 1.f;      add.scale[2] = 1.f;
+
+		if (!SendToClient(sessionId, (const char*)&add)) {
+			return false;
+		}
+	}
 	return true;
 }
 

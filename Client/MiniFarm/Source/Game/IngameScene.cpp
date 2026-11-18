@@ -9,6 +9,7 @@
 #include "WaterParticleSystem.h"
 #include "Collider.h"
 #include "OtherPlayer.h"
+#include "Crow.h"
 #include "../../../../Shared/Protocol.h"
 
 void IngameScene::Init()
@@ -199,7 +200,8 @@ void IngameScene::ApplyInventoryCounts(const InventoryCounts& counts)
 bool IngameScene::AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet)
 {
 	static const char* const TYPE_NAMES[] = { "Field", "House", "Boat" };
-	if (packet.objectType >= 3 || packet.objectId < 0)
+	constexpr unsigned char OBJECT_TYPE_CROW = 3;
+	if (packet.objectType > OBJECT_TYPE_CROW || packet.objectId < 0)
 		return false;
 
 	for (int i = 0; i < 3; i++)
@@ -212,6 +214,15 @@ bool IngameScene::AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet)
 	{
 		if (obj->m_netId == packet.objectId)
 			return false;
+	}
+
+	// 까마귀는 Crow 모델로 보여준다. 위치는 월드 좌표 그대로이다.
+	if (packet.objectType == OBJECT_TYPE_CROW)
+	{
+		auto crow = std::make_shared<Crow>(
+			packet.objectId, glm::vec3(packet.pos[0], packet.pos[1], packet.pos[2]));
+		AddObject(crow);
+		return true;
 	}
 
 	auto obj = ObjectLoader::CreateInteractable(
