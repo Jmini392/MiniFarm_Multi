@@ -11,6 +11,7 @@
 
 class OtherPlayer;
 
+struct InventoryCounts;
 struct S2C_LOGIN_INFO_PACKET;
 struct S2C_ADD_OBJECT_PACKET;
 struct S2C_MOVE_OBJECT_PACKET;
@@ -32,6 +33,7 @@ public:
 	void TestAddMoney(int amount);
 
 	void ApplyLoginInfo(const S2C_LOGIN_INFO_PACKET& info);
+	void ApplyInventoryCounts(const InventoryCounts& counts);
 	bool AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet);
 	bool ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet);
 	bool ApplyEquipObject(const S2C_EQUIP_OBJECT_PACKET& packet);

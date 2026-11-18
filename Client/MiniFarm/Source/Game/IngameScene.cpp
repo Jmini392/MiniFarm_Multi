@@ -162,16 +162,7 @@ void IngameScene::ApplyLoginInfo(const S2C_LOGIN_INFO_PACKET& info)
 {
 	m_playerId = info.playerId;
 
-	InventoryCore& inventory = m_player->GetInventory().Core();
-	inventory = InventoryCore{};
-	if (info.carrotSeedCount > 0)
-		inventory.AddItem(EItemID::SeedCarrot, info.carrotSeedCount);
-	if (info.cabbageSeedCount > 0)
-		inventory.AddItem(EItemID::SeedCabbage, info.cabbageSeedCount);
-	if (info.carrotCount > 0)
-		inventory.AddItem(EItemID::Carrot, info.carrotCount);
-	if (info.cabbageCount > 0)
-		inventory.AddItem(EItemID::Cabbage, info.cabbageCount);
+	ApplyInventoryCounts(info.counts);
 
 	m_player->m_pos = { info.x, info.y, info.z };
 	m_player->m_rot.y = info.yaw;
@@ -182,6 +173,21 @@ void IngameScene::ApplyLoginInfo(const S2C_LOGIN_INFO_PACKET& info)
 	// 현재 Camera.cpp의 카메라·몸 방향 관계에 맞춤
 	m_camera.yaw = 180.f - info.yaw;
 	m_camera.FollowTarget(m_player->m_pos);
+}
+
+void IngameScene::ApplyInventoryCounts(const InventoryCounts& counts)
+{
+	// Clear the old totals so a zero count also removes the previous amount.
+	InventoryCore& inventory = m_player->GetInventory().Core();
+	inventory = InventoryCore{};
+	if (counts.carrotSeedCount > 0)
+		inventory.AddItem(EItemID::SeedCarrot, counts.carrotSeedCount);
+	if (counts.cabbageSeedCount > 0)
+		inventory.AddItem(EItemID::SeedCabbage, counts.cabbageSeedCount);
+	if (counts.carrotCount > 0)
+		inventory.AddItem(EItemID::Carrot, counts.carrotCount);
+	if (counts.cabbageCount > 0)
+		inventory.AddItem(EItemID::Cabbage, counts.cabbageCount);
 }
 
 bool IngameScene::AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet)

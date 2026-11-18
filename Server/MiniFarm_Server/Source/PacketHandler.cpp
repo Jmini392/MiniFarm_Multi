@@ -10,6 +10,25 @@ extern GameWorld g_world;
 // main.cpp에 구현한 송신 함수를 사용한다.
 bool SendToClient(int sessionId, const char* packet);
 
+namespace
+{
+    InventoryCounts ReadInventoryCounts(const InventoryCore& inventory)
+    {
+        return {
+            inventory.GetItemCount(EItemID::SeedCarrot),
+            inventory.GetItemCount(EItemID::SeedCabbage),
+            inventory.GetItemCount(EItemID::Carrot),
+            inventory.GetItemCount(EItemID::Cabbage)
+        };
+    }
+
+    bool SameInventoryCounts(const InventoryCounts& a, const InventoryCounts& b)
+    {
+        return a.carrotSeedCount == b.carrotSeedCount && a.cabbageSeedCount == b.cabbageSeedCount
+            && a.carrotCount == b.carrotCount && a.cabbageCount == b.cabbageCount;
+    }
+}
+
 bool HandlePacket(int sessionId, const char* packet) {
 	PacketHeader header;
 	memcpy(&header, packet, sizeof(header));
@@ -52,11 +71,7 @@ bool HandlePacket(int sessionId, const char* packet) {
             info.z = pos.z;
             info.yaw = player->GetYaw();
 
-            const InventoryCore& inventory = player->GetInventory();
-            info.carrotSeedCount = inventory.GetItemCount(EItemID::SeedCarrot);
-            info.cabbageSeedCount = inventory.GetItemCount(EItemID::SeedCabbage);
-            info.carrotCount = inventory.GetItemCount(EItemID::Carrot);
-            info.cabbageCount = inventory.GetItemCount(EItemID::Cabbage);
+            info.counts = ReadInventoryCounts(player->GetInventory());
 
             g_world.Unlock();
 
@@ -164,8 +179,17 @@ bool HandlePacket(int sessionId, const char* packet) {
             memcpy(&request, packet, sizeof(request));
 
             // 검사부터 밭 변경·씨앗 차감까지 같은 잠금 안에서 처리한다.
+            S2C_INVENTORY_UPDATE_PACKET update{};
+            bool inventoryChanged = false;
             g_world.Lock();
+            const InventoryCore* inventory = g_world.GetInventory(sessionId);
+            const InventoryCounts before = inventory != nullptr ? ReadInventoryCounts(*inventory) : InventoryCounts{};
             const FieldInteractResult result = g_world.InteractField(sessionId, request.objectId);
+            if (result.status == FieldInteractStatus::Success && inventory != nullptr)
+            {
+                update.counts = ReadInventoryCounts(*inventory);
+                inventoryChanged = !SameInventoryCounts(before, update.counts);
+            }
             g_world.Unlock();
 
             // 형식은 정상인 행동 실패와, 준비되지 않은 요청자를 구분한다.
@@ -179,6 +203,18 @@ bool HandlePacket(int sessionId, const char* packet) {
                 GetFieldInteractStatusName(result.status),
                 static_cast<int>(result.before.id), static_cast<int>(result.after.id),
                 result.seedCountBefore, result.seedCountAfter, result.distanceSquared);
+
+            // Only the requesting player receives their inventory totals.
+            if (inventoryChanged)
+            {
+                update.header.size = (unsigned char)sizeof(update);
+                update.header.type = S2C_INVENTORY_UPDATE;
+                if (!SendToClient(sessionId, (const char*)&update))
+                {
+                    printf("[Inventory update send failed] playerId=%d\n", sessionId);
+                    return false;
+                }
+            }
             return true;
         }
 		case C2S_SHOP_BUY:       // 구매 처리

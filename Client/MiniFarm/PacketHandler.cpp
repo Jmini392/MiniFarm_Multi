@@ -7,6 +7,15 @@
 
 #include <cstring>
 
+namespace
+{
+    bool AreInventoryCountsValid(const InventoryCounts& counts)
+    {
+        return counts.carrotSeedCount >= 0 && counts.cabbageSeedCount >= 0
+            && counts.carrotCount >= 0 && counts.cabbageCount >= 0;
+    }
+}
+
 bool HandlePacket(const char* packet)
 {
     if (packet == nullptr)
@@ -36,8 +45,7 @@ bool HandlePacket(const char* packet)
             return false;
         }
 
-        if (info.carrotSeedCount < 0 || info.cabbageSeedCount < 0
-            || info.carrotCount < 0 || info.cabbageCount < 0)
+        if (!AreInventoryCountsValid(info.counts))
         {
             return false;
         }
@@ -131,6 +139,24 @@ bool HandlePacket(const char* packet)
         memcpy(&update, packet, sizeof(update));
 
         return ingame->ApplyFieldUpdate(update);
+    }
+
+    case S2C_INVENTORY_UPDATE:
+    {
+        if (header.size != sizeof(S2C_INVENTORY_UPDATE_PACKET))
+            return false;
+
+        IngameScene* ingame = dynamic_cast<IngameScene*>(SceneManager::GetScene());
+        if (ingame == nullptr)
+            return false;
+
+        S2C_INVENTORY_UPDATE_PACKET update{};
+        memcpy(&update, packet, sizeof(update));
+        if (!AreInventoryCountsValid(update.counts))
+            return false;
+
+        ingame->ApplyInventoryCounts(update.counts);
+        return true;
     }
 
     case S2C_SHOP_BUY_RESULT:       // 구매 결과 반영

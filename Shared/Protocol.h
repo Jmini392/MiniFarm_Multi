@@ -30,6 +30,7 @@ enum PacketType : unsigned char {
 	S2C_SHOP_SELL_RESULT = 15,
 	S2C_TIME_SYNC = 16,
 	S2C_ESCAPE_RESULT = 17,
+	S2C_INVENTORY_UPDATE = 18,
 };
 
 #pragma pack(push, 1)
@@ -68,6 +69,14 @@ struct C2S_INTERACT_FIELD_PACKET
     std::int32_t objectId;
 };
 
+struct InventoryCounts
+{
+    std::int32_t carrotSeedCount;
+    std::int32_t cabbageSeedCount;
+    std::int32_t carrotCount;
+    std::int32_t cabbageCount;
+};
+
 struct S2C_LOGIN_INFO_PACKET
 {
     PacketHeader header;
@@ -76,11 +85,14 @@ struct S2C_LOGIN_INFO_PACKET
     float y;
     float z;
     float yaw;
-    // 로그인 시 서버가 전달할 개인 인벤토리 수량
-    std::int32_t carrotSeedCount;
-    std::int32_t cabbageSeedCount;
-    std::int32_t carrotCount;
-    std::int32_t cabbageCount;
+    InventoryCounts counts;
+};
+
+// Sent only to the owner. Counts are current totals, including zero.
+struct S2C_INVENTORY_UPDATE_PACKET
+{
+    PacketHeader header;
+    InventoryCounts counts;
 };
 
 // 월드 객체 하나를 알린다. 객체마다 패킷 하나씩 보낸다
@@ -144,7 +156,9 @@ static_assert(sizeof(C2S_LOGIN_PACKET) == 2, "C2S_LOGIN_PACKET must be 2 bytes."
 static_assert(sizeof(C2S_MOVE_OBJECT_PACKET) == 20,"C2S_MOVE_OBJECT_PACKET must be 20 bytes.");
 static_assert(sizeof(C2S_EQUIP_PACKET) == 6, "C2S_EQUIP_PACKET must be 6 bytes.");
 static_assert(sizeof(C2S_INTERACT_FIELD_PACKET) == 6, "C2S_INTERACT_FIELD_PACKET must be 6 bytes.");
+static_assert(sizeof(InventoryCounts) == 16, "InventoryCounts must be 16 bytes.");
 static_assert(sizeof(S2C_LOGIN_INFO_PACKET) == 38, "S2C_LOGIN_INFO_PACKET must be 38 bytes.");
+static_assert(sizeof(S2C_INVENTORY_UPDATE_PACKET) == 18, "S2C_INVENTORY_UPDATE_PACKET must be 18 bytes.");
 static_assert(sizeof(S2C_ADD_OBJECT_PACKET) == 43, "S2C_ADD_OBJECT_PACKET must be 43 bytes.");
 static_assert(sizeof(S2C_MOVE_OBJECT_PACKET) == 24, "S2C_MOVE_OBJECT_PACKET must be 24 bytes.");
 static_assert(sizeof(S2C_EQUIP_OBJECT_PACKET) == 10, "S2C_EQUIP_OBJECT_PACKET must be 10 bytes.");
