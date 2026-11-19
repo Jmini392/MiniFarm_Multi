@@ -1,17 +1,10 @@
-﻿#include "GameWorld.h"
+﻿#include "PCH.h"
+#include "GameWorld.h"
 #include "../../../Common/CropLogic.h"
-#include "../../../Common/GameConfig.h"
-#include <cmath>
-#include <cstdio>
-#include <cstring>
-#include <fstream>
-#include <sstream>
-#include <string>
 #include <rapidjson/document.h>
 
 // "pos": [x, y, z] 같은 숫자 3개짜리 배열을 읽는다
-static bool ReadVec3(const rapidjson::Value& obj, const char* name, Vec3f& out)
-{
+static bool ReadVec3(const rapidjson::Value& obj, const char* name, Vec3f& out) {
 	if (!obj.HasMember(name)) {
 		return false;
 	}
@@ -19,33 +12,37 @@ static bool ReadVec3(const rapidjson::Value& obj, const char* name, Vec3f& out)
 	if (!v.IsArray() || v.Size() != 3) {
 		return false;
 	}
+
 	for (rapidjson::SizeType i = 0; i < 3; i++) {
 		if (!v[i].IsNumber()) {
 			return false;
 		}
 	}
+
 	out.x = v[0].GetFloat();
 	out.y = v[1].GetFloat();
 	out.z = v[2].GetFloat();
+	
 	return true;
 }
 
-static bool ParseType(const char* name, WorldObjectType& type)
-{
+static bool ParseType(const char* name, WorldObjectType& type) {
 	if (strcmp(name, "Field") == 0) { type = WorldObjectType::Field; return true; }
 	if (strcmp(name, "House") == 0) { type = WorldObjectType::House; return true; }
 	if (strcmp(name, "Boat") == 0) { type = WorldObjectType::Boat; return true; }
+	
 	return false;
 }
 
-static bool LoadWorldObjects(const char* path, std::vector<WorldObject>& out, std::string& error)
-{
+static bool LoadWorldObjects(const char* path, std::vector<WorldObject>& out, std::string& error) {
 	// 파일 전체를 읽는다
 	std::ifstream file(path, std::ios::binary);
+
 	if (!file) {
 		error = std::string("파일을 열 수 없음: ") + path;
 		return false;
 	}
+
 	std::stringstream buffer;
 	buffer << file.rdbuf();
 	std::string json = buffer.str();
@@ -92,8 +89,7 @@ static bool LoadWorldObjects(const char* path, std::vector<WorldObject>& out, st
 	return true;
 }
 
-bool GameWorld::Init(const char* cropCsvPath)
-{
+bool GameWorld::Init(const char* cropCsvPath) {
 	// 작물 데이터 읽기
 	std::string error;
 	if (!m_cropTable.Load(cropCsvPath, error)) {
@@ -103,10 +99,10 @@ bool GameWorld::Init(const char* cropCsvPath)
 	return true;
 }
 
-bool GameWorld::LoadObjects(const char* objectsJsonPath)
-{
+bool GameWorld::LoadObjects(const char* objectsJsonPath) {
 	std::vector<WorldObject> objects;
 	std::string error;
+
 	if (!LoadWorldObjects(objectsJsonPath, objects, error)) {
 		printf("[월드] 배치 데이터 로딩 실패: %s\n", error.c_str());
 		return false;
@@ -121,21 +117,19 @@ bool GameWorld::LoadObjects(const char* objectsJsonPath)
 	}
 
 	m_objects = std::move(objects);
+	
 	return true;
 }
 
-void GameWorld::AddPlayer(int sessionId)
-{
+void GameWorld::AddPlayer(int sessionId) {
 	m_players.try_emplace(sessionId, sessionId);
 }
 
-void GameWorld::RemovePlayer(int sessionId)
-{
+void GameWorld::RemovePlayer(int sessionId) {
 	m_players.erase(sessionId);
 }
 
-PlayerState* GameWorld::GetPlayer(int sessionId)
-{
+PlayerState* GameWorld::GetPlayer(int sessionId) {
 	auto it = m_players.find(sessionId);
 
 	if (it == m_players.end())
@@ -144,8 +138,7 @@ PlayerState* GameWorld::GetPlayer(int sessionId)
 	return &it->second;
 }
 
-InventoryCore* GameWorld::GetInventory(int sessionId)
-{
+InventoryCore* GameWorld::GetInventory(int sessionId) {
 	PlayerState* player = GetPlayer(sessionId);
 
 	if (player == nullptr)
@@ -154,8 +147,7 @@ InventoryCore* GameWorld::GetInventory(int sessionId)
 	return &player->GetInventory();
 }
 
-bool GameWorld::AddField(int objectId)
-{
+bool GameWorld::AddField(int objectId) {
 	if (objectId < 0) {
 		return false;
 	}
@@ -165,8 +157,7 @@ bool GameWorld::AddField(int objectId)
 	return m_fields.emplace(objectId, field).second;
 }
 
-int GameWorld::AddCrow(const Vec3f& pos)
-{
+int GameWorld::AddCrow(const Vec3f& pos) {
 	if (!std::isfinite(pos.x) || !std::isfinite(pos.y) || !std::isfinite(pos.z)) {
 		return -1;
 	}
@@ -175,30 +166,30 @@ int GameWorld::AddCrow(const Vec3f& pos)
 	crow.id = CROW_ID_BASE + (int)m_crows.size();
 	crow.pos = pos;
 	m_crows.push_back(crow);
+	
 	return crow.id;
 }
 
-CrowState* GameWorld::GetCrow(int crowId)
-{
+CrowState* GameWorld::GetCrow(int crowId) {
 	// 까마귀는 지워지지 않으므로 ID에서 순서를 바로 알 수 있다
 	const int index = crowId - CROW_ID_BASE;
 	if (index < 0 || index >= (int)m_crows.size()) {
 		return nullptr;
 	}
+	
 	return &m_crows[index];
 }
 
-FieldState* GameWorld::GetField(int objectId)
-{
+FieldState* GameWorld::GetField(int objectId) {
 	auto it = m_fields.find(objectId);
 	if (it == m_fields.end()) {
 		return nullptr;
 	}
+
 	return &it->second;
 }
 
-const char* GetFieldInteractStatusName(FieldInteractStatus status)
-{
+const char* GetFieldInteractStatusName(FieldInteractStatus status) {
     switch (status) {
     case FieldInteractStatus::Success: return "Success";
     case FieldInteractStatus::PlayerNotReady: return "PlayerNotReady";
@@ -213,8 +204,7 @@ const char* GetFieldInteractStatusName(FieldInteractStatus status)
     }
 }
 
-FieldInteractResult GameWorld::InteractField(int sessionId, int objectId)
-{
+FieldInteractResult GameWorld::InteractField(int sessionId, int objectId) {
     // 호출부의 월드 잠금을 유지한 채 검사와 두 상태 변경을 함께 처리한다.
     FieldInteractResult result;
     PlayerState* player = GetPlayer(sessionId);
@@ -229,12 +219,14 @@ FieldInteractResult GameWorld::InteractField(int sessionId, int objectId)
 
     FieldState* field = GetField(objectId);
     const WorldObject* object = nullptr;
-    for (const WorldObject& candidate : m_objects) {
+    
+	for (const WorldObject& candidate : m_objects) {
         if (candidate.objectId == objectId && candidate.type == WorldObjectType::Field) {
             object = &candidate;
             break;
         }
     }
+
     if (field == nullptr || object == nullptr) {
         result.status = FieldInteractStatus::UnknownField;
         return result;
@@ -245,13 +237,13 @@ FieldInteractResult GameWorld::InteractField(int sessionId, int objectId)
     InventoryCore& inventory = player->GetInventory();
     const bool isSeed = result.equippedTool == EItemID::SeedCarrot
         || result.equippedTool == EItemID::SeedCabbage;
-    if (isSeed) {
+    
+	if (isSeed) {
         result.seedCountBefore = inventory.GetItemCount(result.equippedTool);
         result.seedCountAfter = result.seedCountBefore;
     }
 
-    // 배치 원본의 X만 반전하면 이동 패킷의 플레이어 좌표와 같아진다.
-    // 클라이언트의 InteractableObject와 같은 3차원 거리 2.5를 사용한다.
+    // 배치 원본의 X만 반전하면 플레이어 좌표와 같아지며, 클라이언트와 같은 3차원 거리 2.5로 검사한다.
     const PlayerPosition& pos = player->GetPosition();
     const double dx = static_cast<double>(pos.x) + object->pos.x;
     const double dy = static_cast<double>(pos.y) - object->pos.y;
@@ -295,8 +287,7 @@ FieldInteractResult GameWorld::InteractField(int sessionId, int objectId)
     return result;
 }
 
-std::vector<int> GameWorld::GetFieldSyncPlayers() const
-{
+std::vector<int> GameWorld::GetFieldSyncPlayers() const {
 	std::vector<int> players;
 	for (const auto& pair : m_players) {
 		if (pair.second.IsFieldSyncReady())
@@ -305,8 +296,7 @@ std::vector<int> GameWorld::GetFieldSyncPlayers() const
 	return players;
 }
 
-void GameWorld::Update(int dtMs)
-{
+void GameWorld::Update(int dtMs) {
 	m_timeSystem.Update(dtMs);
 
 	// 모든 밭의 작물을 지난 시간만큼 성장시킨다

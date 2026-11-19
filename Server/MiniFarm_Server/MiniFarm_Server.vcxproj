@@ -19,30 +19,40 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\PCH.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\PacketHandler.cpp" />
     <ClCompile Include="Source\PlayerState.cpp" />
-    <ClCompile Include="Source\RecvPacket.cpp" />
-    <ClCompile Include="Source\SendPacket.cpp" />
+    <ClCompile Include="Source\Packet.cpp" />
     <ClCompile Include="Source\GameWorld.cpp" />
     <ClCompile Include="Source\TimeSystem.cpp" />
     <ClCompile Include="Source\WorldSync.cpp" />
-    <ClCompile Include="..\..\Common\InventoryCore.cpp" />
-    <ClCompile Include="..\..\Common\SharedWallet.cpp" />
-    <ClCompile Include="..\..\Common\ShopLogic.cpp" />
-    <ClCompile Include="..\..\Common\CropLogic.cpp" />
-    <ClCompile Include="..\..\Common\CropTable.cpp" />
+    <ClCompile Include="..\..\Common\InventoryCore.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\SharedWallet.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\ShopLogic.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\CropLogic.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\CropTable.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\Common.h" />
+    <ClInclude Include="Source\PCH.h" />
     <ClInclude Include="Source\PacketHandler.h" />
     <ClInclude Include="Source\PlayerState.h" />
-    <ClInclude Include="Source\RecvPacket.h" />
-    <ClInclude Include="Source\SendPacket.h" />
+    <ClInclude Include="Source\Packet.h" />
     <ClInclude Include="Source\GameWorld.h" />
     <ClInclude Include="Source\TimeSystem.h" />
     <ClInclude Include="Source\WorldSync.h" />
-    <ClInclude Include="Source\FieldState.h" />
     <ClInclude Include="..\..\Shared\Protocol.h" />
     <ClInclude Include="..\..\Common\InventoryCore.h" />
     <ClInclude Include="..\..\Common\SharedWallet.h" />
@@ -112,6 +122,8 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>..\..\Client\MiniFarm\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -128,6 +140,8 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>..\..\Client\MiniFarm\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -142,6 +156,8 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>..\..\Client\MiniFarm\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -158,6 +174,8 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>..\..\Client\MiniFarm\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>

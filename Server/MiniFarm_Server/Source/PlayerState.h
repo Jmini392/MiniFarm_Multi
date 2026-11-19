@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../../../Common/InventoryCore.h"
-
 // 서버가 보관할 플레이어 위치
 struct PlayerPosition
 {
@@ -10,27 +8,20 @@ struct PlayerPosition
     float z = 0.f;
 };
 
-class PlayerState
-{
+class PlayerState {
 public:
     explicit PlayerState(int playerId);
 
     int GetId() const { return m_id; }
 
-    const PlayerPosition& GetPosition() const
-    {
-        return m_position;
-    }
+    const PlayerPosition& GetPosition() const { return m_position; }
 
     float GetYaw() const { return m_yaw; }
 
     bool IsMoving() const { return m_isMoving; }
     bool IsAirborne() const { return m_isAirborne; }
 
-    EItemID GetEquippedTool() const
-    {
-        return m_equippedTool;
-    }
+    EItemID GetEquippedTool() const { return m_equippedTool; }
 
     // 위치, 몸 방향, 애니메이션 상태를 함께 변경
     bool SetMovement(
@@ -48,10 +39,7 @@ public:
     int GetLastSentWalletBalance() const { return m_lastSentWalletBalance; }
     void SetLastSentWalletBalance(int balance) { m_lastSentWalletBalance = balance; }
 
-    InventoryCore& GetInventory()
-    {
-        return m_inventory;
-    }
+    InventoryCore& GetInventory() { return m_inventory; }
 
 private:
     int m_lastSentWalletBalance = -1; // No balance has been sent yet.

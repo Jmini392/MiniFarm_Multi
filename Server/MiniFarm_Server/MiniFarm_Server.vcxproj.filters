@@ -30,16 +30,16 @@
     <ClCompile Include="..\..\Common\CropLogic.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="Source\PCH.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="Source\main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Source\PacketHandler.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RecvPacket.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\SendPacket.cpp">
+    <ClCompile Include="Source\Packet.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Source\GameWorld.cpp">
@@ -62,9 +62,6 @@
     <ClInclude Include="..\..\Common\InventoryCore.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Source\FieldState.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Common\SharedWallet.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -83,16 +80,13 @@
     <ClInclude Include="..\..\Common\GameConfig.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Common.h">
+    <ClInclude Include="Source\PCH.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Source\PacketHandler.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RecvPacket.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\SendPacket.h">
+    <ClInclude Include="Source\Packet.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Source\GameWorld.h">

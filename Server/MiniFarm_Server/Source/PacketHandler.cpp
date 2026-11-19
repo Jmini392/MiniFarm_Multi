@@ -1,19 +1,14 @@
-﻿#include "PacketHandler.h"
+﻿#include "PCH.h"
+#include "PacketHandler.h"
 #include "GameWorld.h"
 #include "WorldSync.h"
-#include <cstring>
-#include "../../../Shared/Protocol.h"
+#include "Packet.h"
 
 // main.cpp에 정의된 월드를 사용한다.
 extern GameWorld g_world;
 
-// main.cpp에 구현한 송신 함수를 사용한다.
-bool SendToClient(int sessionId, const char* packet);
-
-namespace
-{
-    InventoryCounts ReadInventoryCounts(const InventoryCore& inventory)
-    {
+namespace {
+    InventoryCounts ReadInventoryCounts(const InventoryCore& inventory) {
         return {
             inventory.GetItemCount(EItemID::SeedCarrot),
             inventory.GetItemCount(EItemID::SeedCabbage),
@@ -22,10 +17,11 @@ namespace
         };
     }
 
-    bool SameInventoryCounts(const InventoryCounts& a, const InventoryCounts& b)
-    {
-        return a.carrotSeedCount == b.carrotSeedCount && a.cabbageSeedCount == b.cabbageSeedCount
-            && a.carrotCount == b.carrotCount && a.cabbageCount == b.cabbageCount;
+    bool SameInventoryCounts(const InventoryCounts& a, const InventoryCounts& b) {
+        return a.carrotSeedCount == b.carrotSeedCount 
+            && a.cabbageSeedCount == b.cabbageSeedCount
+            && a.carrotCount == b.carrotCount 
+            && a.cabbageCount == b.cabbageCount;
     }
 }
 
@@ -36,8 +32,7 @@ bool HandlePacket(int sessionId, const char* packet) {
 	switch (header.type) {
 		case C2S_LOGIN:          // 로그인 처리
 		{
-			if (header.size != sizeof(C2S_LOGIN_PACKET))
-				return false;
+			if (header.size != sizeof(C2S_LOGIN_PACKET)) return false;
 
             S2C_LOGIN_INFO_PACKET info{};
 
@@ -47,8 +42,7 @@ bool HandlePacket(int sessionId, const char* packet) {
             g_world.Lock();
 
             // 이미 로그인한 세션의 중복 요청은 거부한다.
-            if (g_world.GetPlayer(sessionId) != nullptr)
-            {
+            if (g_world.GetPlayer(sessionId) != nullptr) {
                 g_world.Unlock();
                 return false;
             }
@@ -57,8 +51,7 @@ bool HandlePacket(int sessionId, const char* packet) {
 
             PlayerState* player = g_world.GetPlayer(sessionId);
 
-            if (player == nullptr)
-            {
+            if (player == nullptr) {
                 g_world.Unlock();
                 return false;
             }
@@ -76,29 +69,25 @@ bool HandlePacket(int sessionId, const char* packet) {
             g_world.Unlock();
 
             // 송신 중에는 월드 잠금을 잡지 않는다.
-            if (!SendToClient(sessionId, (const char*)&info))
-            {
+            if (!SendToClient(sessionId, (const char*)&info)) {
                 printf("[로그인 응답 실패] ID=%d\n", sessionId);
                 return false;
             }
 
             // 로그인 응답 뒤에 월드 객체를 보낸다.
-            if (!SendWorldObjects(sessionId))
-            {
+            if (!SendWorldObjects(sessionId)) {
                 printf("[객체 전송 실패] ID=%d\n", sessionId);
                 return false;
             }
 
             // 클라이언트에 밭 객체가 생성된 뒤 같은 ID의 상태를 적용한다.
-            if (!SendFieldStates(sessionId))
-            {
+            if (!SendFieldStates(sessionId)) {
                 printf("[밭 상태 전송 실패] ID=%d\n", sessionId);
                 return false;
             }
 
             // 현재 접속자들의 위치·장비를 보내고, 새 플레이어도 기존 접속자에게 알린다.
-            if (!SendPlayerStates(sessionId))
-            {
+            if (!SendPlayerStates(sessionId)) {
                 printf("[플레이어 상태 전송 실패] ID=%d\n", sessionId);
                 return false;
             }
@@ -107,16 +96,15 @@ bool HandlePacket(int sessionId, const char* packet) {
 
             return true;
 		}
+
         case C2S_MOVE_OBJECT:    // 이동 처리
         {
-            if (header.size != sizeof(C2S_MOVE_OBJECT_PACKET))
-                return false;
+            if (header.size != sizeof(C2S_MOVE_OBJECT_PACKET)) return false;
 
             C2S_MOVE_OBJECT_PACKET request{};
             memcpy(&request, packet, sizeof(request));
 
-            if (request.isMoving > 1 || request.isAirborne > 1)
-                return false;
+            if (request.isMoving > 1 || request.isAirborne > 1) return false;
 
             bool success = false;
 
@@ -124,40 +112,39 @@ bool HandlePacket(int sessionId, const char* packet) {
 
             PlayerState* player = g_world.GetPlayer(sessionId);
 
-            if (player != nullptr)
-            {
+            if (player != nullptr) {
                 success = player->SetMovement(request.x,request.y,request.z,request.yaw,
                     request.isMoving != 0, request.isAirborne != 0);
             }
 
             g_world.Unlock();
 
-            if (!success)
-                return false;
+            if (success) SendPlayerMove(sessionId);
 
-            SendPlayerMove(sessionId);
-
-            return true;
+            return success;
         }
+
 		case C2S_EQUIP:          // 장비 변경 처리
 		{
-			if (header.size != sizeof(C2S_EQUIP_PACKET))
-				return false;
+			if (header.size != sizeof(C2S_EQUIP_PACKET)) return false;
 
 			C2S_EQUIP_PACKET request{};
 			memcpy(&request, packet, sizeof(request));
 
 			bool success = false;
 			bool changed = false;
+
 			g_world.Lock();
-			PlayerState* player = g_world.GetPlayer(sessionId);
-			if (player != nullptr)
-			{
+			
+            PlayerState* player = g_world.GetPlayer(sessionId);
+			
+            if (player != nullptr) {
 				const EItemID previous = player->GetEquippedTool();
 				success = player->SetEquippedTool(static_cast<EItemID>(request.itemId));
 				changed = success && previous != player->GetEquippedTool();
 			}
-			g_world.Unlock();
+			
+            g_world.Unlock();
 
 			if (!success)
 				return false;
@@ -170,6 +157,7 @@ bool HandlePacket(int sessionId, const char* packet) {
 			printf("[장비 변경] ID=%d, itemId=%d\n", sessionId, (int)request.itemId);
 			return true;
 		}
+
 #ifdef _DEBUG
         case C2S_DEBUG_WALLET_CHANGE:
         {
@@ -202,10 +190,10 @@ bool HandlePacket(int sessionId, const char* packet) {
             return true;
         }
 #endif
-        case C2S_INTERACT_FIELD:
+
+        case C2S_INTERACT_FIELD:    // 밭 상호작용 처리
         {
-            if (header.size != sizeof(C2S_INTERACT_FIELD_PACKET))
-                return false;
+            if (header.size != sizeof(C2S_INTERACT_FIELD_PACKET)) return false;
 
             C2S_INTERACT_FIELD_PACKET request{};
             memcpy(&request, packet, sizeof(request));
@@ -213,20 +201,22 @@ bool HandlePacket(int sessionId, const char* packet) {
             // 검사부터 밭 변경·씨앗 차감까지 같은 잠금 안에서 처리한다.
             S2C_INVENTORY_UPDATE_PACKET update{};
             bool inventoryChanged = false;
+
             g_world.Lock();
+            
             const InventoryCore* inventory = g_world.GetInventory(sessionId);
             const InventoryCounts before = inventory != nullptr ? ReadInventoryCounts(*inventory) : InventoryCounts{};
             const FieldInteractResult result = g_world.InteractField(sessionId, request.objectId);
-            if (result.status == FieldInteractStatus::Success && inventory != nullptr)
-            {
+            
+            if (result.status == FieldInteractStatus::Success && inventory != nullptr) {
                 update.counts = ReadInventoryCounts(*inventory);
                 inventoryChanged = !SameInventoryCounts(before, update.counts);
             }
+
             g_world.Unlock();
 
             // 형식은 정상인 행동 실패와, 준비되지 않은 요청자를 구분한다.
-            if (result.status == FieldInteractStatus::PlayerNotReady)
-                return false;
+            if (result.status == FieldInteractStatus::PlayerNotReady) return false;
 
             // result는 사본이므로 월드 잠금 없이 로그와 디버그에 사용한다.
             printf("[Field action] playerId=%d, objectId=%d, itemId=%d, result=%s, "
@@ -236,19 +226,18 @@ bool HandlePacket(int sessionId, const char* packet) {
                 static_cast<int>(result.before.id), static_cast<int>(result.after.id),
                 result.seedCountBefore, result.seedCountAfter, result.distanceSquared);
 
-            // Only the requesting player receives their inventory totals.
-            if (inventoryChanged)
-            {
+            // 요청한 플레이어만 자신의 인벤토리를 확인할 수 있습니다.
+            if (inventoryChanged) {
                 update.header.size = (unsigned char)sizeof(update);
                 update.header.type = S2C_INVENTORY_UPDATE;
-                if (!SendToClient(sessionId, (const char*)&update))
-                {
+                if (!SendToClient(sessionId, (const char*)&update)) {
                     printf("[Inventory update send failed] playerId=%d\n", sessionId);
                     return false;
                 }
             }
             return true;
         }
+
 		case C2S_SHOP_BUY:       // 구매 처리
 		case C2S_SHOP_SELL:      // 판매 처리
 		case C2S_BOAT_ESCAPE:    // 탈출 처리

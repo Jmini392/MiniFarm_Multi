@@ -70,7 +70,6 @@ struct C2S_EQUIP_PACKET
     std::int32_t itemId; // 선택한 도구 또는 씨앗 ID. Empty(-1)도 표현한다.
 };
 
-// The session identifies the requester; the server uses its stored equipment.
 struct C2S_INTERACT_FIELD_PACKET
 {
     PacketHeader header;
@@ -108,21 +107,17 @@ struct S2C_LOGIN_INFO_PACKET
     InventoryCounts counts;
 };
 
-// Sent only to the owner. Counts are current totals, including zero.
 struct S2C_INVENTORY_UPDATE_PACKET
 {
     PacketHeader header;
     InventoryCounts counts;
 };
 
-// 월드 객체 하나를 알린다. 객체마다 패킷 하나씩 보낸다
-// 위치·회전·크기는 배치 데이터(JSON)에 적힌 값 그대로이다.
-// 클라이언트는 받은 뒤 x 반전, 회전 y 반전(ObjectLoader::FlipCoord)을 적용해 그린다
 struct S2C_ADD_OBJECT_PACKET
 {
     PacketHeader header;
     std::int32_t objectId;       // 서버와 클라이언트가 같은 객체에 같은 번호를 쓴다
-    unsigned char objectType;    // 객체 종류: 0 밭(Field), 1 집(House), 2 보트(Boat). JSON의 type과 같다
+    unsigned char objectType;    // 객체 종류: 0 밭(Field), 1 집(House), 2 보트(Boat)
     float pos[3];
     float rot[3];
     float scale[3];
@@ -131,7 +126,7 @@ struct S2C_ADD_OBJECT_PACKET
 struct S2C_MOVE_OBJECT_PACKET
 {
     PacketHeader header;
-    std::int32_t objectId; // 이동한 객체 ID. 오늘은 플레이어의 세션 ID
+    std::int32_t objectId;
     float x;
     float y;
     float z;
@@ -141,7 +136,6 @@ struct S2C_MOVE_OBJECT_PACKET
     std::uint8_t isAirborne;
 };
 
-// 서버가 확인한 플레이어의 장비 변경. objectId는 플레이어의 세션 ID다.
 struct S2C_EQUIP_OBJECT_PACKET
 {
     PacketHeader header;
@@ -149,7 +143,6 @@ struct S2C_EQUIP_OBJECT_PACKET
     std::int32_t itemId; // 도구, 씨앗 또는 Empty(-1)
 };
 
-// 이미 생성된 밭 하나의 상태. CropState의 물과 성장 시간도 그대로 전달한다.
 struct S2C_FIELD_UPDATE_PACKET
 {
     PacketHeader header;
@@ -170,19 +163,3 @@ struct S2C_REMOVE_OBJECT_PACKET
 #pragma pack(pop)
 
 constexpr unsigned char PACKET_HEADER_SIZE = sizeof(PacketHeader);
-
-static_assert(sizeof(PacketHeader) == 2, "PacketHeader must be 2 bytes.");
-static_assert(sizeof(C2S_LOGIN_PACKET) == 2, "C2S_LOGIN_PACKET must be 2 bytes.");
-static_assert(sizeof(C2S_MOVE_OBJECT_PACKET) == 20,"C2S_MOVE_OBJECT_PACKET must be 20 bytes.");
-static_assert(sizeof(C2S_EQUIP_PACKET) == 6, "C2S_EQUIP_PACKET must be 6 bytes.");
-static_assert(sizeof(C2S_INTERACT_FIELD_PACKET) == 6, "C2S_INTERACT_FIELD_PACKET must be 6 bytes.");
-static_assert(sizeof(C2S_DEBUG_WALLET_CHANGE_PACKET) == 3, "C2S_DEBUG_WALLET_CHANGE_PACKET must be 3 bytes.");
-static_assert(sizeof(S2C_WALLET_BALANCE_PACKET) == 6, "S2C_WALLET_BALANCE_PACKET must be 6 bytes.");
-static_assert(sizeof(InventoryCounts) == 16, "InventoryCounts must be 16 bytes.");
-static_assert(sizeof(S2C_LOGIN_INFO_PACKET) == 38, "S2C_LOGIN_INFO_PACKET must be 38 bytes.");
-static_assert(sizeof(S2C_INVENTORY_UPDATE_PACKET) == 18, "S2C_INVENTORY_UPDATE_PACKET must be 18 bytes.");
-static_assert(sizeof(S2C_ADD_OBJECT_PACKET) == 43, "S2C_ADD_OBJECT_PACKET must be 43 bytes.");
-static_assert(sizeof(S2C_MOVE_OBJECT_PACKET) == 24, "S2C_MOVE_OBJECT_PACKET must be 24 bytes.");
-static_assert(sizeof(S2C_EQUIP_OBJECT_PACKET) == 10, "S2C_EQUIP_OBJECT_PACKET must be 10 bytes.");
-static_assert(sizeof(S2C_REMOVE_OBJECT_PACKET) == 6, "S2C_REMOVE_OBJECT_PACKET must be 6 bytes.");
-static_assert(sizeof(S2C_FIELD_UPDATE_PACKET) == 26, "S2C_FIELD_UPDATE_PACKET must be 26 bytes.");

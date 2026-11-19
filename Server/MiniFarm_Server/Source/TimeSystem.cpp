@@ -1,5 +1,5 @@
+#include "PCH.h"
 #include "TimeSystem.h"
-#include <cmath>
 
 TimeSystem::TimeSystem()
 {

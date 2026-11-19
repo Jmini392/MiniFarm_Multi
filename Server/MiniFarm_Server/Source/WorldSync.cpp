@@ -1,29 +1,22 @@
-﻿#include "WorldSync.h"
+﻿#include "PCH.h"
+#include "WorldSync.h"
 #include "GameWorld.h"
-#include "../../../Shared/Protocol.h"
-#include "../../../Common/GameConfig.h"
-#include <algorithm>
-#include <mutex>
-#include <unordered_map>
+#include "Packet.h"
 
 // main.cpp에 정의된 월드를 사용한다.
 extern GameWorld g_world;
 
-// main.cpp에 구현한 송신 함수를 사용한다.
-bool SendToClient(int sessionId, const char* packet);
-
 namespace {
-	// 플레이어 초기 상태·이동·장비·퇴장 전송의 순서를 맞춘다.
-	// 이 잠금 안에서도 월드 잠금은 복사·준비 완료 표시 중에만 잡는다.
-	std::mutex s_playerSyncMutex;
+	// 플레이어 초기 상태·이동·장비·퇴장 전송의 순서를 맞춘다. 이 안에서 월드 임계영역은 복사·준비 완료 표시 중에만 잡는다.
+	CriticalSection s_playerSyncCs;
 
-	struct PlayerSyncState {
+	struct PlayerSyncState 
+	{
 		S2C_MOVE_OBJECT_PACKET move{};
 		S2C_EQUIP_OBJECT_PACKET equip{};
 	};
 
-	PlayerSyncState MakePlayerState(const PlayerState& player)
-	{
+	PlayerSyncState MakePlayerState(const PlayerState& player) {
 		PlayerSyncState state;
 		const PlayerPosition& pos = player.GetPosition();
 		state.move.header.size = (unsigned char)sizeof(state.move);
@@ -43,11 +36,10 @@ namespace {
 	}
 
 	// 초기 상태와 변경 상태의 전송 순서를 맞춘다. 월드 잠금과는 별도로 관리한다.
-	std::mutex s_fieldSyncMutex;
+	CriticalSection s_fieldSyncCs;
 	std::unordered_map<int, std::vector<FieldState>> s_sentFields;
 
-	bool CopyFieldStates(std::vector<FieldState>& fields)
-	{
+	bool CopyFieldStates(std::vector<FieldState>& fields) {
 		g_world.Lock();
 		fields.reserve(g_world.GetFieldCount());
 		for (const WorldObject& obj : g_world.GetObjects()) {
@@ -62,11 +54,11 @@ namespace {
 			fields.push_back(*field);
 		}
 		g_world.Unlock();
+
 		return true;
 	}
 
-	bool SendFieldState(int sessionId, const FieldState& field)
-	{
+	bool SendFieldState(int sessionId, const FieldState& field) {
 		const CropState& crop = field.crop;
 		S2C_FIELD_UPDATE_PACKET update{};
 		update.header.size = (unsigned char)sizeof(update);
@@ -81,32 +73,30 @@ namespace {
 		return sent; // 초기·변경 상태의 전송 결과를 디버거에서 확인한다.
 	}
 
-	bool SameFieldState(const FieldState& a, const FieldState& b)
-	{
-		return a.objectId == b.objectId && a.crop.id == b.crop.id
-			&& a.crop.level == b.crop.level && a.crop.water == b.crop.water
+	bool SameFieldState(const FieldState& a, const FieldState& b) {
+		return a.objectId == b.objectId 
+			&& a.crop.id == b.crop.id
+			&& a.crop.level == b.crop.level 
+			&& a.crop.water == b.crop.water
 			&& a.crop.growTime == b.crop.growTime
 			&& a.crop.requiredGrowTime == b.crop.requiredGrowTime;
 	}
 }
 
 // 객체 목록은 서버 시작 때 읽은 뒤 바뀌지 않으므로 월드 잠금 없이 읽는다.
-bool SendWorldObjects(int sessionId)
-{
+bool SendWorldObjects(int sessionId) {
 	for (const WorldObject& obj : g_world.GetObjects()) {
 		S2C_ADD_OBJECT_PACKET add{};
 		add.header.size = (unsigned char)sizeof(add);
 		add.header.type = S2C_ADD_OBJECT;
 		add.objectId = obj.objectId;
-		add.objectType = (unsigned char)obj.type; // 0 밭, 1 집, 2 보트 (WorldObjectType 순서)
+		add.objectType = (unsigned char)obj.type; // 0 밭, 1 집, 2 보트
 
 		add.pos[0] = obj.pos.x;     add.pos[1] = obj.pos.y;     add.pos[2] = obj.pos.z;
 		add.rot[0] = obj.rot.x;     add.rot[1] = obj.rot.y;     add.rot[2] = obj.rot.z;
 		add.scale[0] = obj.scale.x; add.scale[1] = obj.scale.y; add.scale[2] = obj.scale.z;
 
-		if (!SendToClient(sessionId, (const char*)&add)) {
-			return false;
-		}
+		if (!SendToClient(sessionId, (const char*)&add)) return false;
 	}
 
 	// 까마귀는 위치가 바뀔 수 있으므로 월드 잠금을 잡고 복사한 뒤 보낸다
@@ -124,90 +114,97 @@ bool SendWorldObjects(int sessionId)
 		add.pos[0] = crow.pos.x; add.pos[1] = crow.pos.y; add.pos[2] = crow.pos.z;
 		add.scale[0] = 1.f;      add.scale[1] = 1.f;      add.scale[2] = 1.f;
 
-		if (!SendToClient(sessionId, (const char*)&add)) {
-			return false;
-		}
+		if (!SendToClient(sessionId, (const char*)&add)) return false;
 	}
+
 	return true;
 }
 
-bool SendFieldStates(int sessionId)
-{
-	std::lock_guard<std::mutex> syncLock(s_fieldSyncMutex);
+bool SendFieldStates(int sessionId) {
+	s_fieldSyncCs.Lock();
+	
 	std::vector<FieldState> fields;
-	if (!CopyFieldStates(fields))
+	if (!CopyFieldStates(fields)) {
+		s_fieldSyncCs.Unlock();
 		return false;
+	}
 
 	for (const FieldState& field : fields) {
 		if (!SendFieldState(sessionId, field)) {
+			s_fieldSyncCs.Unlock();
 			return false;
 		}
 	}
 
 	// 각 접속자의 실제 전송값을 남겨 초기화 도중 바뀐 상태도 다음 갱신에서 찾는다.
-	if (GameConfig::ServerFarmingEnabled)
+	if (GameConfig::ServerFarmingEnabled) {
 		s_sentFields[sessionId] = std::move(fields);
+	}
+
+	s_fieldSyncCs.Unlock();
+	
 	return true;
 }
 
-bool SendPlayerStates(int sessionId)
-{
-	std::lock_guard<std::mutex> syncLock(s_playerSyncMutex);
+bool SendPlayerStates(int sessionId) {
+	s_playerSyncCs.Lock();
 	std::vector<PlayerSyncState> states;
 	PlayerSyncState joining;
 
 	g_world.Lock();
 	PlayerState* player = g_world.GetPlayer(sessionId);
-	if (player == nullptr || player->IsFieldSyncReady())
-	{
+	if (player == nullptr || player->IsFieldSyncReady()) {
 		g_world.Unlock();
+		s_playerSyncCs.Unlock();
 		return false;
 	}
 
 	joining = MakePlayerState(*player);
-	for (int playerId : g_world.GetFieldSyncPlayers())
-	{
+	for (int playerId : g_world.GetFieldSyncPlayers()) {
 		const PlayerState* other = g_world.GetPlayer(playerId);
-		if (other != nullptr)
-			states.push_back(MakePlayerState(*other));
+		if (other != nullptr) states.push_back(MakePlayerState(*other));
 	}
 	g_world.Unlock();
 
 	// 후접속자는 위치 패킷으로 상대를 생성한 뒤 같은 ID의 장비를 적용한다.
-	for (const PlayerSyncState& state : states)
-	{
-		if (!SendToClient(sessionId, (const char*)&state.move))
+	for (const PlayerSyncState& state : states) {
+		if (!SendToClient(sessionId, (const char*)&state.move)) {
+			s_playerSyncCs.Unlock();
 			return false;
+		}
 		const bool sent = SendToClient(sessionId, (const char*)&state.equip);
-		if (!sent)
+		if (!sent) {
+			s_playerSyncCs.Unlock();
 			return false;
+		}
 	}
 
 	// 객체·밭·플레이어 초기 전송을 모두 마친 뒤 실시간 수신 대상에 넣는다.
 	g_world.Lock();
 	player = g_world.GetPlayer(sessionId);
-	if (player != nullptr)
-		player->SetFieldSyncReady(true);
+	if (player != nullptr) player->SetFieldSyncReady(true);
 	const bool ready = player != nullptr;
 	g_world.Unlock();
-	if (!ready)
+
+	if (!ready) {
+		s_playerSyncCs.Unlock();
 		return false;
+	}
 
 	// 기존 접속자에게도 새 플레이어를 알린다. 다시 움직일 때까지 기다리지 않는다.
-	for (const PlayerSyncState& state : states)
-	{
+	for (const PlayerSyncState& state : states) {
 		const int receiverId = state.move.objectId;
 		if (!SendToClient(receiverId, (const char*)&joining.move)
-			|| !SendToClient(receiverId, (const char*)&joining.equip))
-		{
+			|| !SendToClient(receiverId, (const char*)&joining.equip)) {
 			printf("[새 플레이어 전송 실패] 대상 ID=%d\n", receiverId);
 		}
 	}
+	s_playerSyncCs.Unlock();
+
 	return true;
 }
 
-void SendChangedWalletBalances()
-{
+void SendChangedWalletBalances() {
 	S2C_WALLET_BALANCE_PACKET update{};
 	update.header.size = static_cast<unsigned char>(sizeof(update));
 	update.header.type = S2C_WALLET_BALANCE;
@@ -215,40 +212,37 @@ void SendChangedWalletBalances()
 	std::vector<int> receivers;
 	g_world.Lock();
 	update.balance = g_world.GetWallet().GetMoney();
-	for (int sessionId : g_world.GetFieldSyncPlayers())
-	{
+	for (int sessionId : g_world.GetFieldSyncPlayers()) {
 		if (g_world.GetPlayer(sessionId)->GetLastSentWalletBalance() != update.balance)
 			receivers.push_back(sessionId);
 	}
 	g_world.Unlock();
 
-	// The update thread sends both initial and changed balances in order.
-	for (int sessionId : receivers)
-	{
-		if (!SendToClient(sessionId, reinterpret_cast<const char*>(&update)))
-			continue;
+	// 업데이트 스레드는 초기 잔액과 변경된 돈을 순서대로 전송한다.
+	for (int sessionId : receivers) {
+		if (!SendToClient(sessionId, reinterpret_cast<const char*>(&update))) continue;
 
 		g_world.Lock();
 		PlayerState* player = g_world.GetPlayer(sessionId);
-		if (player != nullptr)
-			player->SetLastSentWalletBalance(update.balance);
+		if (player != nullptr) player->SetLastSentWalletBalance(update.balance);
 		g_world.Unlock();
+
 #ifdef _DEBUG
 		printf("[Wallet sent] playerId=%d, balance=%d\n", sessionId, static_cast<int>(update.balance));
 #endif
 	}
 }
 
-void SendChangedFieldStates()
-{
+void SendChangedFieldStates() {
 	// 로컬 농사를 유지하는 동안 서버의 반복 갱신으로 클라이언트 상태를 덮지 않는다.
-	if (!GameConfig::ServerFarmingEnabled)
-		return;
+	if (!GameConfig::ServerFarmingEnabled) return;
 
-	std::lock_guard<std::mutex> syncLock(s_fieldSyncMutex);
+	s_fieldSyncCs.Lock();
 	std::vector<FieldState> fields;
-	if (!CopyFieldStates(fields))
+	if (!CopyFieldStates(fields)) {
+		s_fieldSyncCs.Unlock();
 		return;
+	}
 
 	g_world.Lock();
 	const std::vector<int> players = g_world.GetFieldSyncPlayers();
@@ -256,21 +250,21 @@ void SendChangedFieldStates()
 
 	// 퇴장한 플레이어의 전송 기록을 정리한다.
 	for (auto it = s_sentFields.begin(); it != s_sentFields.end();) {
-		if (std::find(players.begin(), players.end(), it->first) == players.end())
+		if (std::find(players.begin(), players.end(), it->first) == players.end()) {
 			it = s_sentFields.erase(it);
-		else
+		}
+		else {
 			++it;
+		}
 	}
 
 	for (int sessionId : players) {
 		std::vector<FieldState>& previous = s_sentFields[sessionId];
 		for (std::size_t i = 0; i < fields.size(); ++i) {
-			if (i < previous.size() && SameFieldState(previous[i], fields[i]))
-				continue;
+			if (i < previous.size() && SameFieldState(previous[i], fields[i])) continue;
 
 			const bool sent = SendFieldState(sessionId, fields[i]);
-			if (!sent)
-				break;
+			if (!sent) break;
 
 #ifdef _DEBUG
 			// 성장 시간 갱신마다 출력하지 않고 종류·단계가 바뀐 경우만 기록한다.
@@ -282,17 +276,15 @@ void SendChangedFieldStates()
 #endif
 
 			// 성공한 전송만 기록한다. 성장 시간만 바뀐 경우도 다음 비교에 포함된다.
-			if (i < previous.size())
-				previous[i] = fields[i];
-			else
-				previous.push_back(fields[i]);
+			if (i < previous.size()) previous[i] = fields[i];
+			else previous.push_back(fields[i]);
 		}
 	}
+	s_fieldSyncCs.Unlock();
 }
 
-void SendPlayerMove(int sessionId)
-{
-	std::lock_guard<std::mutex> syncLock(s_playerSyncMutex);
+void SendPlayerMove(int sessionId) {
+	s_playerSyncCs.Lock();
 	S2C_MOVE_OBJECT_PACKET update{};
 	update.header.size = (unsigned char)sizeof(update);
 	update.header.type = S2C_MOVE_OBJECT;
@@ -303,9 +295,9 @@ void SendPlayerMove(int sessionId)
 
 	PlayerState* player = g_world.GetPlayer(sessionId);
 
-	if (player == nullptr)
-	{
+	if (player == nullptr) {
 		g_world.Unlock();
+		s_playerSyncCs.Unlock();
 		return;
 	}
 
@@ -325,21 +317,18 @@ void SendPlayerMove(int sessionId)
 	g_world.Unlock();
 
 	// 월드 잠금을 해제한 뒤 송신한다.
-	for (int receiverId : receivers)
-	{
-		if (receiverId == sessionId)
-			continue;
+	for (int receiverId : receivers) {
+		if (receiverId == sessionId) continue;
 
-		if (!SendToClient(receiverId, (const char*)&update))
-		{
+		if (!SendToClient(receiverId, (const char*)&update)) {
 			printf("[이동 전송 실패] 대상 ID=%d\n", receiverId);
 		}
 	}
+	s_playerSyncCs.Unlock();
 }
 
-void SendPlayerEquip(int sessionId)
-{
-	std::lock_guard<std::mutex> syncLock(s_playerSyncMutex);
+void SendPlayerEquip(int sessionId) {
+	s_playerSyncCs.Lock();
 	S2C_EQUIP_OBJECT_PACKET update{};
 	update.header.size = (unsigned char)sizeof(update);
 	update.header.type = S2C_EQUIP_OBJECT;
@@ -348,9 +337,9 @@ void SendPlayerEquip(int sessionId)
 
 	g_world.Lock();
 	PlayerState* player = g_world.GetPlayer(sessionId);
-	if (player == nullptr)
-	{
+	if (player == nullptr) {
 		g_world.Unlock();
+		s_playerSyncCs.Unlock();
 		return;
 	}
 
@@ -360,35 +349,23 @@ void SendPlayerEquip(int sessionId)
 	g_world.Unlock();
 
 	// 초기 동기화가 끝난 상대에게만 월드 잠금 없이 전송한다.
-	for (int receiverId : receivers)
-	{
-		if (receiverId == sessionId)
-			continue;
+	for (int receiverId : receivers) {
+		if (receiverId == sessionId) continue;
 
 		const bool sent = SendToClient(receiverId, (const char*)&update);
-		if (!sent)
-		{
+		if (!sent) {
 			printf("[장비 전송 실패] 대상 ID=%d\n", receiverId);
 		}
 	}
+	s_playerSyncCs.Unlock();
 }
 
-void BroadcastRemoveObject(int objectId)
-{
-	std::lock_guard<std::mutex> syncLock(s_playerSyncMutex);
+void SendRemoveObject(int objectId) {
+	s_playerSyncCs.Lock();
 	S2C_REMOVE_OBJECT_PACKET remove{};
 	remove.header.size = (unsigned char)sizeof(remove);
 	remove.header.type = S2C_REMOVE_OBJECT;
 	remove.objectId = objectId;
-
-	g_world.Lock();
-	const std::vector<int> receivers = g_world.GetFieldSyncPlayers();
-	g_world.Unlock();
-
-	// 로그인 응답·초기 상태를 받기 전인 접속자에게는 보내지 않는다.
-	for (int receiverId : receivers)
-	{
-		if (!SendToClient(receiverId, (const char*)&remove))
-			printf("[객체 삭제 전송 실패] 대상 ID=%d\n", receiverId);
-	}
+	SendToAll((const char*)&remove);
+	s_playerSyncCs.Unlock();
 }

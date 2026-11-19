@@ -1,136 +1,47 @@
-﻿#include "Common.h"
-#include "RecvPacket.h"
-#include "SendPacket.h"
+﻿#include "PCH.h"
+#include "Packet.h"
 #include "GameWorld.h"
 #include "PacketHandler.h"
 #include "WorldSync.h"
-#include <vector>
-#include <algorithm>
-
-// 접속한 클라이언트 한 명을 나타내는 세션
-// 클라이언트 스레드가 하나씩 맡고, 스레드가 끝날 때 delete 한다
-class ClientSession {
-public:
-	ClientSession(int id, SOCKET sock, const sockaddr_in& addr) : m_id(id), m_sock(sock) {
-		inet_ntop(AF_INET, &addr.sin_addr, m_ip, sizeof(m_ip)); // 클라이언트 IP주소를 문자열로 변환
-		m_port = ntohs(addr.sin_port); // 클라이언트 포트번호를 호스트 바이트 순서로 변환
-		InitializeCriticalSection(&m_sendCs);
-	}
-	~ClientSession() {
-		closesocket(m_sock); // 세션이 사라지면 소켓도 닫는다
-		DeleteCriticalSection(&m_sendCs);
-	}
-
-	// 소켓과 임계영역을 가진 객체이므로 복사하지 않는다
-	ClientSession(const ClientSession&) = delete;
-	ClientSession& operator=(const ClientSession&) = delete;
-
-	// 이 클라이언트에게 패킷을 보낸다
-	// 클라이언트 스레드와 Update 스레드가 같은 소켓으로 동시에 보낼 수 있으므로 송신 락을 잡는다
-	bool Send(const char* packet) {
-		EnterCriticalSection(&m_sendCs);
-		bool ok = SendPacket(m_sock, packet);
-		LeaveCriticalSection(&m_sendCs);
-		return ok;
-	}
-
-	int GetId() const { return m_id; }
-	SOCKET GetSocket() const { return m_sock; }
-	const char* GetIp() const { return m_ip; }
-	int GetPort() const { return m_port; }
-
-private:
-	int m_id; // 세션 ID
-	SOCKET m_sock; // 클라이언트 통신 소켓
-	char m_ip[INET_ADDRSTRLEN]; // 클라이언트 IP 주소 문자열
-	int m_port; // 클라이언트 포트번호
-	CRITICAL_SECTION m_sendCs; // 송신 보호용 임계영역
-};
 
 // 모든 스레드가 함께 쓰는 데이터
-GameWorld g_world; // 게임 월드 (Lock/Unlock으로 보호)
-std::vector<ClientSession*> g_sessions; // 접속 중인 세션 목록
-CRITICAL_SECTION g_sessionCs; // 세션 목록 보호용 임계영역
-
-// 세션 ID로 접속 중인 클라이언트를 찾아 패킷을 전송한다.
-bool SendToClient(int sessionId, const char* packet)
-{
-	bool result = false;
-
-	// 세션을 조회
-	EnterCriticalSection(&g_sessionCs);
-	for (ClientSession* session : g_sessions)
-	{
-		if (session->GetId() == sessionId)
-		{
-			result = session->Send(packet);   // 해당 세션의 송신 함수를 통해 패킷 전체를 전송한다.
-			break;
-		}
-	}
-	LeaveCriticalSection(&g_sessionCs);
-
-	return result;
-}
-
-// 로그인을 마친 모든 클라이언트에게 패킷을 전송한다. exceptSessionId 세션은 제외한다.
-void BroadcastToAll(const char* packet, int exceptSessionId)
-{
-	EnterCriticalSection(&g_sessionCs);
-	for (ClientSession* session : g_sessions)
-	{
-		if (session->GetId() == exceptSessionId)
-			continue;
-
-		// 로그인 전 세션에는 월드 소식을 보내지 않는다 (락 순서: 세션 목록 → 월드)
-		g_world.Lock();
-		bool inWorld = g_world.GetPlayer(session->GetId()) != nullptr;
-		g_world.Unlock();
-		if (!inWorld)
-			continue;
-
-		session->Send(packet);
-	}
-	LeaveCriticalSection(&g_sessionCs);
-}
+GameWorld g_world; // 게임 월드
 
 // 클라이언트 스레드: 클라이언트 한 명의 패킷을 연결이 끊길 때까지 받는다
 DWORD WINAPI ClientThread(LPVOID arg) {
 	ClientSession* session = (ClientSession*)arg;
 	char buf[MAX_PACKET_SIZE]; // 받은 패킷
-	bool loggedIn = false;		// 로그인 기록
+	bool loggedIn = false; // 로그인 기록
 
 	while (1) {
-		int size = RecvPacket(session->GetSocket(), buf);
-		if (size <= 0) break; // 0이면 연결 종료, -1이면 오류
+		int size = session->Recv(buf);
+
+		if (size <= 0) break;
 
 		// 패킷의 헤더에서 타입과 크기를 꺼내 출력
 		PacketHeader header;
 		memcpy(&header, buf, sizeof(header));
-		// printf("[패킷] %s: 타입 %d, 크기 %d\n", session->GetIp(), header.type, header.size);
 
 		// 로그인 전에 다른 요청을 보내면 거부
-		if (!loggedIn && header.type != C2S_LOGIN)
-			break;
-
+		if (!loggedIn && header.type != C2S_LOGIN) break;
 		// 로그인 완료 후 중복 로그인 요청 거부
-		if (loggedIn && header.type == C2S_LOGIN)
-			break;
+		if (loggedIn && header.type == C2S_LOGIN) break;
 
-		if (!HandlePacket(session->GetId(), buf))
-		{
+		// 패킷 처리
+		if (!HandlePacket(session->GetId(), buf)) {
 			printf("[패킷 처리 실패] ID=%d\n", session->GetId());
 			break;
 		}
 
-		if (header.type == C2S_LOGIN)
-			loggedIn = true;
+		// 처음 패킷이 로그인인지 확인
+		if (header.type == C2S_LOGIN) loggedIn = true;
 	}
 
 	// 세션 목록에서 빼고, 월드에서 플레이어를 제거한다
-	EnterCriticalSection(&g_sessionCs);
+	g_sessionCs.Lock();
 	g_sessions.erase(std::remove(g_sessions.begin(), g_sessions.end(), session), g_sessions.end());
 	int count = (int)g_sessions.size();
-	LeaveCriticalSection(&g_sessionCs);
+	g_sessionCs.Unlock();
 
 	g_world.Lock();
 	bool wasInWorld = g_world.GetPlayer(session->GetId()) != nullptr;
@@ -138,8 +49,7 @@ DWORD WINAPI ClientThread(LPVOID arg) {
 	g_world.Unlock();
 
 	// 월드에 있던 플레이어라면 남은 클라이언트에게 삭제를 알린다
-	if (wasInWorld)
-		BroadcastRemoveObject(session->GetId());
+	if (wasInWorld) SendRemoveObject(session->GetId());
 
 	printf("[해제] %s (접속 %d명)\n", session->GetIp(), count);
 	delete session; // 소켓도 함께 닫힌다
@@ -157,9 +67,9 @@ DWORD WINAPI UpdateThread(LPVOID arg) {
 		int dt = (int)(now - last); // 지난 시간(ms)
 		last = now;
 
-		g_world.Lock();
-		g_world.Update(dt);
-		g_world.Unlock();
+			g_world.Lock();
+			g_world.Update(dt);
+			g_world.Unlock();
 
 		// 월드 잠금을 해제한 뒤, 접속 초기화가 끝난 클라이언트에 변경 상태를 보낸다.
 		SendChangedFieldStates();
@@ -199,18 +109,14 @@ int main(int argc, char* argv[]) {
 	printf("[월드] 객체 %d개 로딩 (밭 %d개)\n", (int)g_world.GetObjects().size(), g_world.GetFieldCount());
 
 	// 까마귀 한 마리를 밭 위쪽에 만든다.
-	{
-		const Vec3f CROW_START = { -3.0f, 10.0f, 7.0f };
-		g_world.Lock();
-		const int crowId = g_world.AddCrow(CROW_START);
-		g_world.Unlock();
-		if (crowId < 0) return 1;
-		printf("[월드] 까마귀 생성 ID=%d 위치=(%.1f, %.1f, %.1f)\n", crowId, CROW_START.x, CROW_START.y, CROW_START.z);
-	}
+	const Vec3f CROW_START = { -3.0f, 10.0f, 7.0f };
+	g_world.Lock();
+	const int crowId = g_world.AddCrow(CROW_START);
+	g_world.Unlock();
+	if (crowId < 0) return 1;
+	printf("[월드] 까마귀 생성 ID=%d 위치=(%.1f, %.1f, %.1f)\n", crowId, CROW_START.x, CROW_START.y, CROW_START.z);
 
-	InitializeCriticalSection(&g_sessionCs);
-
-	// Update 스레드 시작 (끝나기를 기다리지 않으므로 핸들은 바로 닫는다)
+	// Update 스레드
 	HANDLE hThread = CreateThread(NULL, 0, UpdateThread, NULL, 0, NULL);
 	if (hThread == NULL) return 1;
 	CloseHandle(hThread);
@@ -219,7 +125,7 @@ int main(int argc, char* argv[]) {
 	SOCKET client_sock;
 	struct sockaddr_in clientaddr;
 	int addrlen;
-	int nextId = 1; // 다음에 부여할 세션 ID
+	int Id = 1;
 
 	while (1) {
 		// accept()
@@ -231,22 +137,22 @@ int main(int argc, char* argv[]) {
 		}
 
 		// 접속한 클라이언트마다 세션 생성
-		ClientSession* session = new ClientSession(nextId++, client_sock, clientaddr);
+		ClientSession* session = new ClientSession(Id++, client_sock, clientaddr);
 
-		EnterCriticalSection(&g_sessionCs);
+		g_sessionCs.Lock();
 		g_sessions.push_back(session);
 		int count = (int)g_sessions.size();
-		LeaveCriticalSection(&g_sessionCs);
+		g_sessionCs.Unlock();
 
 		printf("[접속] %s (접속 %d명)\n", session->GetIp(), count);
 
-		// 클라이언트 스레드 시작 (세션은 스레드가 끝날 때 정리한다)
+		// 클라이언트 스레드
 		hThread = CreateThread(NULL, 0, ClientThread, session, 0, NULL);
 		if (hThread == NULL) {
-			// 스레드를 못 만들면 접속을 정리한다
-			EnterCriticalSection(&g_sessionCs);
+			// 스레드를 못 만드는 경우, 접속을 정리한다.
+			g_sessionCs.Lock();
 			g_sessions.erase(std::remove(g_sessions.begin(), g_sessions.end(), session), g_sessions.end());
-			LeaveCriticalSection(&g_sessionCs);
+			g_sessionCs.Unlock();
 			g_world.Lock();
 			g_world.RemovePlayer(session->GetId());
 			g_world.Unlock();
@@ -259,7 +165,6 @@ int main(int argc, char* argv[]) {
 
 	// 소켓 닫기
 	closesocket(listen_sock);
-	DeleteCriticalSection(&g_sessionCs);
 	// 윈속 종료
 	WSACleanup();
 	return 0;
