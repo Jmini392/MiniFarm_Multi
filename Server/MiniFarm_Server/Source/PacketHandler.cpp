@@ -86,6 +86,12 @@ bool HandlePacket(int sessionId, const char* packet) {
                 return false;
             }
 
+            if (!SendTimeSync(sessionId))
+            {
+                printf("[초기 시각 전송 실패] ID=%d\n", sessionId);
+                return false;
+            }
+
             // 현재 접속자들의 위치·장비를 보내고, 새 플레이어도 기존 접속자에게 알린다.
             if (!SendPlayerStates(sessionId)) {
                 printf("[플레이어 상태 전송 실패] ID=%d\n", sessionId);

@@ -45,7 +45,6 @@ void IngameScene::Update(int dt)
 		SceneManager::SetScene(std::make_unique<ExitScene>());
 		return;
 	}
-	m_timeSystem.Update(dt);
 	UpdateDayNightCycle();
 	SetClearColor(m_BackGroundColor);
 	WaterParticleSystem::Update(static_cast<float>(dt));
@@ -90,7 +89,7 @@ void IngameScene::DrawUI()
 	UIRenderer::Draw(TextureLoader::Load("Assets/ui_goldbar.png"), { 0.01f,0.9f }, 0.25f);
 	TextRenderer::Draw(std::to_string(sharedMoney), 80, WINDOW_H - 35, 2, glm::vec3(0.f));
 
-	float timeValue = m_timeSystem.GetDayTime();
+	float timeValue = m_serverDayTime;
 	int hour = (int)timeValue;
 	int minute = (int)((timeValue - hour) * 60.f);
 	std::string ampm = (hour < 12) ? "AM" : "PM";
@@ -116,7 +115,7 @@ void IngameScene::SetupCameraAndLight()
 
 void IngameScene::UpdateDayNightCycle()
 {
-	float dayTime = m_timeSystem.GetDayTime();
+	float dayTime = m_serverDayTime;
 	const float PI = 3.14159265f;
 
 	float rotationAngle = ((dayTime - 6.f) / 24.f) * 2.f * PI;
@@ -372,4 +371,9 @@ void IngameScene::RemoveWorldObject(int objectId)
 	m_crops.erase(std::remove_if(m_crops.begin(), m_crops.end(),
 		[&it](const std::shared_ptr<Crop>& crop) { return crop.get() == it->get(); }), m_crops.end());
 	m_objects.erase(it);
+}
+
+void IngameScene::ApplyTimeSync(float dayTime)
+{
+	m_serverDayTime = dayTime;
 }

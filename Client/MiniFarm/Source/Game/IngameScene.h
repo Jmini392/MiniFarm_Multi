@@ -4,7 +4,6 @@
 #include "Camera.h"
 #include "Player.h"
 #include "Shader.h"
-#include "TimeSystem.h"
 #include "Crop.h"
 #include "Common/SharedWallet.h"
 #include <unordered_map>
@@ -41,13 +40,15 @@ public:
 	bool ApplyEquipObject(const S2C_EQUIP_OBJECT_PACKET& packet);
 	void RemoveWorldObject(int objectId);
 	bool ApplyFieldUpdate(const S2C_FIELD_UPDATE_PACKET& packet);
+
+	void ApplyTimeSync(float dayTime);
 private:
 	int m_playerId = -1;
 
 	SharedWallet m_wallet;
 	int m_serverWalletBalance = -1; // No server balance has arrived yet.
 	Player* m_player = nullptr;
-	TimeSystem m_timeSystem;
+	float m_serverDayTime = 12.f;
 	std::vector<std::shared_ptr<Crop>> m_crops;
 
 	struct MoveState

@@ -369,3 +369,29 @@ void SendRemoveObject(int objectId) {
 	SendToAll((const char*)&remove);
 	s_playerSyncCs.Unlock();
 }
+
+bool SendTimeSync(int sessionId)
+{
+	S2C_TIME_SYNC_PACKET sync{};
+	sync.header.size = static_cast<unsigned char>(sizeof(sync));
+	sync.header.type = S2C_TIME_SYNC;
+
+	g_world.Lock();
+	sync.dayTime = g_world.GetDayTime();
+	g_world.Unlock();
+
+	return SendToClient(sessionId, reinterpret_cast<const char*>(&sync));
+}
+
+void BroadcastTimeSync()
+{
+	S2C_TIME_SYNC_PACKET sync{};
+	sync.header.size = static_cast<unsigned char>(sizeof(sync));
+	sync.header.type = S2C_TIME_SYNC;
+
+	g_world.Lock();
+	sync.dayTime = g_world.GetDayTime();
+	g_world.Unlock();
+
+	SendToAll(reinterpret_cast<const char*>(&sync));
+}

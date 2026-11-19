@@ -127,9 +127,6 @@
     <ClCompile Include="Source\Systems\ObjectLoader.cpp">
       <Filter>소스 파일\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Systems\TimeSystem.cpp">
-      <Filter>소스 파일\Systems</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Render\WaterParticleSystem.cpp">
       <Filter>소스 파일\Rendering</Filter>
     </ClCompile>
@@ -268,9 +265,6 @@
       <Filter>소스 파일\Systems</Filter>
     </ClInclude>
     <ClInclude Include="Source\Systems\ObjectLoader.h">
-      <Filter>소스 파일\Systems</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Systems\TimeSystem.h">
       <Filter>소스 파일\Systems</Filter>
     </ClInclude>
     <ClInclude Include="Source\Render\WaterParticleSystem.h">

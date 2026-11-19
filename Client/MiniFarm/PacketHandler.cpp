@@ -184,7 +184,22 @@ bool HandlePacket(const char* packet)
         break;
 
     case S2C_TIME_SYNC:             // 게임 시간 반영
-        break;
+    {
+        if (header.size != sizeof(S2C_TIME_SYNC_PACKET))
+            return false;
+
+        S2C_TIME_SYNC_PACKET sync{};
+        memcpy(&sync, packet, sizeof(sync));
+
+        if (!std::isfinite(sync.dayTime) || sync.dayTime < 0.f || sync.dayTime >= 24.f)
+            return false;
+
+        IngameScene* ingame = dynamic_cast<IngameScene*>(SceneManager::GetScene());
+        if (ingame != nullptr)
+            ingame->ApplyTimeSync(sync.dayTime);
+
+        return true;
+    }
 
     case S2C_ESCAPE_RESULT:         // 탈출 결과 반영
         break;

@@ -61,6 +61,9 @@ DWORD WINAPI UpdateThread(LPVOID arg) {
 	const DWORD UPDATE_INTERVAL = 100; // 갱신 간격(ms)
 	DWORD last = GetTickCount();
 
+	constexpr int TIME_SYNC_INTERVAL_MS = 1000;
+	int timeSyncElapsedMs = 0;
+
 	while (1) {
 		Sleep(UPDATE_INTERVAL);
 		DWORD now = GetTickCount();
@@ -74,6 +77,13 @@ DWORD WINAPI UpdateThread(LPVOID arg) {
 		// 월드 잠금을 해제한 뒤, 접속 초기화가 끝난 클라이언트에 변경 상태를 보낸다.
 		SendChangedFieldStates();
 		SendChangedWalletBalances();
+
+		timeSyncElapsedMs += dt;
+		if (timeSyncElapsedMs >= TIME_SYNC_INTERVAL_MS)
+		{
+			timeSyncElapsedMs %= TIME_SYNC_INTERVAL_MS;
+			BroadcastTimeSync();
+		}
 	}
 	return 0;
 }

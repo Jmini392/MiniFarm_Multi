@@ -160,6 +160,12 @@ struct S2C_REMOVE_OBJECT_PACKET
     std::int32_t objectId;
 };
 
+struct S2C_TIME_SYNC_PACKET
+{
+    PacketHeader header;
+    float dayTime;
+};
+
 #pragma pack(pop)
 
 constexpr unsigned char PACKET_HEADER_SIZE = sizeof(PacketHeader);
