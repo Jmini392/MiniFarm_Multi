@@ -18,7 +18,7 @@ void TitleScene::Init()
 	m_camera.FollowTarget(glm::vec3(0.f));
 
 	auto staticObjs = ObjectLoader::LoadStaticObjects("Data/static_props_pos.json");
-	auto interactObjs = ObjectLoader::LoadInteractableObjects("Data/Interactable_props_pos.json");
+	auto interactObjs = ObjectLoader::LoadInteractableObjects("../../Shared/Data/Interactable_props_pos.json");
 
 	for (auto& obj : staticObjs)
 		AddObject(obj);

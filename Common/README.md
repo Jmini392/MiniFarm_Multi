@@ -122,7 +122,7 @@ Crop::OnInteract(player)
 
 현재 테스트용 시작 아이템은 클라이언트 `Inventory` 생성자가 지급한다. `InventoryCore`를 서버에서 생성해도 시작 아이템이 자동으로 생기지 않는다.
 
-작물 설정은 현재 클라이언트 [DataTable](../Client/MiniFarm/Source/Systems/DataTable.cpp)이 [crops.csv](../Client/MiniFarm/Data/crops.csv)에서 읽는다. Common 함수에는 호출자가 해당 작물에 맞는 `CropData`를 전달한다. 클라이언트 `DataTable::GetCrop()`은 없는 ID를 새로 삽입하지 않고 nullptr를 반환하며, 거래·수확 호출부가 설정 누락을 실패로 처리한다.
+작물 설정은 현재 클라이언트 [DataTable](../Client/MiniFarm/Source/Systems/DataTable.cpp)이 [crops.csv](../Shared/Data/crops.csv)에서 읽는다. Common 함수에는 호출자가 해당 작물에 맞는 `CropData`를 전달한다. 클라이언트 `DataTable::GetCrop()`은 없는 ID를 새로 삽입하지 않고 nullptr를 반환하며, 거래·수확 호출부가 설정 누락을 실패로 처리한다.
 
 ### 농사 함수
 

@@ -10,14 +10,15 @@ std::unordered_map<std::string, ObjectInfo> DataTable::m_objects;
 void DataTable::Init()
 {
 	LOG("DataTable Init");
-	LoadCrops("Data/crops.csv");
+	const std::string cropPath = "../../Shared/Data/crops.csv";
+	LoadCrops(cropPath);
 	LoadObjects("Data/object_table.csv");
 
 #ifdef _DEBUG
     // Debug-only copies: gameplay continues to use the existing s_crops table.
     CropTable debugCropTable;
     std::string debugCropError;
-    const bool debugCropLoaded = debugCropTable.Load("Data/crops.csv", debugCropError);
+    const bool debugCropLoaded = debugCropTable.Load(cropPath, debugCropError);
     const std::size_t debugCropCount = debugCropTable.GetCount();
     const CropData* debugCarrot = debugCropTable.GetCrop(EItemID::Carrot);
     const CropData* debugCabbage = debugCropTable.GetCrop(EItemID::Cabbage);
@@ -53,6 +54,12 @@ void DataTable::Init()
 void DataTable::LoadCrops(const std::string& path)
 {
     std::ifstream file(path);
+    if (!file.is_open())
+    {
+        LOG_E("Cannot open crops CSV: %s", path.c_str());
+        return;
+    }
+
     std::string line;
 
     // header skip
