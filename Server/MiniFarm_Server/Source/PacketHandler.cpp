@@ -226,10 +226,11 @@ bool HandlePacket(int sessionId, const char* packet) {
 
             // result는 사본이므로 월드 잠금 없이 로그와 디버그에 사용한다.
             printf("[Field action] playerId=%d, objectId=%d, itemId=%d, result=%s, "
-                "crop=%d->%d, seed=%d->%d, distanceSquared=%.3f\n",
+                "crop=%d->%d, water=%.1f->%.1f, seed=%d->%d, distanceSquared=%.3f\n",
                 sessionId, static_cast<int>(request.objectId), static_cast<int>(result.equippedTool),
                 GetFieldInteractStatusName(result.status),
                 static_cast<int>(result.before.id), static_cast<int>(result.after.id),
+                result.before.water, result.after.water,
                 result.seedCountBefore, result.seedCountAfter, result.distanceSquared);
 
             // 요청한 플레이어만 자신의 인벤토리를 확인할 수 있습니다.

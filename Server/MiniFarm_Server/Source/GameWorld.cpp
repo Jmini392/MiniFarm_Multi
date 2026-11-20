@@ -271,8 +271,10 @@ FieldInteractResult GameWorld::InteractField(int sessionId, int objectId) {
         action = CropLogic::Plant(field->crop, inventory, result.equippedTool);
         result.seedCountAfter = inventory.GetItemCount(result.equippedTool);
     }
+    else if (result.equippedTool == EItemID::WateringCan) {
+        action = CropLogic::Water(field->crop);
+    }
     else {
-        // 물주기·수확은 이후 작업에서 연결한다.
         result.status = FieldInteractStatus::UnsupportedTool;
         return result;
     }
