@@ -146,7 +146,7 @@ bool NetworkClient::SendLoginRequest()
     packet.header.size = (unsigned char)sizeof(packet);
     packet.header.type = C2S_LOGIN;
 
-    if (!SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet))))
+    if (!SendPacketBytes(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet))))
         return false;
 
     LOG("C2S_LOGIN 전송 완료");
@@ -169,7 +169,7 @@ bool NetworkClient::SendMoveRequest(float x, float y, float z,float yaw, bool is
     packet.isMoving = isMoving ? 1 : 0;
     packet.isAirborne = isAirborne ? 1 : 0;
 
-    if (!SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet))))
+    if (!SendPacketBytes(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet))))
     {
         LOG_E("이동 패킷 전송 실패");
         Disconnect();
@@ -186,7 +186,7 @@ bool NetworkClient::SendEquipRequest(EItemID item)
     packet.header.type = C2S_EQUIP;
     packet.itemId = static_cast<std::int32_t>(item);
 
-    return SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
+    return SendPacketBytes(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
 }
 
 bool NetworkClient::SendInteractFieldRequest(int objectId)
@@ -199,7 +199,7 @@ bool NetworkClient::SendInteractFieldRequest(int objectId)
     packet.header.type = C2S_INTERACT_FIELD;
     packet.objectId = static_cast<std::int32_t>(objectId);
 
-    return SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
+    return SendPacketBytes(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
 }
 
 #ifdef _DEBUG
@@ -210,26 +210,22 @@ bool NetworkClient::SendDebugWalletChangeRequest(DebugWalletAction action)
     packet.header.type = C2S_DEBUG_WALLET_CHANGE;
     packet.action = action;
 
-    return SendAll(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
+    return SendPacketBytes(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
 }
 #endif
 
-bool NetworkClient::SendAll(const char* data, int size)
+bool NetworkClient::SendPacketBytes(const char* data, int size)
 {
     if (m_socket == INVALID_SOCKET || !m_connected || !m_receiving
         || data == nullptr || size <= 0)
         return false;
 
-    int totalSent = 0;
-    while (totalSent < size)
-    {
-        int sent = send(m_socket, data + totalSent, size - totalSent, 0);
-        if (sent == SOCKET_ERROR || sent == 0)
-            return false;
+    const int sent = send(m_socket, data, size, 0);
+    // Do not append another packet after a partial send.
+    if (sent > 0 && sent < size)
+        Disconnect();
 
-        totalSent += sent;
-    }
-    return true;
+    return sent == size;
 }
 
 DWORD WINAPI NetworkClient::ReceiveThread(LPVOID parameter)

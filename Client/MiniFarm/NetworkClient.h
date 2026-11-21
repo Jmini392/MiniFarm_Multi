@@ -33,7 +33,7 @@ public:
 #endif
 
 private:
-    bool SendAll(const char* data, int size);
+    bool SendPacketBytes(const char* data, int size);
 
     static DWORD WINAPI ReceiveThread(LPVOID parameter);
     void ReceiveLoop();
