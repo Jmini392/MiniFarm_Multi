@@ -33,12 +33,26 @@ enum PacketType : unsigned char {
 	S2C_ESCAPE_RESULT = 17,
 	S2C_INVENTORY_UPDATE = 18,
 	S2C_WALLET_BALANCE = 19,
+	S2C_FIELD_INTERACT_RESULT = 21,
 };
 
 enum class DebugWalletAction : std::uint8_t
 {
     Add = 1,
     Spend = 2,
+};
+
+enum class FieldInteractStatus : std::uint8_t
+{
+    Success = 0,
+    PlayerNotReady = 1,
+    ServerFarmingDisabled = 2,
+    UnknownField = 3,
+    TooFar = 4,
+    UnsupportedTool = 5,
+    NotApplicable = 6,
+    NoSeed = 7,
+    InvalidCropData = 8,
 };
 
 #pragma pack(push, 1)
@@ -152,6 +166,14 @@ struct S2C_FIELD_UPDATE_PACKET
     float water;
     float growTime;
     float requiredGrowTime;
+};
+
+// Only sent when a field interaction is rejected.
+struct S2C_FIELD_INTERACT_RESULT_PACKET
+{
+    PacketHeader header;
+    std::int32_t objectId;
+    FieldInteractStatus reason;
 };
 
 struct S2C_REMOVE_OBJECT_PACKET

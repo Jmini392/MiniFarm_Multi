@@ -4,6 +4,7 @@
 #include "../../../Common/CropState.h"
 #include "../../../Common/CropTable.h"
 #include "../../../Common/SharedWallet.h"
+#include "../../../Shared/Protocol.h"
 
 // 월드에 배치되는 상호작용 객체의 종류 (Interactable_props_pos.json의 type과 같다)
 enum class WorldObjectType { Field, House, Boat };
@@ -39,19 +40,6 @@ const int CROW_ID_BASE = 2000;
 struct CrowState {
 	int id = -1;
 	Vec3f pos;
-};
-
-// 행동 실패와 패킷 오류를 구분한다. 일반적인 행동 실패는 접속을 끊지 않는다.
-enum class FieldInteractStatus {
-    Success,
-    PlayerNotReady,
-    ServerFarmingDisabled,
-    UnknownField,
-    TooFar,
-    UnsupportedTool,
-    NotApplicable,
-    NoSeed,
-    InvalidCropData
 };
 
 // 잠금을 해제한 뒤에도 로그와 디버거에서 확인할 수 있는 값의 사본이다.

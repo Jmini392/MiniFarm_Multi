@@ -9,6 +9,29 @@
 
 namespace
 {
+    const char* GetFieldRejectionMessage(FieldInteractStatus reason)
+    {
+        switch (reason)
+        {
+        case FieldInteractStatus::ServerFarmingDisabled:
+            return "ServerFarmingDisabled (Server farming is disabled.)";
+        case FieldInteractStatus::UnknownField:
+            return "UnknownField (The field does not exist.)";
+        case FieldInteractStatus::TooFar:
+            return "TooFar (Move closer to the field.)";
+        case FieldInteractStatus::UnsupportedTool:
+            return "UnsupportedTool (This tool cannot be used on the field.)";
+        case FieldInteractStatus::NotApplicable:
+            return "NotApplicable (This tool cannot be used in the field's current state.)";
+        case FieldInteractStatus::NoSeed:
+            return "NoSeed (No seeds left.)";
+        case FieldInteractStatus::InvalidCropData:
+            return "InvalidCropData (Crop data is unavailable.)";
+        default:
+            return nullptr;
+        }
+    }
+
     bool AreInventoryCountsValid(const InventoryCounts& counts)
     {
         return counts.carrotSeedCount >= 0 && counts.cabbageSeedCount >= 0
@@ -139,6 +162,23 @@ bool HandlePacket(const char* packet)
         memcpy(&update, packet, sizeof(update));
 
         return ingame->ApplyFieldUpdate(update);
+    }
+
+    case S2C_FIELD_INTERACT_RESULT:
+    {
+        if (header.size != sizeof(S2C_FIELD_INTERACT_RESULT_PACKET))
+            return false;
+
+        S2C_FIELD_INTERACT_RESULT_PACKET rejection{};
+        memcpy(&rejection, packet, sizeof(rejection));
+
+        const char* message = GetFieldRejectionMessage(rejection.reason);
+        if (message == nullptr)
+            return false;
+
+        LOG_D("Field interaction rejected: objectId=%d, %s",
+            static_cast<int>(rejection.objectId), message);
+        return true;
     }
 
     case S2C_WALLET_BALANCE:

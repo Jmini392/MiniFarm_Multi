@@ -233,6 +233,20 @@ bool HandlePacket(int sessionId, const char* packet) {
                 result.before.water, result.after.water,
                 result.seedCountBefore, result.seedCountAfter, result.distanceSquared);
 
+            if (result.status != FieldInteractStatus::Success) {
+                S2C_FIELD_INTERACT_RESULT_PACKET rejection{};
+                rejection.header.size = static_cast<unsigned char>(sizeof(rejection));
+                rejection.header.type = S2C_FIELD_INTERACT_RESULT;
+                rejection.objectId = request.objectId;
+                rejection.reason = result.status;
+                if (!SendToClient(sessionId, reinterpret_cast<const char*>(&rejection))) {
+                    printf("[Field rejection send failed] playerId=%d, objectId=%d\n",
+                        sessionId, static_cast<int>(rejection.objectId));
+                    return false;
+                }
+                return true;
+            }
+
             // 요청한 플레이어만 자신의 인벤토리를 확인할 수 있습니다.
             if (inventoryChanged) {
                 update.header.size = (unsigned char)sizeof(update);
