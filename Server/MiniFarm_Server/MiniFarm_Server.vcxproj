@@ -29,6 +29,8 @@
     <ClCompile Include="Source\GameWorld.cpp" />
     <ClCompile Include="Source\TimeSystem.cpp" />
     <ClCompile Include="Source\WorldSync.cpp" />
+    <ClCompile Include="Source\Crow.cpp" />
+    <ClCompile Include="Source\CrowSync.cpp" />
     <ClCompile Include="..\..\Common\InventoryCore.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -53,6 +55,8 @@
     <ClInclude Include="Source\GameWorld.h" />
     <ClInclude Include="Source\TimeSystem.h" />
     <ClInclude Include="Source\WorldSync.h" />
+    <ClInclude Include="Source\Crow.h" />
+    <ClInclude Include="Source\CrowSync.h" />
     <ClInclude Include="..\..\Shared\Protocol.h" />
     <ClInclude Include="..\..\Common\InventoryCore.h" />
     <ClInclude Include="..\..\Common\SharedWallet.h" />

@@ -3,6 +3,7 @@
 #include "GameWorld.h"
 #include "PacketHandler.h"
 #include "WorldSync.h"
+#include "CrowSync.h"
 
 // 모든 스레드가 함께 쓰는 데이터
 GameWorld g_world; // 게임 월드
@@ -77,6 +78,7 @@ DWORD WINAPI UpdateThread(LPVOID arg) {
 		// 월드 잠금을 해제한 뒤, 접속 초기화가 끝난 클라이언트에 변경 상태를 보낸다.
 		SendChangedFieldStates();
 		SendChangedWalletBalances();
+		BroadcastCrowMoves();
 
 		timeSyncElapsedMs += dt;
 		if (timeSyncElapsedMs >= TIME_SYNC_INTERVAL_MS)
@@ -121,7 +123,7 @@ int main(int argc, char* argv[]) {
 	// 까마귀 한 마리를 밭 위쪽에 만든다.
 	const Vec3f CROW_START = { -3.0f, 10.0f, 7.0f };
 	g_world.Lock();
-	const int crowId = g_world.AddCrow(CROW_START);
+	const int crowId = g_world.GetCrowSystem().AddCrow(CROW_START);
 	g_world.Unlock();
 	if (crowId < 0) return 1;
 	printf("[월드] 까마귀 생성 ID=%d 위치=(%.1f, %.1f, %.1f)\n", crowId, CROW_START.x, CROW_START.y, CROW_START.z);

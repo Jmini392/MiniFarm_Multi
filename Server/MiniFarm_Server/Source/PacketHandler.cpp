@@ -2,6 +2,7 @@
 #include "PacketHandler.h"
 #include "GameWorld.h"
 #include "WorldSync.h"
+#include "CrowSync.h"
 #include "Packet.h"
 
 // main.cpp에 정의된 월드를 사용한다.
@@ -77,6 +78,11 @@ bool HandlePacket(int sessionId, const char* packet) {
             // 로그인 응답 뒤에 월드 객체를 보낸다.
             if (!SendWorldObjects(sessionId)) {
                 printf("[객체 전송 실패] ID=%d\n", sessionId);
+                return false;
+            }
+
+            if (!SendCrows(sessionId)) {
+                printf("[까마귀 전송 실패] ID=%d\n", sessionId);
                 return false;
             }
 

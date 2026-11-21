@@ -33,6 +33,13 @@
 #include "../../../Common/GameConfig.h"
 #include "../../../Common/InventoryCore.h"
 
+// 서버 월드 좌표 (x, y, z)
+struct Vec3f {
+	float x = 0.f;
+	float y = 0.f;
+	float z = 0.f;
+};
+
 // 소켓 함수 오류 출력 후 종료
 inline void err_quit(const char *msg)
 {

@@ -219,7 +219,7 @@ bool IngameScene::AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet)
 	if (packet.objectType == OBJECT_TYPE_CROW)
 	{
 		auto crow = std::make_shared<Crow>(
-			packet.objectId, glm::vec3(packet.pos[0], packet.pos[1], packet.pos[2]));
+			packet.objectId, glm::vec3(packet.pos[0], packet.pos[1], packet.pos[2]), packet.rot[1]);
 		AddObject(crow);
 		return true;
 	}
@@ -255,6 +255,21 @@ bool IngameScene::ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet)
 	// 내 플레이어는 로컬에서 이동을 계산한다.
 	if (packet.objectId == m_playerId)
 		return true;
+
+	// 까마귀는 서버가 움직이는 객체라 다른 플레이어로 만들지 않고 위치만 옮긴다
+	if (m_OtherPlayers.find(packet.objectId) == m_OtherPlayers.end())
+	{
+		for (auto& obj : m_objects)
+		{
+			if (obj->m_netId != packet.objectId)
+				continue;
+			auto crow = std::dynamic_pointer_cast<Crow>(obj);
+			if (!crow)
+				return false;
+			crow->SetMoveTarget({ packet.x, packet.y, packet.z }, packet.yaw);
+			return true;
+		}
+	}
 
 	MoveState& state = m_moveStates[packet.objectId];
 

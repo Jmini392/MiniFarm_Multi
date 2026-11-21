@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "PlayerState.h"
 #include "TimeSystem.h"
+#include "Crow.h"
 #include "../../../Common/CropState.h"
 #include "../../../Common/CropTable.h"
 #include "../../../Common/SharedWallet.h"
@@ -8,12 +9,6 @@
 
 // 월드에 배치되는 상호작용 객체의 종류 (Interactable_props_pos.json의 type과 같다)
 enum class WorldObjectType { Field, House, Boat };
-
-struct Vec3f {
-	float x = 0.f;
-	float y = 0.f;
-	float z = 0.f;
-};
 
 // 월드에 배치된 객체 하나. 위치·회전·크기는 JSON 값 그대로이며 클라이언트의 x·회전 y 반전은 적용하지 않았다
 struct WorldObject {
@@ -32,15 +27,6 @@ struct FieldState {
 
 // 월드 객체 ID의 시작값. 플레이어 ID(세션 ID는 1부터)와 겹치지 않도록 파일에 적힌 순서대로 붙인다
 const int WORLD_OBJECT_ID_BASE = 1000;
-
-// 까마귀 ID는 이 값부터 만든 순서대로 붙는다. 플레이어(1~)와 월드 객체(1000~)와 겹치지 않는다
-const int CROW_ID_BASE = 2000;
-
-// 맵을 날아다니는 까마귀 하나. 위치는 플레이어와 같은 월드 좌표(JSON 값 그대로가 아님)이며, 바뀔 수 있어 Lock()을 잡고 다룬다
-struct CrowState {
-	int id = -1;
-	Vec3f pos;
-};
 
 // 잠금을 해제한 뒤에도 로그와 디버거에서 확인할 수 있는 값의 사본이다.
 struct FieldInteractResult {
@@ -97,15 +83,16 @@ public:
 	const std::vector<WorldObject>& GetObjects() const { return m_objects; }
 	int GetFieldCount() const { return (int)m_fields.size(); }
 
-	// 까마귀를 만들고 ID를 돌려준다. 좌표가 유한한 값이 아니면 -1. Lock()을 잡고 호출하며 송신은 하지 않는다
-	int AddCrow(const Vec3f& pos);
-	// 해당 까마귀, 없으면 nullptr. Lock()을 잡고 호출한다
-	CrowState* GetCrow(int crowId);
-	const std::vector<CrowState>& GetCrows() const { return m_crows; }
+	// 작물(당근·양배추)이 심겨 있는 밭인지
+	bool HasCrop(int fieldId) const;
+
+	// 월드의 까마귀. Lock()을 잡고 사용한다
+	CrowSystem& GetCrowSystem() { return m_crowSystem; }
+	const CrowSystem& GetCrowSystem() const { return m_crowSystem; }
 
 	float GetDayTime() const { return m_timeSystem.GetDayTime();}
 
-	// 시간이 지난 만큼 월드를 갱신한다 (밭의 작물 성장). dtMs는 밀리초. 호출하는 쪽이 Lock()을 잡아야 한다
+	// 시간이 지난 만큼 월드를 갱신한다 (작물 성장, 까마귀 이동). dtMs는 밀리초. 호출하는 쪽이 Lock()을 잡아야 한다
 	void Update(int dtMs);
 
 private:
@@ -115,7 +102,7 @@ private:
 	std::unordered_map<int, PlayerState> m_players; // 세션 ID별 플레이어 상태
 	std::unordered_map<int, FieldState> m_fields; // 월드 객체 ID별 밭 상태
 	std::vector<WorldObject> m_objects; // 배치 데이터에서 읽은 월드 객체 (밭, 집, 보트)
-	std::vector<CrowState> m_crows; // 서버가 움직이는 까마귀
+	CrowSystem m_crowSystem; // 서버가 움직이는 까마귀
 
 	TimeSystem m_timeSystem; // 공유하는 서버 게임 시간
 };
