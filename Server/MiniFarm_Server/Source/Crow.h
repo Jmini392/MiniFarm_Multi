@@ -10,7 +10,8 @@ const int CROW_ID_BASE = 2000;
 enum class CrowAction {
 	Wander,        // 맵 위를 떠돌아다닌다
 	ApproachField, // 작물이 있는 밭으로 날아가는 중
-	OnField        // 밭에 내려앉았다 (쪼아 먹기는 이후 작업)
+	OnField,       // 밭에 내려앉았다 (쪼아 먹기는 이후 작업)
+	Flee           // 플레이어를 보고 상공으로 도망가는 중. 끝나면 다시 배회한다
 };
 
 const char* GetCrowActionName(CrowAction action);
@@ -23,7 +24,7 @@ struct CrowState {
 	CrowAction action = CrowAction::Wander;
 	Vec3f target;             // 지금 날아가는 목표 지점
 	int targetFieldId = -1;   // ApproachField·OnField일 때 노리는 밭의 객체 ID
-	int searchCooldownMs = 0; // Wander 중 다음 밭 탐색까지 남은 시간
+	int searchCooldownMs = 0; // Wander 중 다음 밭 탐색까지 남은 시간 (도망친 직후에는 더 길다)
 };
 
 // 월드의 까마귀 전체를 가지고 움직인다. GameWorld가 하나 가지며, 모든 함수는 월드 Lock()을 잡은 채 호출한다
@@ -35,14 +36,17 @@ public:
 	CrowState* GetCrow(int crowId);
 	const std::vector<CrowState>& GetCrows() const { return m_crows; }
 
-	// 까마귀를 배회시키거나 작물이 있는 밭으로 날려 보낸다. 밭 정보는 world에서 읽기만 한다
+	// 까마귀를 배회시키거나 작물이 있는 밭으로 날려 보내고, 플레이어가 다가오면 도망가게 한다. world는 읽기만 한다
 	void Update(int dtMs, const GameWorld& world);
 
 private:
-	// 다른 까마귀가 노리지 않는, 작물이 있는 밭 중 가장 가까운 것. 없으면 -1
-	int FindFieldForCrow(const CrowState& crow, const GameWorld& world) const;
+	// 다른 까마귀가 노리지 않고 근처에 플레이어도 없는, 작물이 있는 밭 중 가장 가까운 것. 없으면 -1
+	int FindFieldForCrow(const CrowState& crow, const GameWorld& world,
+		const std::vector<Vec3f>& players, float noticeDistance) const;
 	// 배회 구역 안에서 다음 목표 지점을 고른다
 	Vec3f PickWanderTarget();
+	// 플레이어 반대쪽 상공에서 도망갈 지점을 고른다
+	Vec3f PickFleeTarget(const Vec3f& crowPos, const Vec3f& playerPos);
 
 	std::vector<CrowState> m_crows;
 	std::mt19937 m_rng{ std::random_device{}() }; // 배회 지점용 난수

@@ -91,6 +91,11 @@ public:
 	const CrowSystem& GetCrowSystem() const { return m_crowSystem; }
 
 	float GetDayTime() const { return m_timeSystem.GetDayTime();}
+	// 낮(6~18시)인지
+	bool IsDaytime() const { return m_timeSystem.IsDaytime(); }
+
+	// 월드에 있는 플레이어들의 위치. Lock()을 잡고 호출한다
+	std::vector<Vec3f> GetPlayerPositions() const;
 
 	// 시간이 지난 만큼 월드를 갱신한다 (작물 성장, 까마귀 이동). dtMs는 밀리초. 호출하는 쪽이 Lock()을 잡아야 한다
 	void Update(int dtMs);

@@ -275,6 +275,16 @@ std::vector<int> GameWorld::GetFieldSyncPlayers() const {
 	return players;
 }
 
+std::vector<Vec3f> GameWorld::GetPlayerPositions() const {
+	std::vector<Vec3f> positions;
+	positions.reserve(m_players.size());
+	for (const auto& pair : m_players) {
+		const PlayerPosition& pos = pair.second.GetPosition();
+		positions.push_back({ pos.x, pos.y, pos.z });
+	}
+	return positions;
+}
+
 bool GameWorld::HasCrop(int fieldId) const {
 	auto it = m_fields.find(fieldId);
 	if (it == m_fields.end()) return false;
