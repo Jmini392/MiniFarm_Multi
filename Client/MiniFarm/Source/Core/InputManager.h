@@ -29,7 +29,6 @@ private:
 
     static int  s_centerX;
     static int  s_centerY;
-    static bool s_warping;
 
     static bool s_uiMode;
 };

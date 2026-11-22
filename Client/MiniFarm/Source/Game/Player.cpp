@@ -120,7 +120,7 @@ void Player::HandleRotate()
 
 	float rotSpeed = 0.1f;
 	cam.AddYaw(InputManager::GetDeltaX() * rotSpeed);
-	cam.AddPitch(-InputManager::GetDeltaY() * rotSpeed);
+	cam.AddPitch(InputManager::GetDeltaY() * rotSpeed);
 
 	m_rot.y = cam.GetFlatYaw();
 

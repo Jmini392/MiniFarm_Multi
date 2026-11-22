@@ -54,7 +54,7 @@ void Camera::AddYaw(float delta)
 void Camera::AddPitch(float delta)
 {
 	pitch += delta;
-	pitch = glm::clamp(pitch, 10.f, 50.f);
+	pitch = glm::clamp(pitch, -5.f, 50.f);
 }
 
 void Camera::FollowTarget(const glm::vec3& targetPos)
