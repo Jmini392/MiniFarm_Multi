@@ -81,7 +81,6 @@ void Player::Update(int time)
 	HandleMove();
 	UpdateWalkAnimations();
 	UpdateToolAnimation();
-	Draw();
 	ApplyGravity();
 
 	// 맵 아래로 떨어지면 시작 지점으로 복귀

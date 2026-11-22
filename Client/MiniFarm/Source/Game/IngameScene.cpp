@@ -85,9 +85,9 @@ void IngameScene::DrawUI()
 
 	m_player->GetInventory().DrawUI();
 
-	const int sharedMoney = m_wallet.GetMoney();
+	const std::string goldText = m_serverWalletBalance >= 0 ? std::to_string(m_serverWalletBalance): "-";
 	UIRenderer::Draw(TextureLoader::Load("Assets/ui_goldbar.png"), { 0.01f,0.9f }, 0.25f);
-	TextRenderer::Draw(std::to_string(sharedMoney), 80, WINDOW_H - 35, 2, glm::vec3(0.f));
+	TextRenderer::Draw(goldText, 80, WINDOW_H - 35, 2, glm::vec3(0.f));
 
 	float timeValue = m_serverDayTime;
 	int hour = (int)timeValue;
