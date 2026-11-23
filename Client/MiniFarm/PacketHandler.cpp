@@ -27,6 +27,12 @@ namespace
             return "NoSeed (No seeds left.)";
         case FieldInteractStatus::InvalidCropData:
             return "InvalidCropData (Crop data is unavailable.)";
+        case FieldInteractStatus::NotMature:
+            return "NotMature (The crop is not ready to harvest.)";
+        case FieldInteractStatus::InventoryLimitExceeded:
+            return "InventoryLimitExceeded (Item limit reached.)";
+        case FieldInteractStatus::InvalidCropState:
+            return "InvalidCropState (Crop state is invalid.)";
         default:
             return nullptr;
         }

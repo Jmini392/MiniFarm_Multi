@@ -53,6 +53,9 @@ enum class FieldInteractStatus : std::uint8_t
     NotApplicable = 6,
     NoSeed = 7,
     InvalidCropData = 8,
+    NotMature = 9,
+    InventoryLimitExceeded = 10,
+    InvalidCropState = 11,
 };
 
 #pragma pack(push, 1)

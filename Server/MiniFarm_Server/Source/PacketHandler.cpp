@@ -210,7 +210,7 @@ bool HandlePacket(int sessionId, const char* packet) {
             C2S_INTERACT_FIELD_PACKET request{};
             memcpy(&request, packet, sizeof(request));
 
-            // 검사부터 밭 변경·씨앗 차감까지 같은 잠금 안에서 처리한다.
+            // 요청 판정과 밭·개인 인벤토리 변경을 같은 잠금 안에서 처리한다.
             S2C_INVENTORY_UPDATE_PACKET update{};
             bool inventoryChanged = false;
 

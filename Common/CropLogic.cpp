@@ -113,6 +113,6 @@ CropLogic::ActionResult CropLogic::Harvest(CropState& state,
 
     if (!inventory.AddItem(state.id))
         return ActionResult::InventoryLimitExceeded;
-    ResetState(state, EItemID::Tilled, 0);
+    ResetState(state, EItemID::Empty, 0);
     return ActionResult::Success;
 }

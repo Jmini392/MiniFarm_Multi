@@ -177,6 +177,9 @@ const char* GetFieldInteractStatusName(FieldInteractStatus status) {
     case FieldInteractStatus::NotApplicable: return "NotApplicable";
     case FieldInteractStatus::NoSeed: return "NoSeed";
     case FieldInteractStatus::InvalidCropData: return "InvalidCropData";
+    case FieldInteractStatus::NotMature: return "NotMature";
+    case FieldInteractStatus::InventoryLimitExceeded: return "InventoryLimitExceeded";
+    case FieldInteractStatus::InvalidCropState: return "InvalidCropState";
     default: return "Unknown";
     }
 }
@@ -251,18 +254,40 @@ FieldInteractResult GameWorld::InteractField(int sessionId, int objectId) {
     else if (result.equippedTool == EItemID::WateringCan) {
         action = CropLogic::Water(field->crop);
     }
+    else if (result.equippedTool == EItemID::Sickle) {
+        const CropData* data = m_cropTable.GetCrop(field->crop.id);
+        const CropData missingData{};
+        action = CropLogic::Harvest(field->crop, inventory, data ? *data : missingData);
+    }
     else {
         result.status = FieldInteractStatus::UnsupportedTool;
         return result;
     }
 
     result.after = field->crop;
-    if (action == CropLogic::ActionResult::Success)
+    switch (action) {
+    case CropLogic::ActionResult::Success:
         result.status = FieldInteractStatus::Success;
-    else if (action == CropLogic::ActionResult::NoSeed)
-        result.status = FieldInteractStatus::NoSeed;
-    else
+        break;
+    case CropLogic::ActionResult::NotApplicable:
         result.status = FieldInteractStatus::NotApplicable;
+        break;
+    case CropLogic::ActionResult::NoSeed:
+        result.status = FieldInteractStatus::NoSeed;
+        break;
+    case CropLogic::ActionResult::NotMature:
+        result.status = FieldInteractStatus::NotMature;
+        break;
+    case CropLogic::ActionResult::InventoryLimitExceeded:
+        result.status = FieldInteractStatus::InventoryLimitExceeded;
+        break;
+    case CropLogic::ActionResult::InvalidState:
+        result.status = FieldInteractStatus::InvalidCropState;
+        break;
+    case CropLogic::ActionResult::InvalidData:
+        result.status = FieldInteractStatus::InvalidCropData;
+        break;
+    }
     return result;
 }
 
