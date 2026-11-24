@@ -120,13 +120,19 @@ int main(int argc, char* argv[]) {
 	if (!g_world.LoadObjects("../../Shared/Data/Interactable_props_pos.json")) return 1;
 	printf("[월드] 객체 %d개 로딩 (밭 %d개)\n", (int)g_world.GetObjects().size(), g_world.GetFieldCount());
 
-	// 까마귀 한 마리를 밭 위쪽에 만든다.
-	const Vec3f CROW_START = { -3.0f, 10.0f, 7.0f };
-	g_world.Lock();
-	const int crowId = g_world.GetCrowSystem().AddCrow(CROW_START);
-	g_world.Unlock();
-	if (crowId < 0) return 1;
-	printf("[월드] 까마귀 생성 ID=%d 위치=(%.1f, %.1f, %.1f)\n", crowId, CROW_START.x, CROW_START.y, CROW_START.z);
+	// 까마귀 세 마리를 맵 여기저기 상공에 만든다. 위치는 플레이어 좌표이며 배회 구역 안이다
+	const Vec3f CROW_STARTS[] = {
+		{ -3.0f, 15.0f, 7.0f },   // 밭 위쪽
+		{ 15.0f, 15.0f, -10.0f }, // 오른쪽 아래
+		{ -18.0f, 15.0f, 20.0f }, // 왼쪽 위
+	};
+	for (const Vec3f& start : CROW_STARTS) {
+		g_world.Lock();
+		const int crowId = g_world.GetCrowSystem().AddCrow(start);
+		g_world.Unlock();
+		if (crowId < 0) return 1;
+		printf("[월드] 까마귀 생성 ID=%d 위치=(%.1f, %.1f, %.1f)\n", crowId, start.x, start.y, start.z);
+	}
 
 	// Update 스레드
 	HANDLE hThread = CreateThread(NULL, 0, UpdateThread, NULL, 0, NULL);
