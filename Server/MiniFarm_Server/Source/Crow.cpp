@@ -3,13 +3,14 @@
 #include "GameWorld.h"
 
 namespace {
-	// 까마귀가 떠돌아다니는 구역 (플레이어 좌표). 밭(x -14~8, z -2~16)과 집 주변을 덮는다
-	constexpr float CROW_WANDER_MIN_X = -16.f;
-	constexpr float CROW_WANDER_MAX_X = 16.f;
-	constexpr float CROW_WANDER_MIN_Z = -12.f;
-	constexpr float CROW_WANDER_MAX_Z = 20.f;
-	constexpr float CROW_WANDER_MIN_Y = 9.f;
-	constexpr float CROW_WANDER_MAX_Y = 12.f;
+	// 까마귀가 떠돌아다니는 구역 (플레이어 좌표). 맵 땅(x -29~31, z -23~31) 안쪽으로 가장자리 3칸을 남긴다
+	constexpr float CROW_WANDER_MIN_X = -26.f;
+	constexpr float CROW_WANDER_MAX_X = 28.f;
+	constexpr float CROW_WANDER_MIN_Z = -20.f;
+	constexpr float CROW_WANDER_MAX_Z = 28.f;
+	// 배회 높이. 집 지붕과 큰 나무 꼭대기(약 13.3)보다 위로 난다
+	constexpr float CROW_WANDER_MIN_Y = 14.f;
+	constexpr float CROW_WANDER_MAX_Y = 16.f;
 
 	constexpr float CROW_WANDER_SPEED = 3.f;   // 배회 속도 (초당 거리)
 	constexpr float CROW_APPROACH_SPEED = 5.f; // 밭으로 날아갈 때 속도
@@ -21,8 +22,8 @@ namespace {
 
 	constexpr float CROW_FLEE_SPEED = 7.f;     // 도망갈 때 속도
 	constexpr float CROW_FLEE_DISTANCE = 8.f;  // 플레이어 반대쪽으로 날아가는 수평 거리
-	constexpr float CROW_FLEE_MIN_Y = 12.f;    // 도망가는 높이 (배회 높이보다 위)
-	constexpr float CROW_FLEE_MAX_Y = 14.f;
+	constexpr float CROW_FLEE_MIN_Y = 16.f;    // 도망가는 높이 (배회 높이보다 위)
+	constexpr float CROW_FLEE_MAX_Y = 18.f;
 	constexpr int CROW_FLEE_REST_MS = 3000;    // 도망친 뒤 다시 밭을 찾기까지 쉬는 시간
 
 	// 밭 모델(field.obj)의 높이. 배치 y에 더하면 밭 윗면이 된다

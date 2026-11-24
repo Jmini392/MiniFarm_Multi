@@ -219,7 +219,8 @@ bool IngameScene::AddWorldObject(const S2C_ADD_OBJECT_PACKET& packet)
 	if (packet.objectType == OBJECT_TYPE_CROW)
 	{
 		auto crow = std::make_shared<Crow>(
-			packet.objectId, glm::vec3(packet.pos[0], packet.pos[1], packet.pos[2]), packet.rot[1]);
+			packet.objectId, glm::vec3(packet.pos[0], packet.pos[1], packet.pos[2]), packet.rot[1],
+			glm::vec3(packet.scale[0], packet.scale[1], packet.scale[2]));
 		AddObject(crow);
 		return true;
 	}

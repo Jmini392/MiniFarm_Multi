@@ -6,6 +6,9 @@ class GameWorld;
 // 까마귀 ID는 이 값부터 만든 순서대로 붙는다. 플레이어(1~)와 월드 객체(1000~)와 겹치지 않는다
 const int CROW_ID_BASE = 2000;
 
+// 까마귀 모델 크기 배율. 원래 모델(높이 1.7)이 플레이어만 해서 조금 줄인다
+const float CROW_SCALE = 0.7f;
+
 // 까마귀가 지금 하고 있는 일
 enum class CrowAction {
 	Wander,        // 맵 위를 떠돌아다닌다

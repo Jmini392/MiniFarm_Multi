@@ -11,7 +11,8 @@ public:
 	// 서버가 까마귀 위치를 보내는 간격(초). 이 시간 동안 이전 위치에서 새 위치로 옮겨 간다
 	static constexpr float MOVE_DURATION = 0.1f;
 
-	Crow(int netId, const glm::vec3& pos, float yaw = 0.f) : GameObject(pos) {
+	Crow(int netId, const glm::vec3& pos, float yaw = 0.f, const glm::vec3& scale = glm::vec3(1.f))
+		: GameObject(pos, glm::vec3(0.f), scale) {
 		m_netId = netId;
 		m_name = "Crow";
 		m_model = ModelCache::Get(MODEL_PATH, TEXTURE_PATH);

@@ -21,7 +21,7 @@ bool SendCrows(int sessionId)
 		add.objectType = 3; // 까마귀
 		add.pos[0] = crow.pos.x; add.pos[1] = crow.pos.y; add.pos[2] = crow.pos.z;
 		add.rot[1] = crow.yaw;
-		add.scale[0] = 1.f;      add.scale[1] = 1.f;      add.scale[2] = 1.f;
+		add.scale[0] = CROW_SCALE; add.scale[1] = CROW_SCALE; add.scale[2] = CROW_SCALE;
 
 		if (!SendToClient(sessionId, (const char*)&add)) {
 			return false;
