@@ -55,5 +55,6 @@ void OtherPlayer::Update(int time)
         UpdateWalkAnimations();
     }
 
+    UpdateToolAnimation(time);
     GameObject::Update(time);
 }

@@ -262,6 +262,14 @@ bool HandlePacket(int sessionId, const char* packet) {
                     return false;
                 }
             }
+            if (result.equippedTool == EItemID::WateringCan) {
+                S2C_WATER_FIELD_EFFECT_PACKET effect{};
+                effect.header.size = static_cast<unsigned char>(sizeof(effect));
+                effect.header.type = S2C_WATER_FIELD_EFFECT;
+                effect.playerId = sessionId;
+                effect.fieldId = request.objectId;
+                SendToAll(reinterpret_cast<const char*>(&effect));
+            }
             return true;
         }
 

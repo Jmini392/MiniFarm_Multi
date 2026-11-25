@@ -202,7 +202,7 @@ void Crop::OnInteract(Player* player)
 		if (result == CropLogic::ActionResult::Success)
 		{
 			WaterParticleSystem::Watering(m_pos);
-			player->m_action = true;
+			player->StartWateringAnimation();
 			LOG_D("Crop watered. Current water: %.2f", m_state.water);
 		}
 		break;

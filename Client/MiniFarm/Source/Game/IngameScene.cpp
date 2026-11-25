@@ -370,6 +370,26 @@ bool IngameScene::ApplyFieldUpdate(const S2C_FIELD_UPDATE_PACKET& packet)
     return false;
 }
 
+void IngameScene::PlayWateringEffect(int playerId, int fieldId)
+{
+    const auto field = std::find_if(m_crops.begin(), m_crops.end(),
+        [fieldId](const std::shared_ptr<Crop>& crop) { return crop->m_netId == fieldId; });
+    if (field == m_crops.end())
+        return;
+
+    WaterParticleSystem::Watering((*field)->m_pos);
+
+    Player* player = m_player;
+    if (playerId != m_playerId)
+    {
+        const auto other = m_OtherPlayers.find(playerId);
+        if (other == m_OtherPlayers.end())
+            return;
+        player = other->second.get();
+    }
+    player->StartWateringAnimation();
+}
+
 void IngameScene::RemoveWorldObject(int objectId)
 {
 	if (objectId < 0)

@@ -80,7 +80,7 @@ void Player::Update(int time)
 	HandleRotate();
 	HandleMove();
 	UpdateWalkAnimations();
-	UpdateToolAnimation();
+	UpdateToolAnimation(time);
 	ApplyGravity();
 
 	// ¸Ê ¾Æ·¡·Î ¶³¾îÁö¸é ½ÃÀÛ ÁöÁ¡À¸·Î º¹±Í
@@ -409,7 +409,9 @@ void Player::Draw()
 		{ -0.3f, 0.5f, 0.2f },
 		{ -0.3f, 0.5f, 0.2f }
 	};
-	float armRotX = m_limbs[1].currentRot.x;
+	const bool isWatering = m_wateringAnimationMs > 0;
+	const EItemID visibleTool = isWatering ? EItemID::WateringCan : m_equippedTool;
+	const float armRotX = isWatering ? -45.f : m_limbs[1].currentRot.x;
 	float radians = glm::radians(armRotX);
 	float armLength = 1.f;
 	glm::vec3 toolOffset = glm::vec3(0.f, -armLength * (1.0f - std::cos(radians)), -armLength * std::sin(radians));
@@ -418,7 +420,7 @@ void Player::Draw()
 		auto& limb = m_limbs[i];
 		if (limb.model) {
 			glm::mat4 limbTransform;
-			if (i == 4 && m_equippedTool == EItemID::Hoe) {
+			if (i == 4 && visibleTool == EItemID::Hoe) {
 				limbTransform = playerTransform *
 					Translate(jointPositions[i] + toolOffset) *
 					Rotate(armRotX, { 1,0,0 }) *
@@ -426,10 +428,10 @@ void Player::Draw()
 					Rotate(limb.currentRot.y, { 0,1,0 }) *
 					Rotate(limb.currentRot.z, { 0,0,1 });
 			}
-			else if (i == 4 && m_equippedTool != EItemID::Hoe) {
+			else if (i == 4 && visibleTool != EItemID::Hoe) {
 				continue;
 			}
-			else if (i == 5 && m_equippedTool == EItemID::WateringCan) {
+			else if (i == 5 && visibleTool == EItemID::WateringCan) {
 				limbTransform = playerTransform *
 					Translate(jointPositions[i] + toolOffset) *
 					Rotate(armRotX, { 1,0,0 }) *
@@ -437,10 +439,10 @@ void Player::Draw()
 					Rotate(limb.currentRot.y, { 0,1,0 }) *
 					Rotate(limb.currentRot.z, { 0,0,1 });
 			}
-			else if (i == 5 && m_equippedTool != EItemID::WateringCan) {
+			else if (i == 5 && visibleTool != EItemID::WateringCan) {
 				continue;
 			}
-			else if (i == 6 && m_equippedTool == EItemID::Sickle) {
+			else if (i == 6 && visibleTool == EItemID::Sickle) {
 				limbTransform = playerTransform *
 					Translate(jointPositions[i] + toolOffset) *
 					Rotate(armRotX, { 1,0,0 }) *
@@ -448,13 +450,13 @@ void Player::Draw()
 					Rotate(limb.currentRot.y, { 0,1,0 }) *
 					Rotate(limb.currentRot.z, { 0,0,1 });
 			}
-			else if (i == 6 && m_equippedTool != EItemID::Sickle) {
+			else if (i == 6 && visibleTool != EItemID::Sickle) {
 				continue;
 			}
 			else {
 				limbTransform = playerTransform *
 					Translate(jointPositions[i]) *
-					Rotate(limb.currentRot.x, { 1,0,0 }) *
+					Rotate(i == 1 ? armRotX : limb.currentRot.x, { 1,0,0 }) *
 					Rotate(limb.currentRot.y, { 0,1,0 }) *
 					Rotate(limb.currentRot.z, { 0,0,1 }) *
 					Translate(-jointPositions[i]);
@@ -530,19 +532,13 @@ void Player::ApplyGravity()
 	m_collider->UpdatePos(m_pos);
 }
 
-void Player::UpdateToolAnimation()
+void Player::StartWateringAnimation()
 {
-	static float time = 0.0f;
-	if (m_action)
-	{
-		time += 0.2f;
-		m_limbs[1].currentRot.x = -45.f;
-		
-		if (time >= 3.14159f)
-		{
-			m_action = false;
-			time = 0.0f;
-			m_limbs[1].currentRot.x = 0.0f;
-		}
-	}
+	constexpr int WATERING_ANIMATION_DURATION_MS = 260;
+	m_wateringAnimationMs = WATERING_ANIMATION_DURATION_MS;
+}
+
+void Player::UpdateToolAnimation(int time)
+{
+	m_wateringAnimationMs = std::max(0, m_wateringAnimationMs - time);
 }

@@ -34,6 +34,7 @@ enum PacketType : unsigned char {
 	S2C_INVENTORY_UPDATE = 18,
 	S2C_WALLET_BALANCE = 19,
 	S2C_FIELD_INTERACT_RESULT = 21,
+	S2C_WATER_FIELD_EFFECT = 22,
 };
 
 enum class DebugWalletAction : std::uint8_t
@@ -177,6 +178,13 @@ struct S2C_FIELD_INTERACT_RESULT_PACKET
     PacketHeader header;
     std::int32_t objectId;
     FieldInteractStatus reason;
+};
+
+struct S2C_WATER_FIELD_EFFECT_PACKET
+{
+    PacketHeader header;
+    std::int32_t playerId;
+    std::int32_t fieldId;
 };
 
 struct S2C_REMOVE_OBJECT_PACKET

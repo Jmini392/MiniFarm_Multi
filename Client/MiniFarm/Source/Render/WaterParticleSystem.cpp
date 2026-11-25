@@ -7,11 +7,11 @@ GLuint WaterParticleSystem::s_vao = 0;
 GLuint WaterParticleSystem::s_vbo = 0;
 GLuint WaterParticleSystem::s_shaderProgram = 0;
 std::vector<WaterParticle> WaterParticleSystem::s_particles;
-size_t WaterParticleSystem::s_activeParticles = 0;
 float WaterParticleSystem::s_gravity = 8.f;
 
 void WaterParticleSystem::Init() {
-    s_particles.resize(MAX_PARTICLES);
+    s_particles.clear();
+    s_particles.reserve(MAX_PARTICLES);
 
     std::string vertSource = LoadFile("Shaders/particle.vert");
     if (vertSource.empty()) {
@@ -104,28 +104,19 @@ void WaterParticleSystem::Init() {
 }
 
 void WaterParticleSystem::Update(float dt) {
-    float deltaTime = dt / 1000.f;
-    s_activeParticles = 0;
-
+    const float deltaTime = dt / 1000.f;
     for (auto& particle : s_particles) {
-        if (particle.life > 0.0f) {
-            particle.velocity.y -= s_gravity * deltaTime;
-
-            if (particle.velocity.y < -5.f) {
-                particle.velocity.y = -5.f;
-            }
-            particle.position += particle.velocity * deltaTime;
-            particle.life -= deltaTime;
-            particle.size = 0.04f;
-
-            if (particle.position.y < 0.1f) {
-                particle.life = 0.0f;
-            }
-            s_activeParticles++;
-        }
+        particle.velocity.y = std::max(-5.f, particle.velocity.y - s_gravity * deltaTime);
+        particle.position += particle.velocity * deltaTime;
+        particle.life -= deltaTime;
     }
 
-    if (s_activeParticles > 0) {
+    s_particles.erase(std::remove_if(s_particles.begin(), s_particles.end(),
+        [](const WaterParticle& particle) {
+            return particle.life <= 0.f || particle.position.y < 0.1f;
+        }), s_particles.end());
+
+    if (!s_particles.empty()) {
         UpdateBuffers();
     }
 }
@@ -137,7 +128,7 @@ void WaterParticleSystem::UpdateBuffers() {
 }
 
 void WaterParticleSystem::Draw(Shader* mainShader) {
-    if (s_activeParticles == 0 || s_shaderProgram == 0) return;
+    if (s_particles.empty() || s_shaderProgram == 0) return;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -159,7 +150,7 @@ void WaterParticleSystem::Draw(Shader* mainShader) {
     glUniform3f(glGetUniformLocation(s_shaderProgram, "uViewPos"), 0.f, 5.f, 10.f);
 
     glBindVertexArray(s_vao);
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(s_activeParticles));
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(s_particles.size()));
     glBindVertexArray(0);
 
     glDepthMask(GL_TRUE);
@@ -173,7 +164,13 @@ void WaterParticleSystem::Watering(const glm::vec3& centerPos) {
     static std::uniform_real_distribution<float> lifeDist(0.8f, 1.2f);
     static std::uniform_real_distribution<float> speedDist(0.f, 0.5f);
 
-    for (auto& particle : s_particles) {
+    const size_t required = s_particles.size() + PARTICLES_PER_WATERING;
+    if (required > MAX_PARTICLES) {
+        s_particles.erase(s_particles.begin(), s_particles.begin() + (required - MAX_PARTICLES));
+    }
+
+    for (size_t i = 0; i < PARTICLES_PER_WATERING; ++i) {
+        auto& particle = s_particles.emplace_back();
         float offsetX = posDist(gen) * 2.f;
         float offsetZ = posDist(gen) * 2.f;
 

@@ -20,6 +20,7 @@ public:
     explicit Player(SharedWallet& wallet);
     virtual void Update(int time);
     virtual void Draw();
+    void StartWateringAnimation();
 private:
     void HandleRotate();
     void HandleMove();
@@ -30,7 +31,6 @@ private:
     void HandleShopDirectInput();
     void HandleBoatDirectInput();
 
-	void UpdateToolAnimation();
     void ApplyGravity();
 public:
     void BuySeed(EItemID seedID, int count = 1);
@@ -55,7 +55,6 @@ public:
     bool CanEscape() const { return m_canescape; }
     bool IsOnBoat() const { return m_onBoat; }
 
-    bool m_action = false;
 private:
     float m_speed = 0.2f;
     Inventory m_inventory;
@@ -78,8 +77,10 @@ private:
     bool m_isGrounded = true;
 
     int m_moveTimerMs = 0;
+    int m_wateringAnimationMs = 0;
 protected:
     void UpdateWalkAnimations();
+    void UpdateToolAnimation(int time);
 
     bool m_isWalking = false;
 };

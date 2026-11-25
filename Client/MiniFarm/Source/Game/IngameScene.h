@@ -40,6 +40,7 @@ public:
 	bool ApplyEquipObject(const S2C_EQUIP_OBJECT_PACKET& packet);
 	void RemoveWorldObject(int objectId);
 	bool ApplyFieldUpdate(const S2C_FIELD_UPDATE_PACKET& packet);
+	void PlayWateringEffect(int playerId, int fieldId);
 
 	void ApplyTimeSync(float dayTime);
 private:

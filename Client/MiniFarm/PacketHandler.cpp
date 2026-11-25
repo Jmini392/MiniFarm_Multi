@@ -170,6 +170,22 @@ bool HandlePacket(const char* packet)
         return ingame->ApplyFieldUpdate(update);
     }
 
+    case S2C_WATER_FIELD_EFFECT:
+    {
+        if (header.size != sizeof(S2C_WATER_FIELD_EFFECT_PACKET))
+            return false;
+
+        S2C_WATER_FIELD_EFFECT_PACKET effect{};
+        memcpy(&effect, packet, sizeof(effect));
+        if (effect.playerId <= 0 || effect.fieldId < 0)
+            return false;
+
+        IngameScene* ingame = dynamic_cast<IngameScene*>(SceneManager::GetScene());
+        if (ingame != nullptr)
+            ingame->PlayWateringEffect(effect.playerId, effect.fieldId);
+        return true;
+    }
+
     case S2C_FIELD_INTERACT_RESULT:
     {
         if (header.size != sizeof(S2C_FIELD_INTERACT_RESULT_PACKET))

@@ -20,12 +20,12 @@ public:
 private:
     static void UpdateBuffers();
 
-    static constexpr size_t MAX_PARTICLES = 30;
+    static constexpr size_t PARTICLES_PER_WATERING = 30;
+    static constexpr size_t MAX_PARTICLES = PARTICLES_PER_WATERING * 8;
 
     static GLuint s_vao;
     static GLuint s_vbo;
     static GLuint s_shaderProgram;
     static std::vector<WaterParticle> s_particles;
-    static size_t s_activeParticles;
     static float s_gravity;
 };
