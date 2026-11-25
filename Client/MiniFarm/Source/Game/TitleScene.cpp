@@ -7,6 +7,7 @@
 #include "ObjectLoader.h"
 #include "UIRenderer.h"
 #include "NetworkClient.h"
+#include "Shared/Protocol.h"
 
 void TitleScene::Init()
 {
@@ -35,26 +36,34 @@ void TitleScene::Update(int dt)
 	// 접속 실패 후 키를 놓고 다시 누르면 재시도할 수 있다.
 	InputManager::Update();
 
-	if (StartPressed)
-	{
-		auto& networkClient = SceneManager::GetNetworkClient();
+	auto& networkClient = SceneManager::GetNetworkClient();
 
-		if (networkClient.Connect("127.0.0.1", 9000))
+	if (m_connectRequested)
+	{
+		m_connectRequested = false;
+
+		if (!networkClient.Connect(m_serverIp.c_str(), SERVER_PORT))
 		{
-			// 연결 성공 후 로그인 요청
-			if (!networkClient.SendLoginRequest())
-			{
-				LOG_E("로그인 요청 전송 실패");
-				networkClient.Disconnect();
-			}
-			else
-			{
-				LOG("서버 로그인 응답 대기");
-			}
+			m_connectionMessage = "Connection failed";
+		}
+		else if (!networkClient.SendLoginRequest())
+		{
+			networkClient.Disconnect();
+			m_connectionMessage = "Login request failed";
 		}
 		else
 		{
-			LOG_E("서버 접속 실패");
+			m_connectionMessage = "Waiting for login";
+			m_loginWaitMs = 5000;
+		}
+	}
+	else if (m_loginWaitMs > 0)
+	{
+		m_loginWaitMs -= dt;
+		if (m_loginWaitMs <= 0)
+		{
+			networkClient.Disconnect();
+			m_connectionMessage = "Login response timed out";
 		}
 	}
 
@@ -72,9 +81,16 @@ void TitleScene::Draw()
 
 	UIRenderer::DrawCenter(TextureLoader::Load("Assets/ui_title.png"), { 0.5f,0.5f }, 1.0f, { 1,1,1,1 });
 
-	if (sin(m_blinkTime * 4.0f) > 0.0f)
+	TextRenderer::Draw("Server IP: " + m_serverIp,
+		WINDOW_W / 2, WINDOW_H / 2 - 50, 2, { 1, 1, 1 });
+
+	TextRenderer::Draw("Press Space to connect",
+		WINDOW_W / 2, WINDOW_H / 2 - 85, 1.5f, { 1, 1, 1 });
+
+	if (!m_connectionMessage.empty())
 	{
-		TextRenderer::Draw("Press [SpaceBar] to start", WINDOW_W / 2, WINDOW_H / 2 - 50, 2, { 1,1,1 });
+		TextRenderer::Draw(m_connectionMessage,
+			WINDOW_W / 2, WINDOW_H / 2 - 115, 1.5f, { 1, 1, 1 });
 	}
 }
 
@@ -100,4 +116,27 @@ void TitleScene::SetupCameraAndLight()
 	shader->SetViewPos(m_camera.eye);
 
 	shader->SetModel(glm::mat4(1.0f));
+}
+
+void TitleScene::OnKeyDown(unsigned char key)
+{
+	if (m_connectRequested || m_loginWaitMs > 0)
+		return;
+
+	if (key == ' ')
+	{
+		m_connectRequested = true;
+	}
+	else if (key == '\b')
+	{
+		if (!m_serverIp.empty())
+			m_serverIp.pop_back();
+		m_connectionMessage.clear();
+	}
+	else if (((key >= '0' && key <= '9') || key == '.')
+		&& m_serverIp.size() < 15)
+	{
+		m_serverIp.push_back(static_cast<char>(key));
+		m_connectionMessage.clear();
+	}
 }

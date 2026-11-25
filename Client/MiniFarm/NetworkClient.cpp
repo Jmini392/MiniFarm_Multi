@@ -19,6 +19,41 @@ NetworkClient::~NetworkClient()
     delete m_recvBuffer;
 }
 
+namespace
+{
+    bool ConnectWithTimeout(SOCKET sock, const sockaddr_in& address, int timeoutMs)
+    {
+        u_long nonBlocking = 1;
+        if (ioctlsocket(sock, FIONBIO, &nonBlocking) == SOCKET_ERROR)
+            return false;
+
+        if (connect(sock, reinterpret_cast<const sockaddr*>(&address),
+                    sizeof(address)) == SOCKET_ERROR)
+        {
+            if (WSAGetLastError() != WSAEWOULDBLOCK)
+                return false;
+
+            fd_set writable;
+            fd_set failed;
+            FD_ZERO(&writable);
+            FD_ZERO(&failed);
+            FD_SET(sock, &writable);
+            FD_SET(sock, &failed);
+
+            timeval timeout{};
+            timeout.tv_sec = timeoutMs / 1000;
+            timeout.tv_usec = (timeoutMs % 1000) * 1000;
+
+            const int ready = select(0, nullptr, &writable, &failed, &timeout);
+            if (ready <= 0 || FD_ISSET(sock, &failed) || !FD_ISSET(sock, &writable))
+                return false;
+        }
+
+        nonBlocking = 0;
+        return ioctlsocket(sock, FIONBIO, &nonBlocking) == 0;
+    }
+}
+
 bool NetworkClient::Connect(const char* ip, unsigned short port)
 {
     if (ip == nullptr || port == 0)
@@ -57,12 +92,18 @@ bool NetworkClient::Connect(const char* ip, unsigned short port)
     struct sockaddr_in serveraddr;
     memset(&serveraddr, 0, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
-    inet_pton(AF_INET, ip, &serveraddr.sin_addr);
-    serveraddr.sin_port = htons(port);
-    result = connect(m_socket, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
-    if (result == SOCKET_ERROR)
+    if (inet_pton(AF_INET, ip, &serveraddr.sin_addr) != 1)
     {
-        LOG_E("connect()");
+        LOG_E("Invalid IPv4 address");
+        Disconnect();
+        return false;
+    }
+    serveraddr.sin_port = htons(port);
+
+    constexpr int CONNECT_TIMEOUT_MS = 1000;
+    if (!ConnectWithTimeout(m_socket, serveraddr, CONNECT_TIMEOUT_MS))
+    {
+        LOG_E("Connection failed or timed out");
         Disconnect();
         return false;
     }

@@ -93,6 +93,9 @@ Camera& SceneManager::GetCamera()
 
 void SceneManager::InputTestKey(char key)
 {
+	if (auto* title = dynamic_cast<TitleScene*>(s_currentScene.get()))
+		title->OnKeyDown(static_cast<unsigned char>(key));
+
 	switch (key)
 	{
 	case 't':
