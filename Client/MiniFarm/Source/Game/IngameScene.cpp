@@ -267,7 +267,7 @@ bool IngameScene::ApplyMoveObject(const S2C_MOVE_OBJECT_PACKET& packet)
 			auto crow = std::dynamic_pointer_cast<Crow>(obj);
 			if (!crow)
 				return false;
-			crow->SetMoveTarget({ packet.x, packet.y, packet.z }, packet.yaw);
+			crow->SetMoveTarget({ packet.x, packet.y, packet.z }, packet.yaw, packet.isMoving != 0);
 			return true;
 		}
 	}

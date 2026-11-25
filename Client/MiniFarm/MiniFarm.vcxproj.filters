@@ -64,6 +64,9 @@
     <ClCompile Include="Source\Systems\DataTable.cpp">
       <Filter>소스 파일\Systems</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Game\Crow.cpp">
+      <Filter>소스 파일\Game</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Game\GameObject.cpp">
       <Filter>소스 파일\Game</Filter>
     </ClCompile>
@@ -182,6 +185,9 @@
     </ClInclude>
     <ClInclude Include="Source\Systems\DataTable.h">
       <Filter>소스 파일\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Crow.h">
+      <Filter>소스 파일\Game</Filter>
     </ClInclude>
     <ClInclude Include="Source\Game\GameObject.h">
       <Filter>소스 파일\Game</Filter>
