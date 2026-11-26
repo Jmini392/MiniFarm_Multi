@@ -243,6 +243,19 @@ bool NetworkClient::SendInteractFieldRequest(int objectId)
     return SendPacketBytes(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
 }
 
+bool NetworkClient::SendBoatEscapeRequest(int objectId)
+{
+    if (objectId < 0)
+        return false;
+
+    C2S_BOAT_ESCAPE_PACKET packet{};
+    packet.header.size = static_cast<unsigned char>(sizeof(packet));
+    packet.header.type = C2S_BOAT_ESCAPE;
+    packet.objectId = objectId;
+
+    return SendPacketBytes(reinterpret_cast<const char*>(&packet), static_cast<int>(sizeof(packet)));
+}
+
 #ifdef _DEBUG
 bool NetworkClient::SendDebugWalletChangeRequest(DebugWalletAction action)
 {

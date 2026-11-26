@@ -238,16 +238,12 @@ void Player::HandleBoatDirectInput()
 
 	if (InputManager::IsKeyPressed('y'))
 	{
-		LOG("Å»Ãâ ½Ãµµ");
-		if (CanEscape())
-		{
-			LOG("Å»Ãâ ¼º°ø!");
-			m_onBoat = true;
-		}
+		auto& network = SceneManager::GetNetworkClient();
 	}
 
 	if (InputManager::IsKeyPressed('n') || InputManager::IsKeyPressed(' '))
 	{
+		SetEscapeBoatId(-1);
 		InputManager::SetUIMode(false);
 		SetEscaping(false);
 	}

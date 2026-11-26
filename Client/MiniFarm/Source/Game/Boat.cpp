@@ -5,14 +5,8 @@
 
 void Boat::OnInteract(Player* player)
 {
-	int money = player->GetSharedWallet().GetMoney();
-	bool canEscape = money >= GOAL_MONEY;
-
-	auto msg = canEscape ? "Are you sure?\nYes[Y]\nNo[N]"
-		: std::format("Not enough money\nto escape!\n need {}G.\n\nOK[space]", GOAL_MONEY - money);
-	
-	InputManager::SetUIMode(true);
-	player->SetSysMsg(msg);
-	player->SetEscaping(true);
-	player->SetCanEscape(canEscape);
+    player->SetEscapeBoatId(m_netId);
+    player->SetSysMsg("Request escape?\nYes[Y]\nNo[N]");
+    player->SetEscaping(true);
+    InputManager::SetUIMode(true);
 }

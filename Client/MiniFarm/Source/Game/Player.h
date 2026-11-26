@@ -54,6 +54,7 @@ public:
     void SetCanEscape(bool canescape) { m_canescape = canescape; }
     bool CanEscape() const { return m_canescape; }
     bool IsOnBoat() const { return m_onBoat; }
+    void SetEscapeBoatId(int objectId) { m_escapeBoatId = objectId; }
 
 private:
     float m_speed = 0.2f;
@@ -78,6 +79,8 @@ private:
 
     int m_moveTimerMs = 0;
     int m_wateringAnimationMs = 0;
+
+    int m_escapeBoatId = -1;
 protected:
     void UpdateWalkAnimations();
     void UpdateToolAnimation(int time);

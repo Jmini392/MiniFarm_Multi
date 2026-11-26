@@ -94,6 +94,12 @@ struct C2S_INTERACT_FIELD_PACKET
     std::int32_t objectId;
 };
 
+struct C2S_BOAT_ESCAPE_PACKET
+{
+    PacketHeader header;
+    std::int32_t objectId; // 상호작용한 배
+};
+
 struct C2S_DEBUG_WALLET_CHANGE_PACKET
 {
     PacketHeader header;

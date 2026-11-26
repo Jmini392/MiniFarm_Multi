@@ -274,10 +274,19 @@ bool HandlePacket(int sessionId, const char* packet) {
         }
 
 		case C2S_SHOP_BUY:       // 구매 처리
+            return true;
 		case C2S_SHOP_SELL:      // 판매 처리
+            return true;
 		case C2S_BOAT_ESCAPE:    // 탈출 처리
-			(void)sessionId;
-			return true;
+        {
+            if (header.size != sizeof(C2S_BOAT_ESCAPE_PACKET))
+                return false;
+
+            C2S_BOAT_ESCAPE_PACKET request{};
+            memcpy(&request, packet, sizeof(request));
+
+            return true;
+        }
 		default:
 			return false; // 모르는 타입
 	}

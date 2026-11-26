@@ -28,6 +28,7 @@ public:
     bool SendMoveRequest(float x, float y, float z, float yaw, bool isMoving, bool isAirborne);
     bool SendEquipRequest(EItemID item);
     bool SendInteractFieldRequest(int objectId);
+    bool SendBoatEscapeRequest(int objectId);
 #ifdef _DEBUG
     bool SendDebugWalletChangeRequest(DebugWalletAction action);
 #endif
