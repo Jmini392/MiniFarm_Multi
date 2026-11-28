@@ -9,15 +9,6 @@
 extern GameWorld g_world;
 
 namespace {
-    InventoryCounts ReadInventoryCounts(const InventoryCore& inventory) {
-        return {
-            inventory.GetItemCount(EItemID::SeedCarrot),
-            inventory.GetItemCount(EItemID::SeedCabbage),
-            inventory.GetItemCount(EItemID::Carrot),
-            inventory.GetItemCount(EItemID::Cabbage)
-        };
-    }
-
     bool SameInventoryCounts(const InventoryCounts& a, const InventoryCounts& b) {
         return a.carrotSeedCount == b.carrotSeedCount 
             && a.cabbageSeedCount == b.cabbageSeedCount
@@ -65,7 +56,7 @@ bool HandlePacket(int sessionId, const char* packet) {
             info.z = pos.z;
             info.yaw = player->GetYaw();
 
-            info.counts = ReadInventoryCounts(player->GetInventory());
+            info.counts = GameWorld::ReadInventoryCounts(player->GetInventory());
 
             g_world.Unlock();
 
@@ -217,11 +208,11 @@ bool HandlePacket(int sessionId, const char* packet) {
             g_world.Lock();
             
             const InventoryCore* inventory = g_world.GetInventory(sessionId);
-            const InventoryCounts before = inventory != nullptr ? ReadInventoryCounts(*inventory) : InventoryCounts{};
+            const InventoryCounts before = inventory != nullptr ? GameWorld::ReadInventoryCounts(*inventory) : InventoryCounts{};
             const FieldInteractResult result = g_world.InteractField(sessionId, request.objectId);
             
             if (result.status == FieldInteractStatus::Success && inventory != nullptr) {
-                update.counts = ReadInventoryCounts(*inventory);
+                update.counts = GameWorld::ReadInventoryCounts(*inventory);
                 inventoryChanged = !SameInventoryCounts(before, update.counts);
             }
 

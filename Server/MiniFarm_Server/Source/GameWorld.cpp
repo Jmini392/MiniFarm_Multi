@@ -1,6 +1,7 @@
 ﻿#include "PCH.h"
 #include "GameWorld.h"
 #include "../../../Common/CropLogic.h"
+#include <mutex>
 #include <rapidjson/document.h>
 
 // "pos": [x, y, z] 같은 숫자 3개짜리 배열을 읽는다
@@ -145,6 +146,56 @@ InventoryCore* GameWorld::GetInventory(int sessionId) {
 		return nullptr;
 
 	return &player->GetInventory();
+}
+
+InventoryCounts GameWorld::ReadInventoryCounts(const InventoryCore& inventory) {
+    return {
+        inventory.GetItemCount(EItemID::SeedCarrot),
+        inventory.GetItemCount(EItemID::SeedCabbage),
+        inventory.GetItemCount(EItemID::Carrot),
+        inventory.GetItemCount(EItemID::Cabbage)
+    };
+}
+
+std::optional<ShopTradeResult> GameWorld::BuySeed(int sessionId, EItemID seedId, int count) {
+    return TradeShopItem(sessionId, ShopAction::Buy, seedId, count);
+}
+
+std::optional<ShopTradeResult> GameWorld::SellCrop(int sessionId, EItemID cropId, int count) {
+    return TradeShopItem(sessionId, ShopAction::Sell, cropId, count);
+}
+
+std::optional<ShopTradeResult> GameWorld::TradeShopItem(
+    int sessionId, ShopAction action, EItemID itemId, int count) {
+    const std::lock_guard<CriticalSection> lock(m_cs);
+    PlayerState* player = GetPlayer(sessionId);
+    if (player == nullptr || !player->IsFieldSyncReady())
+        return std::nullopt;
+
+    EItemID cropId = EItemID::Empty;
+    if (action == ShopAction::Buy) {
+        if (itemId == EItemID::SeedCarrot)
+            cropId = EItemID::Carrot;
+        else if (itemId == EItemID::SeedCabbage)
+            cropId = EItemID::Cabbage;
+    }
+    else if (itemId == EItemID::Carrot || itemId == EItemID::Cabbage) {
+        cropId = itemId;
+    }
+
+    InventoryCore& inventory = player->GetInventory();
+    ShopLogic::TradeResult trade{ false, 0, ShopLogic::TradeFailure::InvalidItem };
+    if (cropId != EItemID::Empty) {
+        const CropData* data = m_cropTable.GetCrop(cropId);
+        if (data == nullptr)
+            trade.reason = ShopLogic::TradeFailure::InvalidPrice;
+        else if (action == ShopAction::Buy)
+            trade = ShopLogic::BuySeed(inventory, m_wallet, itemId, count, *data);
+        else
+            trade = ShopLogic::SellCrop(inventory, m_wallet, itemId, count, *data);
+    }
+
+    return ShopTradeResult{ trade, ReadInventoryCounts(inventory), m_wallet.GetMoney() };
 }
 
 bool GameWorld::AddField(int objectId) {

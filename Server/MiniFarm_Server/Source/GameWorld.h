@@ -5,7 +5,9 @@
 #include "../../../Common/CropState.h"
 #include "../../../Common/CropTable.h"
 #include "../../../Common/SharedWallet.h"
+#include "../../../Common/ShopLogic.h"
 #include "../../../Shared/Protocol.h"
+#include <optional>
 
 // 월드에 배치되는 상호작용 객체의 종류 (Interactable_props_pos.json의 type과 같다)
 enum class WorldObjectType { Field, House, Boat };
@@ -41,6 +43,12 @@ struct FieldInteractResult {
 
 const char* GetFieldInteractStatusName(FieldInteractStatus status);
 
+struct ShopTradeResult {
+    ShopLogic::TradeResult trade;
+    InventoryCounts counts;
+    int balance;
+};
+
 // 서버의 게임 월드. 여러 스레드가 함께 쓰므로 읽거나 바꾸는 동안에는 Lock()/Unlock()으로 감싸야 한다
 class GameWorld {
 public:
@@ -63,6 +71,13 @@ public:
 	PlayerState* GetPlayer(int sessionId);
 	// 해당 플레이어의 인벤토리, 없으면 nullptr
 	InventoryCore* GetInventory(int sessionId);
+    // The caller holds the world lock while reading inventory counts.
+    static InventoryCounts ReadInventoryCounts(const InventoryCore& inventory);
+
+    // These methods lock the world and return a copy of the result and state.
+    // nullopt means the player is absent or has not finished joining the world.
+    std::optional<ShopTradeResult> BuySeed(int sessionId, EItemID seedId, int count);
+    std::optional<ShopTradeResult> SellCrop(int sessionId, EItemID cropId, int count);
 
 	// 빈 밭을 등록한다. 음수 ID나 중복 ID는 거부하며 기존 상태를 유지한다.
 	bool AddField(int objectId);
@@ -101,6 +116,9 @@ public:
 	void Update(int dtMs);
 
 private:
+    enum class ShopAction { Buy, Sell };
+    std::optional<ShopTradeResult> TradeShopItem(int sessionId, ShopAction action, EItemID itemId, int count);
+
 	CriticalSection m_cs; // 월드 보호용 임계영역
 	CropTable m_cropTable; // 작물 설정
 	SharedWallet m_wallet; // 모든 플레이어가 함께 쓰는 돈

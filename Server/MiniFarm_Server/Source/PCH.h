@@ -91,6 +91,9 @@ public:
 	void Lock() { EnterCriticalSection(&m_cs); }
 	void Unlock() { LeaveCriticalSection(&m_cs); }
 
+	void lock() { Lock(); }
+	void unlock() { Unlock(); }
+
 private:
 	CRITICAL_SECTION m_cs;
 };
