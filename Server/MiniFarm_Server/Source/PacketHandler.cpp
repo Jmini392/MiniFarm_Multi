@@ -285,6 +285,14 @@ bool HandlePacket(int sessionId, const char* packet) {
             C2S_BOAT_ESCAPE_PACKET request{};
             memcpy(&request, packet, sizeof(request));
 
+            constexpr int REQUIRED_ESCAPE_GOLD = 10000;
+
+            g_world.Lock();
+            const int balance = g_world.GetWallet().GetMoney();
+            g_world.Unlock();
+
+            const bool canEscape = balance >= REQUIRED_ESCAPE_GOLD;
+
             return true;
         }
 		default:

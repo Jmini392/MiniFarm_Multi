@@ -239,6 +239,8 @@ void Player::HandleBoatDirectInput()
 	if (InputManager::IsKeyPressed('y'))
 	{
 		auto& network = SceneManager::GetNetworkClient();
+		if (!network.SendBoatEscapeRequest(m_escapeBoatId))
+			LOG_E("Failed to send escape request");
 	}
 
 	if (InputManager::IsKeyPressed('n') || InputManager::IsKeyPressed(' '))
